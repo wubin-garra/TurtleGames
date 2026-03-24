@@ -70,11 +70,13 @@ const PHYSICS = {
   restitution: 0.3,
   friction: 0.4,
   groundFriction: 0.6,
-  damping: 0.99,
-  sleepThreshold: 0.5,
-  sleepDelay: 0.5,
-  solverIterations: 4,
+  damping: 0.995,
+  sleepThreshold: 2.0,    // higher threshold to stop jitter sooner
+  sleepDelay: 0.3,         // faster sleep
+  solverIterations: 6,     // more iterations for stable stacking
   fixedDt: 1 / 60,
+  slop: 0.5,               // allowed penetration depth before correction
+  correctionRate: 0.4,     // only correct 40% of overlap per iteration (Baumgarte)
 };
 
 const GAME = {
@@ -121,7 +123,7 @@ resize();
 function drawTurtle(ctx, x, y, level, scale = 1) {
   const t = TURTLES[level];
   const r = t.radius * scale;
-  const s = r / 40;
+  const s = r / 30; // scale to fill collision radius visually
 
   ctx.save();
   ctx.translate(x, y);
@@ -354,18 +356,30 @@ function detectCollisionsOptimized(bodies, area) {
 function solveCollision(pair) {
   const { a, b, nx, ny, overlap } = pair;
   if (!b) {
+    // Wall collision
     const isGround = pair.wall === 'bottom';
     const fric = isGround ? PHYSICS.groundFriction : PHYSICS.friction;
     const e = PHYSICS.restitution;
+
+    // Full position correction for walls (no slop needed)
     a.x += nx * overlap;
     a.y += ny * overlap;
+
     const vn = a.vx * nx + a.vy * ny;
     if (vn < 0) {
-      a.vx -= (1 + e) * vn * nx;
-      a.vy -= (1 + e) * vn * ny;
+      // Only bounce if velocity is significant, otherwise just zero it
+      if (Math.abs(vn) < 20) {
+        // Kill tiny bounces to prevent jitter
+        a.vx -= vn * nx;
+        a.vy -= vn * ny;
+      } else {
+        a.vx -= (1 + e) * vn * nx;
+        a.vy -= (1 + e) * vn * ny;
+      }
+      // Tangent friction
       const tx = -ny, ty = nx;
       const vt = a.vx * tx + a.vy * ty;
-      const maxFric = Math.abs(vn * (1 + e)) * fric;
+      const maxFric = Math.abs(vn) * fric;
       const fricImpulse = Math.max(-maxFric, Math.min(maxFric, -vt));
       a.vx += fricImpulse * tx;
       a.vy += fricImpulse * ty;
@@ -374,32 +388,42 @@ function solveCollision(pair) {
     a.sleepTimer = 0;
     return;
   }
+
+  // Circle-circle collision
   // Merge check
   if (a.level === b.level && a.level < TURTLES.length - 1 && !a.mergeFlag && !b.mergeFlag) {
     a.mergeFlag = true;
     b.mergeFlag = true;
     world.mergeQueue.push({ a, b });
   }
-  // Position correction
+
+  // Position correction with slop (Baumgarte stabilization)
   const totalInvMass = a.invMass + b.invMass;
   if (totalInvMass > 0) {
-    const corrA = (a.invMass / totalInvMass) * overlap * 1.01;
-    const corrB = (b.invMass / totalInvMass) * overlap * 1.01;
+    const corrAmount = Math.max(0, overlap - PHYSICS.slop) * PHYSICS.correctionRate;
+    const corrA = (a.invMass / totalInvMass) * corrAmount;
+    const corrB = (b.invMass / totalInvMass) * corrAmount;
     a.x -= nx * corrA;
     a.y -= ny * corrA;
     b.x += nx * corrB;
     b.y += ny * corrB;
   }
+
+  // Relative velocity along normal
   const dvx = a.vx - b.vx;
   const dvy = a.vy - b.vy;
   const vn = dvx * nx + dvy * ny;
-  if (vn > 0) return;
-  const e = PHYSICS.restitution;
+  if (vn > 0) return; // separating
+
+  // Normal impulse — kill tiny bounces
+  const e = Math.abs(vn) < 20 ? 0 : PHYSICS.restitution;
   const j = -(1 + e) * vn / totalInvMass;
   a.vx += j * a.invMass * nx;
   a.vy += j * a.invMass * ny;
   b.vx -= j * b.invMass * nx;
   b.vy -= j * b.invMass * ny;
+
+  // Tangent friction
   const tx = -ny, ty = nx;
   const vt = dvx * tx + dvy * ty;
   const maxFric = Math.abs(j) * PHYSICS.friction;
@@ -409,6 +433,8 @@ function solveCollision(pair) {
   a.vy += jt * a.invMass * ty;
   b.vx -= jt * b.invMass * tx;
   b.vy -= jt * b.invMass * ty;
+
+  // Wake both
   a.sleeping = false; a.sleepTimer = 0;
   b.sleeping = false; b.sleepTimer = 0;
 }
@@ -423,8 +449,11 @@ function physicsStep(dt) {
     for (const body of world.bodies) {
       if (body.sleeping) continue;
       body.vy += PHYSICS.gravity * fixedDt;
-      body.vx *= PHYSICS.damping;
-      body.vy *= PHYSICS.damping;
+      // Stronger damping at low speeds to help settle
+      const speed = Math.sqrt(body.vx * body.vx + body.vy * body.vy);
+      const damp = speed < 30 ? 0.95 : PHYSICS.damping;
+      body.vx *= damp;
+      body.vy *= damp;
       body.x += body.vx * fixedDt;
       body.y += body.vy * fixedDt;
     }
