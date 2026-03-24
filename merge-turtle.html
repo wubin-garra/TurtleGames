@@ -95,7 +95,7 @@ function computeLayout() {
   const diffBarH = 28;
   const previewH = 30;
   const dropZoneH = 50;
-  const bottomBarH = 40;
+  const bottomBarH = 46;
 
   layout.width = W;
   layout.height = H;
@@ -169,9 +169,13 @@ function drawTurtle(ctx, x, y, level, scale = 1) {
   ctx.lineWidth = 1.5 * s;
   ctx.stroke();
 
-  // Crown for level 8 (Galapagos)
+  // Silver crown for level 6 (Sulcata)
+  if (level === 6) {
+    drawCrown(ctx, s, true);
+  }
+  // Gold crown for level 8 (Galapagos)
   if (level === 8) {
-    drawCrown(ctx, s);
+    drawCrown(ctx, s, false);
   }
 
   ctx.restore();
@@ -205,9 +209,9 @@ function drawShellPattern(ctx, level, s) {
   }
 }
 
-function drawCrown(ctx, s) {
-  ctx.fillStyle = '#FFD700';
-  ctx.strokeStyle = '#FFA000';
+function drawCrown(ctx, s, silver) {
+  ctx.fillStyle = silver ? '#C0C0C0' : '#FFD700';
+  ctx.strokeStyle = silver ? '#888' : '#FFA000';
   ctx.lineWidth = 1 * s;
   ctx.beginPath();
   ctx.moveTo(-10 * s, -24 * s);
@@ -221,8 +225,8 @@ function drawCrown(ctx, s) {
   ctx.fill();
   ctx.stroke();
 
-  // Glow ring for Galapagos
-  ctx.strokeStyle = 'rgba(255, 213, 79, 0.3)';
+  // Glow ring
+  ctx.strokeStyle = silver ? 'rgba(192, 192, 192, 0.25)' : 'rgba(255, 213, 79, 0.3)';
   ctx.lineWidth = 4 * s;
   ctx.beginPath();
   ctx.ellipse(0, 2 * s, 34 * s, 28 * s, 0, 0, Math.PI * 2);
@@ -769,7 +773,7 @@ function shareScore() {
 // === UI LAYER ===
 function renderHUD(ctx) {
   const tb = layout.topBar;
-  ctx.fillStyle = '#12122a';
+  ctx.fillStyle = '#0a1628';
   ctx.fillRect(tb.x, tb.y, tb.w, tb.h);
   ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
   ctx.fillText('分数', tb.x + 12, tb.y + 14);
@@ -785,7 +789,7 @@ function renderHUD(ctx) {
 
 function renderDifficultyBar(ctx) {
   const db = layout.diffBar;
-  ctx.fillStyle = '#12122a';
+  ctx.fillStyle = '#0a1628';
   ctx.fillRect(db.x, db.y, db.w, db.h);
   const diffs = ['easy', 'normal', 'hard'];
   const labels = ['简单', '普通', '困难'];
@@ -807,7 +811,7 @@ function renderDifficultyBar(ctx) {
 
 function renderPreview(ctx) {
   const pv = layout.preview;
-  ctx.fillStyle = '#12122a';
+  ctx.fillStyle = '#0a1628';
   ctx.fillRect(pv.x, pv.y, pv.w, pv.h);
   ctx.fillStyle = '#666'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
   ctx.fillText('下一个:', pv.x + pv.w / 2 - 15, pv.y + 19);
@@ -826,17 +830,105 @@ function renderDropZone(ctx) {
   }
 }
 
+// === OCEAN BACKGROUND ===
+const bubbles = [];
+for (let i = 0; i < 15; i++) {
+  bubbles.push({
+    x: Math.random(),        // 0-1 relative to game area width
+    y: Math.random(),        // 0-1 relative to game area height
+    r: 2 + Math.random() * 5,
+    speed: 15 + Math.random() * 25,
+    wobble: Math.random() * Math.PI * 2,
+    wobbleSpeed: 0.5 + Math.random() * 1.5,
+  });
+}
+
 function renderGameArea(ctx) {
   const ga = layout.gameArea;
+
+  // Ocean gradient background
   const grad = ctx.createLinearGradient(0, ga.y, 0, ga.y + ga.h);
-  grad.addColorStop(0, '#1a1a2e'); grad.addColorStop(1, '#162447');
-  ctx.fillStyle = grad; ctx.fillRect(ga.x, ga.y, ga.w, ga.h);
-  ctx.fillStyle = '#2a2a4a';
+  grad.addColorStop(0, '#0a1628');   // deep dark blue (surface)
+  grad.addColorStop(0.3, '#0d2137'); // mid ocean
+  grad.addColorStop(0.7, '#0f2b4a'); // lighter deep
+  grad.addColorStop(1, '#133a5e');   // ocean floor
+  ctx.fillStyle = grad;
+  ctx.fillRect(ga.x, ga.y, ga.w, ga.h);
+
+  // Sandy ocean floor
+  const floorH = 8;
+  const floorGrad = ctx.createLinearGradient(0, ga.y + ga.h - floorH, 0, ga.y + ga.h);
+  floorGrad.addColorStop(0, 'rgba(194, 178, 128, 0.15)');
+  floorGrad.addColorStop(1, 'rgba(194, 178, 128, 0.3)');
+  ctx.fillStyle = floorGrad;
+  ctx.fillRect(ga.x, ga.y + ga.h - floorH, ga.w, floorH);
+
+  // Seaweed (static, drawn from bottom)
+  ctx.globalAlpha = 0.2;
+  const seaweedPositions = [0.1, 0.25, 0.55, 0.75, 0.9];
+  seaweedPositions.forEach((xRatio, idx) => {
+    const sx = ga.x + ga.w * xRatio;
+    const sy = ga.y + ga.h;
+    const height = 40 + (idx % 3) * 20;
+    ctx.strokeStyle = idx % 2 === 0 ? '#1a6b3a' : '#1a5c2e';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    const time = Date.now() / 1000;
+    for (let h = 0; h < height; h += 4) {
+      const sway = Math.sin(time * 0.8 + h * 0.08 + idx) * 6;
+      ctx.lineTo(sx + sway, sy - h);
+    }
+    ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+
+  // Animated bubbles
+  ctx.globalAlpha = 0.15;
+  const time = Date.now() / 1000;
+  for (const b of bubbles) {
+    b.y -= b.speed * PHYSICS.fixedDt / ga.h;
+    if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); }
+    const bx = ga.x + b.x * ga.w + Math.sin(time * b.wobbleSpeed + b.wobble) * 8;
+    const by = ga.y + b.y * ga.h;
+    ctx.strokeStyle = '#7ec8e3';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(bx, by, b.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Light rays from top
+  ctx.globalAlpha = 0.03;
+  for (let i = 0; i < 3; i++) {
+    const rx = ga.x + ga.w * (0.2 + i * 0.3);
+    const rw = 30 + i * 15;
+    const rayGrad = ctx.createLinearGradient(0, ga.y, 0, ga.y + ga.h * 0.7);
+    rayGrad.addColorStop(0, '#7ec8e3');
+    rayGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = rayGrad;
+    ctx.beginPath();
+    ctx.moveTo(rx - rw / 2, ga.y);
+    ctx.lineTo(rx + rw / 2, ga.y);
+    ctx.lineTo(rx + rw, ga.y + ga.h * 0.7);
+    ctx.lineTo(rx - rw, ga.y + ga.h * 0.7);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Walls
+  ctx.fillStyle = 'rgba(42, 62, 90, 0.6)';
   ctx.fillRect(ga.x, ga.y, GAME.wallThickness, ga.h);
   ctx.fillRect(ga.x + ga.w - GAME.wallThickness, ga.y, GAME.wallThickness, ga.h);
-  ctx.setLineDash([6, 4]); ctx.strokeStyle = 'rgba(255,0,0,0.3)';
+
+  // Game over line
+  ctx.setLineDash([6, 4]); ctx.strokeStyle = 'rgba(255,80,80,0.3)';
   ctx.beginPath(); ctx.moveTo(ga.x, layout.gameOverLineY); ctx.lineTo(ga.x + ga.w, layout.gameOverLineY);
   ctx.stroke(); ctx.setLineDash([]);
+
+  // Bodies
   for (const body of world.bodies) {
     drawTurtle(ctx, body.x, body.y, body.level);
     game.discoveredLevels.add(body.level);
@@ -846,12 +938,13 @@ function renderGameArea(ctx) {
 
 function renderBottomBar(ctx) {
   const bb = layout.bottomBar;
-  ctx.fillStyle = '#12122a'; ctx.fillRect(bb.x, bb.y, bb.w, bb.h);
-  const totalW = TURTLES.length * 28;
+  ctx.fillStyle = '#0a1220'; ctx.fillRect(bb.x, bb.y, bb.w, bb.h);
+  const spacing = 38;
+  const totalW = TURTLES.length * spacing;
   let startX = bb.x + (bb.w - totalW) / 2;
   TURTLES.forEach((t, i) => {
     ctx.globalAlpha = game.discoveredLevels.has(i) ? 1 : 0.25;
-    drawTurtle(ctx, startX + i * 28 + 14, bb.y + bb.h / 2, i, 0.25);
+    drawTurtle(ctx, startX + i * spacing + spacing / 2, bb.y + bb.h / 2, i, 0.28);
   });
   ctx.globalAlpha = 1;
 }
