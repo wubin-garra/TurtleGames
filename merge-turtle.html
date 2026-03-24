@@ -201,82 +201,231 @@ function drawCrown(ctx, s) {
 
 // === END OF TURTLE RENDERER ===
 
-// === GAME LOOP (turtle test grid) ===
-function drawTestGrid() {
+// === PHYSICS ENGINE ===
+class Body {
+  constructor(x, y, level) {
+    this.x = x;
+    this.y = y;
+    this.vx = 0;
+    this.vy = 0;
+    this.level = level;
+    this.radius = TURTLES[level].radius;
+    this.mass = this.radius * this.radius;
+    this.invMass = 1 / this.mass;
+    this.sleeping = false;
+    this.sleepTimer = 0;
+    this.mergeFlag = false;
+    this.age = 0;
+    this.id = Body.nextId++;
+  }
+}
+Body.nextId = 0;
+
+const world = {
+  bodies: [],
+  mergeQueue: [],
+  addBody(x, y, level) {
+    const b = new Body(x, y, level);
+    this.bodies.push(b);
+    return b;
+  },
+  removeBody(body) {
+    const idx = this.bodies.indexOf(body);
+    if (idx !== -1) this.bodies.splice(idx, 1);
+  },
+};
+
+function detectCollisions(bodies, area) {
+  const pairs = [];
+  for (let i = 0; i < bodies.length; i++) {
+    for (let j = i + 1; j < bodies.length; j++) {
+      const a = bodies[i], b = bodies[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const minDist = a.radius + b.radius;
+      if (dist < minDist) {
+        const nx = dist > 0.0001 ? dx / dist : 0;
+        const ny = dist > 0.0001 ? dy / dist : 1;
+        pairs.push({ a, b, nx, ny, overlap: minDist - dist });
+      }
+    }
+  }
+  const left = area.x + GAME.wallThickness;
+  const right = area.x + area.w - GAME.wallThickness;
+  const bottom = area.y + area.h;
+  for (const body of bodies) {
+    if (body.x - body.radius < left)
+      pairs.push({ a: body, b: null, nx: 1, ny: 0, overlap: left - (body.x - body.radius), wall: 'left' });
+    if (body.x + body.radius > right)
+      pairs.push({ a: body, b: null, nx: -1, ny: 0, overlap: (body.x + body.radius) - right, wall: 'right' });
+    if (body.y + body.radius > bottom)
+      pairs.push({ a: body, b: null, nx: 0, ny: -1, overlap: (body.y + body.radius) - bottom, wall: 'bottom' });
+  }
+  return pairs;
+}
+
+function solveCollision(pair) {
+  const { a, b, nx, ny, overlap } = pair;
+  if (!b) {
+    const isGround = pair.wall === 'bottom';
+    const fric = isGround ? PHYSICS.groundFriction : PHYSICS.friction;
+    const e = PHYSICS.restitution;
+    a.x += nx * overlap;
+    a.y += ny * overlap;
+    const vn = a.vx * nx + a.vy * ny;
+    if (vn < 0) {
+      a.vx -= (1 + e) * vn * nx;
+      a.vy -= (1 + e) * vn * ny;
+      const tx = -ny, ty = nx;
+      const vt = a.vx * tx + a.vy * ty;
+      const maxFric = Math.abs(vn * (1 + e)) * fric;
+      const fricImpulse = Math.max(-maxFric, Math.min(maxFric, -vt));
+      a.vx += fricImpulse * tx;
+      a.vy += fricImpulse * ty;
+    }
+    a.sleeping = false;
+    a.sleepTimer = 0;
+    return;
+  }
+  // Merge check
+  if (a.level === b.level && a.level < TURTLES.length - 1 && !a.mergeFlag && !b.mergeFlag) {
+    a.mergeFlag = true;
+    b.mergeFlag = true;
+    world.mergeQueue.push({ a, b });
+  }
+  // Position correction
+  const totalInvMass = a.invMass + b.invMass;
+  if (totalInvMass > 0) {
+    const corrA = (a.invMass / totalInvMass) * overlap * 1.01;
+    const corrB = (b.invMass / totalInvMass) * overlap * 1.01;
+    a.x -= nx * corrA;
+    a.y -= ny * corrA;
+    b.x += nx * corrB;
+    b.y += ny * corrB;
+  }
+  const dvx = a.vx - b.vx;
+  const dvy = a.vy - b.vy;
+  const vn = dvx * nx + dvy * ny;
+  if (vn > 0) return;
+  const e = PHYSICS.restitution;
+  const j = -(1 + e) * vn / totalInvMass;
+  a.vx += j * a.invMass * nx;
+  a.vy += j * a.invMass * ny;
+  b.vx -= j * b.invMass * nx;
+  b.vy -= j * b.invMass * ny;
+  const tx = -ny, ty = nx;
+  const vt = dvx * tx + dvy * ty;
+  const maxFric = Math.abs(j) * PHYSICS.friction;
+  let jt = -vt / totalInvMass;
+  jt = Math.max(-maxFric, Math.min(maxFric, jt));
+  a.vx += jt * a.invMass * tx;
+  a.vy += jt * a.invMass * ty;
+  b.vx -= jt * b.invMass * tx;
+  b.vy -= jt * b.invMass * ty;
+  a.sleeping = false; a.sleepTimer = 0;
+  b.sleeping = false; b.sleepTimer = 0;
+}
+
+let physicsAccumulator = 0;
+
+function physicsStep(dt) {
+  physicsAccumulator += dt;
+  const fixedDt = PHYSICS.fixedDt;
+  while (physicsAccumulator >= fixedDt) {
+    physicsAccumulator -= fixedDt;
+    for (const body of world.bodies) {
+      if (body.sleeping) continue;
+      body.vy += PHYSICS.gravity * fixedDt;
+      body.vx *= PHYSICS.damping;
+      body.vy *= PHYSICS.damping;
+      body.x += body.vx * fixedDt;
+      body.y += body.vy * fixedDt;
+    }
+    for (let iter = 0; iter < PHYSICS.solverIterations; iter++) {
+      const pairs = detectCollisions(world.bodies, layout.gameArea);
+      for (const pair of pairs) {
+        solveCollision(pair);
+      }
+    }
+    processMerges();
+    for (const body of world.bodies) {
+      if (body.sleeping) continue;
+      const speed = Math.sqrt(body.vx * body.vx + body.vy * body.vy);
+      if (speed < PHYSICS.sleepThreshold) {
+        body.sleepTimer += fixedDt;
+        if (body.sleepTimer >= PHYSICS.sleepDelay) body.sleeping = true;
+      } else {
+        body.sleepTimer = 0;
+      }
+    }
+  }
+}
+
+function processMerges() {
+  // Stub - will be implemented in Task 5
+  world.mergeQueue = [];
+}
+
+// === GAME LOOP ===
+let lastTime = null;
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const spawnY = layout.dropZone.y + layout.dropZone.h;
+  const level = Math.floor(Math.random() * 4);
+  world.addBody(clickX, spawnY, level);
+});
+
+function drawGame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Background
+  // Full background
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Title
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 20px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('合成大乌龟 — Turtle Preview', canvas.width / 2, 30);
+  // Game area dark gradient background
+  const ga = layout.gameArea;
+  const grad = ctx.createLinearGradient(ga.x, ga.y, ga.x, ga.y + ga.h);
+  grad.addColorStop(0, '#0d1117');
+  grad.addColorStop(1, '#1a1a2e');
+  ctx.fillStyle = grad;
+  ctx.fillRect(ga.x, ga.y, ga.w, ga.h);
 
-  // Layout zone debug bars
-  const zones = [
-    { zone: layout.topBar,   color: 'rgba(255,100,100,0.15)', label: 'Top Bar' },
-    { zone: layout.diffBar,  color: 'rgba(100,255,100,0.15)', label: 'Diff Bar' },
-    { zone: layout.preview,  color: 'rgba(100,100,255,0.15)', label: 'Preview' },
-    { zone: layout.dropZone, color: 'rgba(255,255,100,0.15)', label: 'Drop Zone' },
-    { zone: layout.gameArea, color: 'rgba(100,255,255,0.08)', label: 'Game Area' },
-    { zone: layout.bottomBar,color: 'rgba(255,100,255,0.15)', label: 'Bottom Bar' },
-  ];
+  // Walls (left, right, bottom)
+  ctx.fillStyle = 'rgba(100, 180, 255, 0.25)';
+  ctx.fillRect(ga.x, ga.y, GAME.wallThickness, ga.h);
+  ctx.fillRect(ga.x + ga.w - GAME.wallThickness, ga.y, GAME.wallThickness, ga.h);
+  ctx.fillRect(ga.x, ga.y + ga.h - GAME.wallThickness, ga.w, GAME.wallThickness);
 
-  ctx.font = '10px sans-serif';
-  ctx.textAlign = 'left';
-  for (const { zone, color, label } of zones) {
-    ctx.fillStyle = color;
-    ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fillText(label, zone.x + 4, zone.y + zone.h / 2 + 4);
-  }
-
-  // Game-over line
-  ctx.strokeStyle = 'rgba(255,80,80,0.5)';
+  // Game over line
+  ctx.strokeStyle = 'rgba(255, 80, 80, 0.5)';
   ctx.lineWidth = 1;
   ctx.setLineDash([6, 4]);
   ctx.beginPath();
-  ctx.moveTo(0, layout.gameOverLineY);
-  ctx.lineTo(canvas.width, layout.gameOverLineY);
+  ctx.moveTo(ga.x, layout.gameOverLineY);
+  ctx.lineTo(ga.x + ga.w, layout.gameOverLineY);
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Draw all 9 turtles in a 3×3 grid centred in the game area
-  const cols = 3;
-  const rows = 3;
-  const ga = layout.gameArea;
-  const cellW = ga.w / cols;
-  const cellH = ga.h / rows;
-
-  for (let i = 0; i < TURTLES.length; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const cx = ga.x + cellW * col + cellW / 2;
-    const cy = ga.y + cellH * row + cellH / 2;
-
-    // Scale so the largest turtle fits comfortably in the cell
-    const maxR = TURTLES[i].radius;
-    const fitScale = Math.min(cellW, cellH) / (maxR * 2 + 40) * 0.75;
-
-    drawTurtle(ctx, cx, cy, i, fitScale * 40 / TURTLES[i].radius);
-
-    // Label
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.font = `${Math.max(10, Math.min(14, cellW / 8))}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(TURTLES[i].name, cx, cy + maxR * fitScale * 40 / TURTLES[i].radius + 16);
-    ctx.fillText(`Lv${i + 1}  +${TURTLES[i].score}`, cx, cy + maxR * fitScale * 40 / TURTLES[i].radius + 30);
+  // Draw all bodies
+  for (const body of world.bodies) {
+    drawTurtle(ctx, body.x, body.y, body.level);
   }
 }
 
-function gameLoop() {
-  drawTestGrid();
+function gameLoop(timestamp) {
+  if (lastTime === null) lastTime = timestamp;
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+  lastTime = timestamp;
+
+  physicsStep(dt);
+  drawGame();
+
   requestAnimationFrame(gameLoop);
 }
-gameLoop();
+requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
