@@ -18,20 +18,260 @@ canvas{display:block}
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// === CONSTANTS & CONFIG ===
+const TURTLES = [
+  { name: '草龟',          radius: 20, score: 10,  color: '#8BC34A', darkColor: '#689F38' },
+  { name: '巴西龟',        radius: 26, score: 30,  color: '#66BB6A', darkColor: '#43A047' },
+  { name: '花龟',          radius: 32, score: 60,  color: '#FFCA28', darkColor: '#F9A825' },
+  { name: '锦龟',          radius: 39, score: 100, color: '#FF7043', darkColor: '#E64A19' },
+  { name: '鳄龟',          radius: 47, score: 150, color: '#78909C', darkColor: '#546E7A' },
+  { name: '海龟',          radius: 56, score: 210, color: '#42A5F5', darkColor: '#1E88E5' },
+  { name: '苏卡达陆龟',    radius: 63, score: 280, color: '#D4A574', darkColor: '#B8895A' },
+  { name: '象龟',          radius: 70, score: 360, color: '#A1887F', darkColor: '#795548' },
+  { name: '加拉帕戈斯象龟',radius: 80, score: 500, color: '#FFD54F', darkColor: '#FF8F00' },
+];
+
+const DIFFICULTY = {
+  easy:   { name: '简单', maxDrop: 7 },
+  normal: { name: '普通', maxDrop: 6 },
+  hard:   { name: '困难', maxDrop: 5 },
+};
+
+const PHYSICS = {
+  gravity: 980,
+  restitution: 0.3,
+  friction: 0.4,
+  groundFriction: 0.6,
+  damping: 0.99,
+  sleepThreshold: 0.5,
+  sleepDelay: 0.5,
+  solverIterations: 4,
+  fixedDt: 1 / 60,
+};
+
+const GAME = {
+  dropCooldown: 0.5,
+  gameOverDelay: 2.0,
+  wallThickness: 2,
+};
+
+// === LAYOUT ===
+const layout = {};
+
+function computeLayout() {
+  const W = canvas.width;
+  const H = canvas.height;
+  const topBarH = 44;
+  const diffBarH = 28;
+  const previewH = 30;
+  const dropZoneH = 50;
+  const bottomBarH = 40;
+
+  layout.width = W;
+  layout.height = H;
+  layout.topBar    = { x: 0, y: 0,                                  w: W, h: topBarH };
+  layout.diffBar   = { x: 0, y: topBarH,                            w: W, h: diffBarH };
+  layout.preview   = { x: 0, y: topBarH + diffBarH,                 w: W, h: previewH };
+  layout.dropZone  = { x: 0, y: topBarH + diffBarH + previewH,      w: W, h: dropZoneH };
+
+  const gameTop    = topBarH + diffBarH + previewH + dropZoneH;
+  const gameBottom = H - bottomBarH;
+  layout.gameArea      = { x: 0, y: gameTop,    w: W, h: gameBottom - gameTop };
+  layout.gameOverLineY = gameTop + 30;
+  layout.bottomBar     = { x: 0, y: gameBottom, w: W, h: bottomBarH };
+}
+
 function resize() {
-  canvas.width = window.innerWidth;
+  canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
+  computeLayout();
 }
 window.addEventListener('resize', resize);
 resize();
 
-// === GAME LOOP (placeholder) ===
-function gameLoop() {
+// === TURTLE RENDERER ===
+function drawTurtle(ctx, x, y, level, scale = 1) {
+  const t = TURTLES[level];
+  const r = t.radius * scale;
+  const s = r / 40;
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Shell (outer)
+  ctx.beginPath();
+  ctx.ellipse(0, 2 * s, 28 * s, 22 * s, 0, 0, Math.PI * 2);
+  ctx.fillStyle = t.color;
+  ctx.fill();
+
+  // Shell (inner, darker)
+  ctx.beginPath();
+  ctx.ellipse(0, 2 * s, 22 * s, 17 * s, 0, 0, Math.PI * 2);
+  ctx.fillStyle = t.darkColor;
+  ctx.fill();
+
+  // Shell pattern (varies by level)
+  drawShellPattern(ctx, level, s);
+
+  // Legs
+  ctx.fillStyle = t.color;
+  ctx.beginPath(); ctx.ellipse(-20 * s, 10 * s, 7 * s, 5 * s, -0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 20 * s, 10 * s, 7 * s, 5 * s,  0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-16 * s, 20 * s, 6 * s, 4 * s, -0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 16 * s, 20 * s, 6 * s, 4 * s,  0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,       26 * s, 3 * s, 5 * s,    0, 0, Math.PI * 2); ctx.fill();
+
+  // Head
+  ctx.beginPath();
+  ctx.arc(0, -16 * s, 10 * s, 0, Math.PI * 2);
+  ctx.fillStyle = t.color;
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(-4 * s, -18 * s, 2.5 * s, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc( 4 * s, -18 * s, 2.5 * s, 0, Math.PI * 2); ctx.fill();
+
+  // Smile
+  ctx.beginPath();
+  ctx.arc(0, -14 * s, 5 * s, 0.1, Math.PI - 0.1, false);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1.5 * s;
+  ctx.stroke();
+
+  // Crown for level 8 (Galapagos)
+  if (level === 8) {
+    drawCrown(ctx, s);
+  }
+
+  ctx.restore();
+}
+
+function drawShellPattern(ctx, level, s) {
+  if (level === 2) { // 花龟 - spots
+    ctx.fillStyle = TURTLES[level].darkColor;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.arc(-6 * s, -2 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 5 * s,  5 * s, 3 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  } else if (level === 3) { // 锦龟 - zigzag
+    ctx.strokeStyle = TURTLES[level].darkColor;
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(-12 * s, -2 * s); ctx.lineTo(-6 * s, -8 * s); ctx.lineTo(0, -2 * s);
+    ctx.lineTo(6 * s, -8 * s);   ctx.lineTo(12 * s, -2 * s);
+    ctx.stroke();
+  } else if (level >= 6 && level <= 8) { // 苏卡达/象龟/加拉帕戈斯 - grid
+    ctx.fillStyle = TURTLES[level].darkColor;
+    ctx.globalAlpha = 0.4;
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 2; col++) {
+        const bx = (-8 + col * 14) * s;
+        const by = (-6 + row * 14) * s;
+        ctx.fillRect(bx, by, 10 * s, 10 * s);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawCrown(ctx, s) {
+  ctx.fillStyle = '#FFD700';
+  ctx.strokeStyle = '#FFA000';
+  ctx.lineWidth = 1 * s;
+  ctx.beginPath();
+  ctx.moveTo(-10 * s, -24 * s);
+  ctx.lineTo( -7 * s, -32 * s);
+  ctx.lineTo( -3 * s, -26 * s);
+  ctx.lineTo(  0,     -34 * s);
+  ctx.lineTo(  3 * s, -26 * s);
+  ctx.lineTo(  7 * s, -32 * s);
+  ctx.lineTo( 10 * s, -24 * s);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Glow ring for Galapagos
+  ctx.strokeStyle = 'rgba(255, 213, 79, 0.3)';
+  ctx.lineWidth = 4 * s;
+  ctx.beginPath();
+  ctx.ellipse(0, 2 * s, 34 * s, 28 * s, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+// === GAME LOOP (turtle test grid) ===
+function drawTestGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 28px sans-serif';
+
+  // Background
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Title
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 20px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🐢 合成大乌龟', canvas.width / 2, canvas.height / 2);
+  ctx.fillText('合成大乌龟 — Turtle Preview', canvas.width / 2, 30);
+
+  // Layout zone debug bars
+  const zones = [
+    { zone: layout.topBar,   color: 'rgba(255,100,100,0.15)', label: 'Top Bar' },
+    { zone: layout.diffBar,  color: 'rgba(100,255,100,0.15)', label: 'Diff Bar' },
+    { zone: layout.preview,  color: 'rgba(100,100,255,0.15)', label: 'Preview' },
+    { zone: layout.dropZone, color: 'rgba(255,255,100,0.15)', label: 'Drop Zone' },
+    { zone: layout.gameArea, color: 'rgba(100,255,255,0.08)', label: 'Game Area' },
+    { zone: layout.bottomBar,color: 'rgba(255,100,255,0.15)', label: 'Bottom Bar' },
+  ];
+
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  for (const { zone, color, label } of zones) {
+    ctx.fillStyle = color;
+    ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillText(label, zone.x + 4, zone.y + zone.h / 2 + 4);
+  }
+
+  // Game-over line
+  ctx.strokeStyle = 'rgba(255,80,80,0.5)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, layout.gameOverLineY);
+  ctx.lineTo(canvas.width, layout.gameOverLineY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw all 9 turtles in a 3×3 grid centred in the game area
+  const cols = 3;
+  const rows = 3;
+  const ga = layout.gameArea;
+  const cellW = ga.w / cols;
+  const cellH = ga.h / rows;
+
+  for (let i = 0; i < TURTLES.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const cx = ga.x + cellW * col + cellW / 2;
+    const cy = ga.y + cellH * row + cellH / 2;
+
+    // Scale so the largest turtle fits comfortably in the cell
+    const maxR = TURTLES[i].radius;
+    const fitScale = Math.min(cellW, cellH) / (maxR * 2 + 40) * 0.75;
+
+    drawTurtle(ctx, cx, cy, i, fitScale * 40 / TURTLES[i].radius);
+
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = `${Math.max(10, Math.min(14, cellW / 8))}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(TURTLES[i].name, cx, cy + maxR * fitScale * 40 / TURTLES[i].radius + 16);
+    ctx.fillText(`Lv${i + 1}  +${TURTLES[i].score}`, cx, cy + maxR * fitScale * 40 / TURTLES[i].radius + 30);
+  }
+}
+
+function gameLoop() {
+  drawTestGrid();
   requestAnimationFrame(gameLoop);
 }
 gameLoop();
