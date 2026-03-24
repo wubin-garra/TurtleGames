@@ -780,60 +780,59 @@ function renderGameOverPanel(ctx) {
   game.shareBtn = { x: px + 140, y: py + 140, w: 100, h: 40 };
 }
 
-// === GAME LOOP (placeholder) ===
-let lastTime = null;
-
-function drawGame() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Full background
-  ctx.fillStyle = '#1a1a2e';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Game area dark gradient background
-  const ga = layout.gameArea;
-  const grad = ctx.createLinearGradient(ga.x, ga.y, ga.x, ga.y + ga.h);
-  grad.addColorStop(0, '#0d1117');
-  grad.addColorStop(1, '#1a1a2e');
-  ctx.fillStyle = grad;
-  ctx.fillRect(ga.x, ga.y, ga.w, ga.h);
-
-  // Walls (left, right, bottom)
-  ctx.fillStyle = 'rgba(100, 180, 255, 0.25)';
-  ctx.fillRect(ga.x, ga.y, GAME.wallThickness, ga.h);
-  ctx.fillRect(ga.x + ga.w - GAME.wallThickness, ga.y, GAME.wallThickness, ga.h);
-  ctx.fillRect(ga.x, ga.y + ga.h - GAME.wallThickness, ga.w, GAME.wallThickness);
-
-  // Game over line
-  ctx.strokeStyle = 'rgba(255, 80, 80, 0.5)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([6, 4]);
-  ctx.beginPath();
-  ctx.moveTo(ga.x, layout.gameOverLineY);
-  ctx.lineTo(ga.x + ga.w, layout.gameOverLineY);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Draw all bodies
-  for (const body of world.bodies) {
-    drawTurtle(ctx, body.x, body.y, body.level);
-  }
-
-  // Draw particles and score popups
-  renderParticles(ctx);
-}
+// === GAME LOOP ===
+let lastTime = 0;
 
 function gameLoop(timestamp) {
-  if (lastTime === null) lastTime = timestamp;
   const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
   lastTime = timestamp;
 
-  physicsStep(dt);
+  if (game.state === 'playing') {
+    if (!game.canDrop) {
+      game.dropCooldownTimer -= dt;
+      if (game.dropCooldownTimer <= 0) game.canDrop = true;
+    }
+    physicsStep(dt);
+    for (const body of world.bodies) body.age += dt;
+    let anyAbove = false;
+    for (const body of world.bodies) {
+      if (body.age > 1.0 && body.y - body.radius < layout.gameOverLineY) { anyAbove = true; break; }
+    }
+    if (anyAbove) {
+      game.gameOverTimer += dt;
+      if (game.gameOverTimer >= GAME.gameOverDelay) {
+        game.state = 'gameover';
+        if (game.score > game.highScore) {
+          game.highScore = game.score;
+          localStorage.setItem('turtle_merge_high_score', game.highScore.toString());
+        }
+        playGameOverSound();
+        if (navigator.vibrate) navigator.vibrate(200);
+      }
+    } else {
+      game.gameOverTimer = 0;
+    }
+  }
+
   updateParticles(dt);
-  drawGame();
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  renderHUD(ctx);
+  renderDifficultyBar(ctx);
+  renderPreview(ctx);
+  renderDropZone(ctx);
+  renderGameArea(ctx);
+  renderBottomBar(ctx);
+
+  if (game.state === 'gameover') renderGameOverPanel(ctx);
 
   requestAnimationFrame(gameLoop);
 }
+
+// === INIT ===
+game.difficulty = localStorage.getItem('turtle_merge_difficulty') || 'normal';
+computeLayout();
+game.reset();
 requestAnimationFrame(gameLoop);
 </script>
 </body>
