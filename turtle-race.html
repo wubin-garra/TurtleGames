@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐢 Turtle Race - 乌龟赛跑</title>
+<style>
+  :root {
+    --bg-dark: #0A1628;
+    --bg-panel: #0D1F3C;
+    --bg-race: #0E2240;
+    --bg-lane-odd: #162D50;
+    --bg-lane-even: #1A3358;
+    --border: #1A3A5C;
+    --accent: #4EEAAC;
+    --gold: #FFD700;
+    --danger: #FF6B6B;
+    --warn: #FFB347;
+    --purple: #A78BFA;
+    --text-muted: #6B8AB8;
+    --text-secondary: #8BB8E8;
+  }
+
+  .scene { display: none; flex-direction: column; min-height: 100vh; }
+  .scene.active { display: flex; }
+
+  .start-screen {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 30%, #0E2240 0%, #0A1628 70%);
+    gap: 8px;
+  }
+  .start-logo { font-size: 96px; animation: turtleBounce 2s ease-in-out infinite; }
+  @keyframes turtleBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-15px) rotate(-5deg); }
+    75% { transform: translateY(-5px) rotate(5deg); }
+  }
+  .start-title {
+    font-size: 56px; font-weight: 900; color: var(--accent);
+    text-shadow: 0 0 40px rgba(78,234,172,0.3);
+  }
+  .start-subtitle { font-size: 20px; color: var(--text-secondary); margin-bottom: 32px; }
+  .start-menu { display: flex; flex-direction: column; gap: 14px; width: 280px; }
+  .menu-btn {
+    border: none; border-radius: 14px; padding: 16px 32px;
+    font-size: 18px; font-weight: 700; cursor: pointer;
+    background: var(--bg-panel); color: var(--text-secondary);
+    border: 2px solid var(--border); transition: all 0.2s;
+  }
+  .menu-btn:hover { border-color: var(--accent); color: #fff; transform: translateY(-2px); }
+  .menu-btn.primary {
+    background: linear-gradient(to bottom, var(--accent), #2BC48A);
+    color: var(--bg-dark); border-color: transparent;
+  }
+  .menu-btn.primary:hover { box-shadow: 0 4px 20px rgba(78,234,172,0.4); }
+  .start-highscore { margin-top: 8px; font-size: 15px; color: var(--text-muted); }
+  @keyframes caishenFade {
+    0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+    20% { opacity: 1; transform: translateY(0) scale(1.05); }
+    40% { transform: scale(1); }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .back-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 16px; color: var(--text-secondary); cursor: pointer;
+    font-size: 14px; transition: all 0.2s;
+  }
+  .back-btn:hover { border-color: var(--accent); color: #fff; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0A1628;
+    color: #fff;
+    min-height: 100vh;
+    user-select: none;
+  }
+
+  /* Top Bar */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 70px;
+    background: #0D1F3C;
+    border-bottom: 1px solid #1A3A5C;
+  }
+  .logo { font-size: 26px; font-weight: 800; color: #4EEAAC; }
+  .stats { display: flex; gap: 24px; font-size: 17px; font-weight: 700; color: #FFD700; }
+  .round-badge {
+    background: #1A3A5C; border-radius: 20px; padding: 8px 20px;
+    font-size: 15px; font-weight: 600; color: #8BB8E8;
+  }
+
+  /* Race Area */
+  .race-area {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 24px 32px; gap: 12px; background: #0E2240;
+  }
+  .race-title {
+    text-align: center; font-size: 22px; font-weight: 700;
+    margin-bottom: 8px; color: #fff;
+  }
+
+  /* === COSMETIC MODAL === */
+  .cosmetic-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px; max-height: 280px; overflow-y: auto; padding: 4px;
+  }
+  .cosmetic-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 6px; border-radius: 10px; cursor: pointer;
+    background: var(--bg-dark); border: 2px solid var(--border); transition: all 0.15s;
+    font-size: 11px;
+  }
+  .cosmetic-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .cosmetic-item.equipped { border-color: var(--gold); background: rgba(255,215,0,0.1); }
+  .cosmetic-item.locked { opacity: 0.6; }
+  .cosmetic-item.locked:hover { border-color: var(--gold); }
+  .cosmetic-emoji { font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .cosmetic-name { font-weight: 600; color: #fff; }
+  .cosmetic-cost { color: var(--gold); font-weight: 700; font-size: 11px; }
+  .cosmetic-status { color: var(--accent); font-weight: 600; font-size: 10px; }
+
+  /* === TURTLE PICKER === */
+  .turtle-picker-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px; padding: 20px; flex: 1;
+  }
+  .picker-card {
+    background: var(--bg-lane-odd); border-radius: 14px; padding: 18px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+  }
+  .picker-card:hover { border-color: var(--accent); transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+  .picker-name { font-size: 15px; font-weight: 700; }
+  .picker-speed { font-size: 12px; color: var(--text-muted); }
+
+  /* === RACE TRACK === */
+  .track-container {
+    flex: 1; display: flex; flex-direction: column; gap: 0;
+    background: var(--track-bg, #2d5a1b); border-radius: 12px; overflow: hidden;
+    position: relative; padding: 0;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.3);
+  }
+  .track-header {
+    display: flex; justify-content: space-between; padding: 10px 16px;
+    background: rgba(0,0,0,0.2); font-size: 13px; color: rgba(255,255,255,0.7);
+  }
+  .track-lanes { flex: 1; display: flex; flex-direction: column; position: relative; }
+
+  .track-lane {
+    flex: 1; position: relative; display: flex; align-items: center;
+    border-bottom: 2px dashed rgba(255,255,255,0.15);
+    cursor: pointer; transition: background 0.2s;
+    min-height: 90px;
+  }
+  .track-lane:last-child { border-bottom: none; }
+  .track-lane:nth-child(odd) { background: rgba(34,80,22,0.5); }
+  .track-lane:nth-child(even) { background: rgba(28,70,18,0.5); }
+  .track-lane:hover { background: rgba(78,234,172,0.08); }
+  .track-lane.selected { background: rgba(255,215,0,0.1); box-shadow: inset 0 0 0 2px rgba(255,215,0,0.4); }
+  .track-lane.winner .turtle-runner { filter: drop-shadow(0 0 12px gold); }
+
+  .lane-label {
+    position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    z-index: 2; width: 70px;
+  }
+  .lane-name { font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .lane-speed { font-size: 10px; color: rgba(255,255,255,0.6); }
+
+  .finish-line {
+    position: absolute; right: 40px; top: 0; bottom: 0; width: 20px;
+    background: repeating-linear-gradient(
+      0deg, #fff 0px, #fff 10px, #222 10px, #222 20px
+    );
+    opacity: 0.7; z-index: 1;
+  }
+  .start-line {
+    position: absolute; left: 85px; top: 0; bottom: 0; width: 3px;
+    background: rgba(255,255,255,0.3); z-index: 1;
+  }
+
+  .turtle-runner {
+    position: absolute; z-index: 3; transition: left 0.08s linear;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .turtle-runner svg { width: 56px; height: 44px; }
+  .turtle-runner.racing svg {
+    animation: turtleWalk 0.3s ease-in-out infinite;
+  }
+  .turtle-runner.racing.in-water {
+    animation: turtleSwim 0.4s ease-in-out infinite;
+  }
+  .turtle-runner.racing.in-water svg {
+    animation: none;
+    filter: brightness(0.85) saturate(1.2);
+  }
+  .turtle-runner.racing.in-climb {
+    animation: turtleFrogJump 0.6s ease-in-out infinite;
+  }
+  .turtle-runner.racing.in-climb svg {
+    animation: none;
+  }
+  .turtle-runner.finished svg {
+    animation: none;
+  }
+  @keyframes turtleWalk {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-3px) rotate(2deg); }
+    75% { transform: translateY(1px) rotate(-1deg); }
+  }
+
+  .lane-rank-badge {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: #0A1628; z-index: 4;
+  }
+
+  /* Grass decoration strips */
+  .track-container::before, .track-container::after {
+    content: ''; display: block; height: 12px;
+    background: repeating-linear-gradient(90deg, #3a7a20 0px, #2d6a18 20px, #3a7a20 40px);
+  }
+
+  /* === COMMENTARY BAR === */
+  .commentary-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
+    padding: 10px 16px 8px; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    min-height: 40px; pointer-events: none;
+  }
+  .commentary-avatar { font-size: 22px; flex-shrink: 0; }
+  .commentary-text {
+    font-size: 14px; font-weight: 600; color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    animation: commentFade 0.3s ease;
+  }
+  @keyframes commentFade {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* === SPEECH BUBBLES on turtles === */
+  .turtle-bubble {
+    position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,255,255,0.95); color: #222; font-size: 14px;
+    padding: 3px 8px; border-radius: 10px; white-space: nowrap;
+    pointer-events: none; z-index: 5;
+    animation: bubblePop 2s ease forwards;
+  }
+  .turtle-bubble::after {
+    content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: rgba(255,255,255,0.95);
+  }
+  @keyframes bubblePop {
+    0% { opacity: 0; transform: translateX(-50%) translateY(5px) scale(0.7); }
+    15% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  }
+
+  /* === STREAK BADGE === */
+  .streak-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: linear-gradient(to right, #FF6B35, #FF2D2D);
+    border-radius: 12px; padding: 4px 12px; font-size: 13px;
+    font-weight: 700; color: #fff; animation: streakPulse 1s ease infinite;
+  }
+  @keyframes streakPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.4); }
+    50% { box-shadow: 0 0 8px 4px rgba(255,107,53,0.2); }
+  }
+
+  /* === ODDS DISPLAY === */
+  .odds-bar {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  }
+  .odds-tag {
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* === TRIATHLON ZONE OVERLAYS === */
+  .zone-overlay {
+    position: absolute; top: 0; bottom: 0; z-index: 0; pointer-events: none;
+    display: flex; align-items: flex-start; justify-content: center; padding-top: 4px;
+    overflow: hidden; transition: none;
+  }
+  .zone-label {
+    font-size: 13px; font-weight: 900; color: #fff; letter-spacing: 1px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7); white-space: nowrap;
+    background: rgba(0,0,0,0.4); padding: 3px 12px; border-radius: 8px;
+    backdrop-filter: blur(2px); z-index: 2;
+  }
+  /* Zone run: brown dirt track with texture */
+  .zone-run {
+    background: linear-gradient(180deg,
+      rgba(139,90,43,0.55) 0%, rgba(110,70,30,0.45) 50%, rgba(139,90,43,0.55) 100%);
+  }
+  .zone-run::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg,
+      transparent 0px, rgba(160,110,60,0.15) 8px, transparent 16px);
+  }
+  /* Zone swim: animated water with waves */
+  .zone-swim {
+    background: linear-gradient(180deg,
+      rgba(20,80,160,0.6) 0%, rgba(30,120,200,0.5) 30%,
+      rgba(20,100,180,0.55) 60%, rgba(15,70,150,0.6) 100%);
+  }
+  .zone-swim::before {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg,
+      transparent 0px, rgba(100,200,255,0.12) 15px, transparent 30px,
+      rgba(80,180,255,0.08) 45px, transparent 60px);
+    animation: waveShift 3s linear infinite;
+  }
+  .zone-swim::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(180deg,
+      transparent 0px, rgba(255,255,255,0.06) 20px, transparent 40px);
+    animation: waveShift 5s linear infinite reverse;
+  }
+  @keyframes waveShift {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(60px); }
+  }
+  /* Zone climb: rocky wall with cracks */
+  .zone-climb {
+    background: linear-gradient(180deg,
+      rgba(100,70,40,0.6) 0%, rgba(80,55,30,0.5) 40%,
+      rgba(90,60,35,0.55) 70%, rgba(70,45,25,0.6) 100%);
+  }
+  .zone-climb::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 8px 6px at 20% 30%, rgba(60,40,20,0.4) 0%, transparent 100%),
+      radial-gradient(ellipse 12px 8px at 60% 60%, rgba(50,30,15,0.3) 0%, transparent 100%),
+      radial-gradient(ellipse 6px 10px at 80% 20%, rgba(60,40,20,0.35) 0%, transparent 100%),
+      radial-gradient(ellipse 10px 6px at 40% 80%, rgba(55,35,18,0.3) 0%, transparent 100%);
+  }
+  .zone-climb::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.15), transparent 40%);
+  }
+
+  .zone-divider {
+    position: absolute; top: 0; bottom: 0; width: 4px; z-index: 2;
+    background: rgba(255,255,255,0.5);
+    box-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+  .zone-divider::after {
+    content: attr(data-icon); position: absolute; top: -20px;
+    left: 50%; transform: translateX(-50%); font-size: 16px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  /* Zone-specific particles */
+  .splash {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    background: rgba(120,200,255,0.7);
+    animation: splashUp 0.7s ease forwards;
+  }
+  .splash-drop {
+    position: absolute; width: 3px; height: 6px; border-radius: 3px;
+    background: rgba(150,210,255,0.6); pointer-events: none;
+    animation: dropFall 0.5s ease forwards;
+  }
+  @keyframes splashUp {
+    0% { opacity: 0.9; transform: scale(1) translateY(0); }
+    40% { opacity: 0.8; transform: scale(1.3) translateY(-18px); }
+    100% { opacity: 0; transform: scale(0.2) translateY(-25px); }
+  }
+  @keyframes dropFall {
+    0% { opacity: 0.8; transform: translateY(-12px) scaleY(1); }
+    100% { opacity: 0; transform: translateY(10px) scaleY(0.5); }
+  }
+  .rock-particle {
+    position: absolute; border-radius: 2px; pointer-events: none;
+    background: rgba(160,130,90,0.8);
+    animation: rockFall 0.8s ease forwards;
+  }
+  .rock-spark {
+    position: absolute; width: 3px; height: 3px; border-radius: 50%;
+    background: rgba(255,200,100,0.8); pointer-events: none;
+    animation: sparkFade 0.4s ease forwards;
+  }
+  @keyframes rockFall {
+    0% { opacity: 0.9; transform: translateY(-8px) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(18px) rotate(180deg) translateX(8px); }
+  }
+  @keyframes sparkFade {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0) translateY(-10px); }
+  }
+
+  /* Triathlon zone animations */
+  @keyframes turtleSwim {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-5px) rotate(4deg); }
+    75% { transform: translateY(3px) rotate(-3deg); }
+  }
+  @keyframes turtleFrogJump {
+    0% { transform: translateY(0) scaleY(1) scaleX(1); }
+    12% { transform: translateY(3px) scaleY(0.65) scaleX(1.3); }
+    30% { transform: translateY(-22px) scaleY(1.15) scaleX(0.9) rotate(12deg); }
+    50% { transform: translateY(-26px) scaleY(1.1) scaleX(0.9) rotate(-6deg); }
+    70% { transform: translateY(-8px) scaleY(1) scaleX(1) rotate(4deg); }
+    85% { transform: translateY(3px) scaleY(0.75) scaleX(1.2) rotate(0deg); }
+    100% { transform: translateY(0) scaleY(1) scaleX(1) rotate(0deg); }
+  }
+
+  /* Water ripple effect behind swimming turtles */
+  .water-ripple {
+    position: absolute; width: 20px; height: 10px; border-radius: 50%;
+    border: 2px solid rgba(150,220,255,0.4); pointer-events: none;
+    animation: rippleExpand 1s ease forwards;
+  }
+  @keyframes rippleExpand {
+    0% { opacity: 0.6; transform: scale(0.5); }
+    100% { opacity: 0; transform: scale(2.5); }
+  }
+
+  /* Dust particles during race */
+  .dust {
+    position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(200,180,140,0.5); pointer-events: none;
+    animation: dustFade 0.6s ease forwards;
+  }
+  @keyframes dustFade {
+    0% { opacity: 0.7; transform: scale(1); }
+    100% { opacity: 0; transform: scale(2) translateX(-15px); }
+  }
+
+  /* Bottom Bar */
+  .bottom-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; padding: 20px 32px; background: #0D1F3C;
+    border-top: 1px solid #1A3A5C; flex-wrap: wrap;
+  }
+  .pick-label { font-size: 16px; font-weight: 600; color: #8BB8E8; }
+  .pick-btn {
+    border: none; border-radius: 12px; padding: 12px 22px;
+    font-size: 15px; font-weight: 700; color: #0A1628; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .pick-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .pick-btn:active { transform: translateY(0); }
+  .pick-btn.active { box-shadow: 0 0 0 3px #FFD700, 0 4px 12px rgba(0,0,0,0.3); }
+
+  .start-btn {
+    border: none; border-radius: 12px; padding: 14px 36px;
+    font-size: 17px; font-weight: 800; color: #0A1628; cursor: pointer;
+    background: linear-gradient(to bottom, #FFD700, #FFA500);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(255,215,0,0.4); }
+  .start-btn:active { transform: translateY(0); }
+  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Result Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    justify-content: center; align-items: center; z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #0D1F3C; border-radius: 20px; padding: 40px 48px;
+    text-align: center; border: 2px solid #1A3A5C;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 420px;
+    animation: modalIn 0.4s ease;
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal h2 { font-size: 28px; margin-bottom: 8px; }
+  .modal .result-emoji { font-size: 64px; margin: 16px 0; }
+  .modal .result-text { font-size: 18px; color: #8BB8E8; margin-bottom: 8px; }
+  .modal .reward-text { font-size: 22px; font-weight: 700; color: #FFD700; margin-bottom: 24px; }
+  .modal button {
+    border: none; border-radius: 12px; padding: 14px 40px;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    background: linear-gradient(to bottom, #4EEAAC, #2BC48A);
+    color: #0A1628; transition: transform 0.15s;
+  }
+  .modal button:hover { transform: translateY(-2px); }
+
+  /* Confetti */
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
+  .confetti {
+    position: absolute; width: 10px; height: 10px;
+    top: -20px; animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { top: 110vh; transform: rotate(720deg); }
+  }
+
+  /* Game Over Screen */
+  .gameover-screen {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 40%, #0E2240 0%, #0A1628 70%);
+    gap: 16px;
+  }
+  .gameover-emoji { font-size: 80px; animation: turtleBounce 2s ease-in-out infinite; }
+  .gameover-title { font-size: 42px; font-weight: 900; color: var(--accent); }
+  .gameover-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin: 24px 0; width: 360px;
+  }
+  .stat-card {
+    background: var(--bg-panel); border-radius: 14px; padding: 20px;
+    text-align: center; border: 1px solid var(--border);
+  }
+  .stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--gold); }
+  .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .gameover-actions { display: flex; gap: 14px; margin-top: 8px; }
+
+  /* Shop Area */
+  .shop-area {
+    flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px; padding: 24px 32px; background: var(--bg-race); align-content: start;
+  }
+  .shop-card {
+    background: var(--bg-lane-odd); border-radius: 16px; padding: 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    border: 2px solid transparent; transition: all 0.2s;
+  }
+  .shop-card:hover { border-color: var(--accent); }
+  .shop-card.locked { opacity: 0.7; }
+  .shop-card.rainbow-card {
+    background: linear-gradient(135deg, rgba(255,0,0,0.08), rgba(255,136,0,0.08), rgba(255,255,0,0.08), rgba(0,204,68,0.08), rgba(0,136,255,0.08), rgba(170,0,255,0.08));
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+    overflow: hidden;
+  }
+  .shop-card.rainbow-card::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00cc44, #0088ff, #aa00ff, #ff0000);
+    background-size: 200% 100%;
+    z-index: -1;
+    border-radius: inherit;
+    animation: rainbowBorder 3s linear infinite;
+  }
+  .shop-card.rainbow-card::after {
+    content: '✨ 传说级 ✨';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 10px;
+    color: #FFD700;
+    text-shadow: 0 0 4px rgba(255,215,0,0.5);
+  }
+  @keyframes rainbowBorder {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  .shop-card.legendary-card {
+    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.08), rgba(255,215,0,0.1));
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .shop-card.legendary-card::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #FFD700, #FF8C00, #FFD700, #FFF8DC, #FFD700);
+    background-size: 200% 100%;
+    z-index: -1;
+    border-radius: inherit;
+    animation: legendaryBorder 4s linear infinite;
+  }
+  .shop-card.legendary-card::after {
+    content: '🏆 传说级';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 10px;
+    color: #FFD700;
+    text-shadow: 0 0 6px rgba(255,215,0,0.6);
+  }
+  @keyframes legendaryBorder {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  .shop-card .turtle-preview { font-size: 48px; }
+  .shop-buy-btn {
+    border: none; border-radius: 10px; padding: 10px 24px;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .shop-buy-btn:hover { transform: translateY(-2px); }
+  .shop-buy-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .shop-section-title {
+    grid-column: 1 / -1; font-size: 20px; font-weight: 800;
+    color: var(--text-secondary); padding: 8px 0 0 0;
+    border-top: 1px solid var(--border); margin-top: 8px;
+  }
+  .shop-section-title:first-child { border-top: none; margin-top: 0; }
+
+  /* Leaderboard Area */
+  .leaderboard-area {
+    flex: 1; padding: 24px 32px; background: var(--bg-race);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .leaderboard-list {
+    width: 100%; max-width: 500px; display: flex;
+    flex-direction: column; gap: 8px; margin-top: 16px;
+  }
+  .lb-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px; border-radius: 12px; background: var(--bg-lane-odd);
+  }
+  .lb-rank { font-size: 18px; font-weight: 800; width: 36px; text-align: center; }
+  .lb-date { font-size: 12px; color: var(--text-muted); }
+
+  /* Bet Selector */
+  .bet-selector { display: flex; align-items: center; gap: 8px; }
+  .bet-btns { display: flex; gap: 6px; }
+  .bet-btn {
+    border: 2px solid var(--border); border-radius: 10px; padding: 8px 14px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    background: var(--bg-dark); color: var(--gold); transition: all 0.15s;
+  }
+  .bet-btn:hover { border-color: var(--gold); }
+  .bet-btn.active { border-color: var(--gold); background: rgba(255,215,0,0.15); }
+  .bet-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .mute-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; cursor: pointer; font-size: 18px; transition: all 0.2s;
+  }
+  .mute-btn:hover { border-color: var(--accent); }
+
+  .items-bar { display: flex; gap: 8px; align-items: center; }
+  .item-btn {
+    border: 2px solid var(--border); border-radius: 10px; padding: 8px 12px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    background: var(--bg-dark); color: #fff; transition: all 0.15s;
+  }
+  .item-btn:hover { border-color: var(--accent); }
+  .item-btn.used { opacity: 0.4; border-color: transparent; cursor: not-allowed; }
+  .item-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Countdown Overlay */
+  .countdown-overlay {
+    position: fixed; inset: 0; display: flex;
+    align-items: center; justify-content: center;
+    background: rgba(10,22,40,0.85); z-index: 50;
+    backdrop-filter: blur(4px);
+  }
+  .countdown-text {
+    font-size: 120px; font-weight: 900; color: var(--gold);
+    text-shadow: 0 0 60px rgba(255,215,0,0.5);
+    animation: countPop 0.8s ease;
+  }
+  @keyframes countPop {
+    0% { transform: scale(2); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Race Events */
+  .race-event {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: rgba(13,31,60,0.95); border: 2px solid var(--gold);
+    border-radius: 14px; padding: 12px 28px; font-size: 18px;
+    font-weight: 700; z-index: 60; animation: eventSlide 0.3s ease;
+    white-space: nowrap; color: #fff;
+  }
+  @keyframes eventSlide {
+    from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .top-bar { padding: 0 16px; height: 56px; }
+    .logo { font-size: 20px; }
+    .stats { font-size: 14px; gap: 12px; }
+    .race-area { padding: 12px 16px; }
+    .race-title { font-size: 18px; }
+    .track-lane { min-height: 70px; }
+    .turtle-runner svg { width: 40px; height: 32px; }
+    .lane-label { width: 55px; left: 4px; }
+    .lane-name { font-size: 10px; }
+    .lane-speed { font-size: 9px; }
+    .finish-line { right: 25px; width: 14px; }
+    .bottom-bar { gap: 8px; padding: 12px 16px; flex-wrap: wrap; justify-content: center; }
+    .pick-btn { padding: 8px 12px; font-size: 13px; }
+    .start-btn { padding: 10px 20px; font-size: 15px; }
+    .bet-btn { padding: 6px 10px; font-size: 12px; }
+    .item-btn { padding: 6px 10px; font-size: 11px; }
+    .start-title { font-size: 36px; }
+    .start-logo { font-size: 64px; }
+    .gameover-stats { width: 300px; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-card { padding: 14px; }
+    .stat-card .stat-value { font-size: 22px; }
+    .countdown-text { font-size: 80px; }
+    .shop-area { padding: 16px; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+    .shop-card { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 开始画面 -->
+<div class="scene active" id="scene-start">
+  <div class="start-screen">
+    <div class="start-logo">🐢</div>
+    <h1 class="start-title">Turtle Race</h1>
+    <p class="start-subtitle">乌龟赛跑</p>
+    <div class="start-menu">
+      <button class="menu-btn primary" onclick="startNewGame()">🏁 开始游戏</button>
+      <button class="menu-btn" onclick="showScene('scene-shop')">🛒 乌龟商店</button>
+      <button class="menu-btn" onclick="showScene('scene-leaderboard')">📊 排行榜</button>
+      <button class="menu-btn" onclick="prayCaiShen()" id="caishenBtn">🧧 拜财神</button>
+    </div>
+    <div id="caishenMsg" style="height:24px;font-size:15px;color:var(--gold);margin-top:8px"></div>
+    <div class="start-highscore">🪙 余额: <span id="startCoins">0</span> · 最高纪录: <span id="highScore">0</span></div>
+  </div>
+</div>
+
+<div class="scene" id="scene-race">
+  <div class="top-bar">
+    <div class="logo">🐢 Turtle Race</div>
+    <div class="stats">
+      <span>🪙 <span id="coins">1000</span></span>
+      <span>🏆 <span id="wins">0</span> Wins</span>
+    </div>
+    <div class="round-badge">Round <span id="round">1</span> / 5</div>
+    <button class="back-btn" id="raceBackBtn" onclick="confirmBackToHome()">← 返回</button>
+    <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+  </div>
+
+  <div class="race-area">
+    <div class="race-title" id="raceTitle">🏁 Choose Your Turtle & Start Racing!</div>
+    <div class="track-container">
+      <div class="track-header">
+        <span>🏁 START</span>
+        <div id="raceOdds" class="odds-bar"></div>
+        <div id="streakDisplay"></div>
+        <span>FINISH 🏁</span>
+      </div>
+      <div class="track-lanes" id="trackLanes">
+        <div class="start-line"></div>
+        <div class="finish-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bet-selector">
+      <span class="pick-label">下注:</span>
+      <div id="betBtns" class="bet-btns"></div>
+    </div>
+    <div class="items-bar">
+      <span class="pick-label">道具:</span>
+      <div id="itemBtns"></div>
+    </div>
+    <span class="pick-label">参赛选手:</span>
+    <div id="pickBtns"></div>
+    <button class="start-btn" id="startBtn" disabled onclick="startRace()">🏁 START RACE</button>
+  </div>
+</div>
+
+<div class="scene" id="scene-shop">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScene('scene-start')">← 返回</button>
+    <div class="logo">🛒 乌龟商店</div>
+    <div class="stats"><span>🪙 <span id="shopCoins">0</span></span></div>
+  </div>
+  <div class="shop-area" id="shopArea"></div>
+</div>
+
+<div class="scene" id="scene-leaderboard">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScene('scene-start')">← 返回</button>
+    <div class="logo">📊 排行榜</div>
+    <div></div>
+  </div>
+  <div class="leaderboard-area" id="leaderboardArea"></div>
+</div>
+
+<div class="scene" id="scene-gameover">
+  <div class="gameover-screen">
+    <div class="gameover-emoji" id="gameoverEmoji">🏆</div>
+    <h1 class="gameover-title" id="gameoverTitle">Game Over</h1>
+    <div class="gameover-stats" id="gameoverStats"></div>
+    <div class="gameover-actions">
+      <button class="menu-btn primary" onclick="startNewGame()">🔄 再来一局</button>
+      <button class="menu-btn" onclick="showScene('scene-start')">🏠 返回主页</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <div class="result-emoji" id="modalEmoji"></div>
+    <div class="result-text" id="modalText"></div>
+    <div class="reward-text" id="modalReward"></div>
+    <button onclick="nextRound()">Continue</button>
+  </div>
+</div>
+<div class="confetti-container" id="confetti"></div>
+
+<script>
+// === Accessory SVG parts — drawn on top of the turtle ===
+const ACCESSORY_SVG = {
+  tophat: `<rect x="48" y="4" width="12" height="10" rx="1" fill="#222"/>
+    <rect x="45" y="13" width="18" height="3" rx="1" fill="#222"/>
+    <rect x="48" y="11" width="12" height="2" fill="#C8A23C"/>`,
+  crown: `<polygon points="49,8 51,14 53,10 55,14 57,8 58,16 48,16" fill="#FFD700"/>
+    <circle cx="53" cy="11" r="1" fill="#E74C3C"/>
+    <circle cx="50" cy="13" r="0.8" fill="#3498DB"/>
+    <circle cx="56" cy="13" r="0.8" fill="#2ECC71"/>`,
+  bow: `<ellipse cx="50" cy="14" rx="5" ry="3" fill="#FF69B4"/>
+    <ellipse cx="58" cy="14" rx="5" ry="3" fill="#FF69B4"/>
+    <circle cx="54" cy="14" r="2" fill="#E0458A"/>
+    <line x1="54" y1="14" x2="54" y2="20" stroke="#E0458A" stroke-width="1"/>`,
+  flower: `<circle cx="55" cy="12" r="3" fill="#FF6B9D"/>
+    <circle cx="52" cy="10" r="2.5" fill="#FFB5D0"/>
+    <circle cx="58" cy="10" r="2.5" fill="#FFB5D0"/>
+    <circle cx="52" cy="14" r="2.5" fill="#FFB5D0"/>
+    <circle cx="58" cy="14" r="2.5" fill="#FFB5D0"/>
+    <circle cx="55" cy="12" r="1.5" fill="#FFE66D"/>`,
+  sunglasses: `<rect x="51" y="20" width="5" height="4" rx="1" fill="#111" opacity="0.85"/>
+    <rect x="57" y="20" width="5" height="4" rx="1" fill="#111" opacity="0.85"/>
+    <line x1="56" y1="22" x2="57" y2="22" stroke="#111" stroke-width="1"/>
+    <line x1="51" y1="22" x2="49" y2="21" stroke="#111" stroke-width="0.8"/>
+    <rect x="52" y="21" width="3" height="1.5" rx="0.5" fill="#4488FF" opacity="0.3"/>
+    <rect x="58" y="21" width="3" height="1.5" rx="0.5" fill="#4488FF" opacity="0.3"/>`,
+  bandana: `<path d="M48,18 Q53,13 58,18 Q60,18 62,16" fill="#E74C3C" opacity="0.9"/>
+    <path d="M60,17 L63,19 L62,15" fill="#E74C3C" opacity="0.8"/>
+    <line x1="50" y1="17" x2="56" y2="17" stroke="#C0392B" stroke-width="0.6"/>`,
+  wizard: `<polygon points="53,2 48,18 58,18" fill="#5B2C8E"/>
+    <polygon points="53,2 48,18 58,18" fill="none" stroke="#9B59B6" stroke-width="0.5"/>
+    <circle cx="53" cy="11" r="1.2" fill="#F1C40F"/>
+    <circle cx="51" cy="14" r="0.7" fill="#F1C40F" opacity="0.6"/>
+    <circle cx="55" cy="8" r="0.7" fill="#F1C40F" opacity="0.6"/>
+    <rect x="47" y="17" width="12" height="2" rx="1" fill="#5B2C8E"/>`,
+  cape: `<path d="M15,22 Q8,28 12,40 Q18,42 22,38 Q20,30 18,24 Z" fill="#E74C3C" opacity="0.8"/>
+    <path d="M15,22 Q8,28 12,40" fill="none" stroke="#C0392B" stroke-width="0.8"/>
+    <path d="M13,30 L15,28 L14,32" fill="#FFD700" opacity="0.6"/>`,
+  antenna: `<line x1="53" y1="17" x2="50" y2="6" stroke="#333" stroke-width="1.2"/>
+    <line x1="55" y1="17" x2="58" y2="4" stroke="#333" stroke-width="1.2"/>
+    <circle cx="50" cy="5" r="2.5" fill="#FF4444"/>
+    <circle cx="58" cy="3" r="2.5" fill="#4444FF"/>
+    <circle cx="50" cy="4.5" r="0.8" fill="#FF8888"/>
+    <circle cx="58" cy="2.5" r="0.8" fill="#8888FF"/>`,
+  scarf: `<path d="M46,26 Q50,30 56,28 Q58,26 60,27" fill="none" stroke="#27AE60" stroke-width="3" stroke-linecap="round"/>
+    <path d="M46,27 Q44,32 46,36" fill="#27AE60" opacity="0.8" stroke="#1E8449" stroke-width="0.5"/>
+    <line x1="46" y1="28" x2="47" y2="33" stroke="#2ECC71" stroke-width="0.6"/>`,
+  // === KUROMI 酷洛米 ACCESSORIES ===
+  kuromi_hood: `<!-- 酷洛米头巾 -->
+    <path d="M46,16 Q48,4 53,6 Q56,3 58,8 Q63,6 62,16 Q60,18 52,18 Q47,18 46,16Z" fill="#2D2D2D"/>
+    <path d="M46,16 Q48,4 53,6 Q56,3 58,8 Q63,6 62,16" fill="none" stroke="#1a1a1a" stroke-width="0.6"/>
+    <circle cx="54" cy="12" r="3.5" fill="#FF69B4"/>
+    <ellipse cx="53" cy="11" rx="1.2" ry="1.8" fill="#2D2D2D"/>
+    <ellipse cx="55.5" cy="11" rx="1.2" ry="1.8" fill="#2D2D2D"/>
+    <ellipse cx="54" cy="13.5" rx="1.8" ry="0.8" fill="#2D2D2D"/>`,
+  kuromi_ears: `<!-- 酷洛米恶魔耳朵 -->
+    <path d="M48,18 L44,6 L50,14Z" fill="#2D2D2D"/>
+    <path d="M58,18 L62,6 L56,14Z" fill="#2D2D2D"/>
+    <path d="M48,18 L45,8 L49,14Z" fill="#FF69B4" opacity="0.5"/>
+    <path d="M58,18 L61,8 L57,14Z" fill="#FF69B4" opacity="0.5"/>`,
+  kuromi_tail: `<!-- 酷洛米恶魔尾巴 -->
+    <path d="M8,28 Q2,24 4,18 Q6,14 3,10" fill="none" stroke="#2D2D2D" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M3,10 L1,7 L5,9 L3,6 L6,10" fill="#2D2D2D"/>
+    <path d="M8,28 Q2,24 4,18 Q6,14 3,10" fill="none" stroke="#FF69B4" stroke-width="1" opacity="0.3" stroke-linecap="round"/>`,
+  kuromi_necklace: `<!-- 酷洛米骷髅项链 -->
+    <path d="M46,28 Q49,32 53,30 Q57,32 60,28" fill="none" stroke="#2D2D2D" stroke-width="1.5"/>
+    <circle cx="53" cy="31" r="3.5" fill="#2D2D2D"/>
+    <circle cx="51.5" cy="30" r="1" fill="#FF69B4"/>
+    <circle cx="54.5" cy="30" r="1" fill="#FF69B4"/>
+    <ellipse cx="53" cy="32.5" rx="1.5" ry="0.8" fill="#FF69B4" opacity="0.6"/>
+    <rect x="52" y="34" width="0.8" height="2" fill="#ddd" opacity="0.5"/>
+    <rect x="53.5" y="34" width="0.8" height="2" fill="#ddd" opacity="0.5"/>`,
+  kuromi_wings: `<!-- 酷洛米蝙蝠翅膀 -->
+    <path d="M15,18 Q8,12 6,18 Q4,12 2,16 Q0,10 4,8 Q8,6 12,10 Q14,14 15,18Z" fill="#2D2D2D" opacity="0.85"/>
+    <path d="M15,18 Q8,12 6,18" fill="none" stroke="#FF69B4" stroke-width="0.5" opacity="0.4"/>
+    <path d="M49,18 Q56,12 58,18 Q60,12 62,16 Q64,10 60,8 Q56,6 52,10 Q50,14 49,18Z" fill="#2D2D2D" opacity="0.85"/>
+    <path d="M49,18 Q56,12 58,18" fill="none" stroke="#FF69B4" stroke-width="0.5" opacity="0.4"/>`,
+  kuromi_bow: `<!-- 酷洛米骷髅蝴蝶结 -->
+    <ellipse cx="50" cy="14" rx="5" ry="3.5" fill="#2D2D2D"/>
+    <ellipse cx="58" cy="14" rx="5" ry="3.5" fill="#2D2D2D"/>
+    <circle cx="54" cy="14" r="2.5" fill="#FF69B4"/>
+    <circle cx="53" cy="13.2" r="0.7" fill="#2D2D2D"/>
+    <circle cx="55" cy="13.2" r="0.7" fill="#2D2D2D"/>
+    <ellipse cx="54" cy="15" rx="1" ry="0.5" fill="#2D2D2D"/>
+    <path d="M54,16.5 L53,19" stroke="#2D2D2D" stroke-width="0.8"/>
+    <path d="M54,16.5 L55,19" stroke="#2D2D2D" stroke-width="0.8"/>`,
+  // === LEGENDARY ACCESSORIES ===
+  angel_wings: `<!-- 天使翅膀 - 左翼 -->
+    <path d="M18,16 Q10,8 4,12 Q0,16 2,20 Q6,18 10,16 Q8,10 14,8 Q10,14 12,18 Q14,16 18,16Z" fill="white" opacity="0.9"/>
+    <path d="M18,16 Q10,8 4,12 Q0,16 2,20" fill="none" stroke="#E8E8FF" stroke-width="0.6"/>
+    <path d="M14,12 Q10,10 6,14" fill="none" stroke="#D4D4FF" stroke-width="0.4" opacity="0.6"/>
+    <path d="M12,16 Q8,14 4,16" fill="none" stroke="#D4D4FF" stroke-width="0.4" opacity="0.6"/>
+    <!-- 天使翅膀 - 右翼 -->
+    <path d="M46,16 Q54,8 60,12 Q64,16 62,20 Q58,18 54,16 Q56,10 50,8 Q54,14 52,18 Q50,16 46,16Z" fill="white" opacity="0.9"/>
+    <path d="M46,16 Q54,8 60,12 Q64,16 62,20" fill="none" stroke="#E8E8FF" stroke-width="0.6"/>
+    <path d="M50,12 Q54,10 58,14" fill="none" stroke="#D4D4FF" stroke-width="0.4" opacity="0.6"/>
+    <path d="M52,16 Q56,14 60,16" fill="none" stroke="#D4D4FF" stroke-width="0.4" opacity="0.6"/>
+    <!-- 光环 -->
+    <ellipse cx="53" cy="8" rx="6" ry="2" fill="none" stroke="#FFD700" stroke-width="1.2" opacity="0.8"/>
+    <ellipse cx="53" cy="8" rx="6" ry="2" fill="none" stroke="#FFFACD" stroke-width="0.5" opacity="0.4"/>
+    <!-- 羽毛闪光 -->
+    <circle cx="6" cy="14" r="1" fill="#FFFACD" opacity="0.6"/>
+    <circle cx="10" cy="10" r="0.8" fill="#FFFACD" opacity="0.5"/>
+    <circle cx="58" cy="10" r="0.8" fill="#FFFACD" opacity="0.5"/>
+    <circle cx="62" cy="14" r="1" fill="#FFFACD" opacity="0.6"/>`,
+  bunny_mount: `<!-- 小兔子坐骑 - 身体 -->
+    <ellipse cx="32" cy="44" rx="10" ry="5" fill="#FFB6C1"/>
+    <ellipse cx="32" cy="43" rx="9" ry="4.5" fill="#FFC0CB"/>
+    <!-- 兔头 -->
+    <circle cx="22" cy="40" r="5" fill="#FFC0CB"/>
+    <circle cx="22" cy="40" r="4.5" fill="#FFD1DC"/>
+    <!-- 耳朵 -->
+    <ellipse cx="19" cy="32" rx="2.5" ry="6" fill="#FFC0CB" transform="rotate(-10 19 32)"/>
+    <ellipse cx="19" cy="32" rx="1.5" ry="4.5" fill="#FF69B4" opacity="0.4" transform="rotate(-10 19 32)"/>
+    <ellipse cx="25" cy="31" rx="2.5" ry="6" fill="#FFC0CB" transform="rotate(10 25 31)"/>
+    <ellipse cx="25" cy="31" rx="1.5" ry="4.5" fill="#FF69B4" opacity="0.4" transform="rotate(10 25 31)"/>
+    <!-- 眼睛 -->
+    <circle cx="20" cy="39" r="1.5" fill="white"/>
+    <circle cx="20.5" cy="39" r="0.8" fill="#FF1493"/>
+    <circle cx="20.8" cy="38.7" r="0.3" fill="white"/>
+    <!-- 嘴巴 + 腮红 -->
+    <path d="M21,42 Q22,43 23,42" fill="none" stroke="#FF69B4" stroke-width="0.5"/>
+    <circle cx="18" cy="41" r="1.5" fill="#FF69B4" opacity="0.25"/>
+    <circle cx="24" cy="41" r="1.5" fill="#FF69B4" opacity="0.25"/>
+    <!-- 前脚 -->
+    <ellipse cx="26" cy="48" rx="2.5" ry="1.5" fill="#FFB6C1"/>
+    <!-- 后脚 -->
+    <ellipse cx="40" cy="48" rx="3" ry="2" fill="#FFB6C1"/>
+    <!-- 尾巴 -->
+    <circle cx="42" cy="40" r="3" fill="white" opacity="0.8"/>
+    <circle cx="42" cy="40" r="2" fill="#FFF0F5"/>
+    <!-- 爱心装饰 -->
+    <path d="M30,40 Q30,38 32,39 Q34,38 34,40 Q34,42 32,43 Q30,42 30,40Z" fill="#FF69B4" opacity="0.5"/>`,
+  // === SHOE ACCESSORIES (drawn on feet) ===
+  shoe_spikes: `<!-- 钉鞋 - 草地 -->
+    <rect x="13" y="42" width="12" height="4" rx="2" fill="#4CAF50"/>
+    <rect x="40" y="42" width="12" height="4" rx="2" fill="#4CAF50"/>
+    <line x1="15" y1="46" x2="15" y2="48" stroke="#2E7D32" stroke-width="1.5"/>
+    <line x1="19" y1="46" x2="19" y2="48" stroke="#2E7D32" stroke-width="1.5"/>
+    <line x1="23" y1="46" x2="23" y2="48" stroke="#2E7D32" stroke-width="1.5"/>
+    <line x1="42" y1="46" x2="42" y2="48" stroke="#2E7D32" stroke-width="1.5"/>
+    <line x1="46" y1="46" x2="46" y2="48" stroke="#2E7D32" stroke-width="1.5"/>
+    <line x1="50" y1="46" x2="50" y2="48" stroke="#2E7D32" stroke-width="1.5"/>`,
+  shoe_flippers: `<!-- 蛙鞋 - 沙滩 -->
+    <ellipse cx="18" cy="45" rx="8" ry="3" fill="#00BCD4" opacity="0.85"/>
+    <ellipse cx="44" cy="45" rx="8" ry="3" fill="#00BCD4" opacity="0.85"/>
+    <line x1="12" y1="45" x2="10" y2="44" stroke="#0097A7" stroke-width="1"/>
+    <line x1="12" y1="45" x2="10" y2="46" stroke="#0097A7" stroke-width="1"/>
+    <line x1="38" y1="45" x2="36" y2="44" stroke="#0097A7" stroke-width="1"/>
+    <line x1="38" y1="45" x2="36" y2="46" stroke="#0097A7" stroke-width="1"/>`,
+  shoe_snowboard: `<!-- 滑板 - 雪地 -->
+    <rect x="10" y="44" width="18" height="3" rx="1.5" fill="#5C6BC0"/>
+    <rect x="37" y="44" width="18" height="3" rx="1.5" fill="#5C6BC0"/>
+    <rect x="10" y="44" width="18" height="1.5" rx="1" fill="#7986CB" opacity="0.6"/>
+    <rect x="37" y="44" width="18" height="1.5" rx="1" fill="#7986CB" opacity="0.6"/>
+    <circle cx="12" cy="45.5" r="0.8" fill="#C5CAE9"/>
+    <circle cx="39" cy="45.5" r="0.8" fill="#C5CAE9"/>`,
+  shoe_glow: `<!-- 荧光鞋 - 夜光 -->
+    <ellipse cx="18" cy="44" rx="7" ry="3" fill="#7C4DFF" opacity="0.9"/>
+    <ellipse cx="44" cy="44" rx="7" ry="3" fill="#7C4DFF" opacity="0.9"/>
+    <ellipse cx="18" cy="44" rx="9" ry="5" fill="#B388FF" opacity="0.2"/>
+    <ellipse cx="44" cy="44" rx="9" ry="5" fill="#B388FF" opacity="0.2"/>
+    <ellipse cx="18" cy="44" rx="5" ry="2" fill="#E8DAFF" opacity="0.4"/>
+    <ellipse cx="44" cy="44" rx="5" ry="2" fill="#E8DAFF" opacity="0.4"/>`,
+  shoe_fireproof: `<!-- 防火靴 - 火山 -->
+    <rect x="12" y="41" width="14" height="6" rx="2" fill="#E65100"/>
+    <rect x="39" y="41" width="14" height="6" rx="2" fill="#E65100"/>
+    <rect x="12" y="41" width="14" height="3" rx="1.5" fill="#FF8F00" opacity="0.7"/>
+    <rect x="39" y="41" width="14" height="3" rx="1.5" fill="#FF8F00" opacity="0.7"/>
+    <path d="M14,41 Q16,37 18,41" fill="#FF5722" opacity="0.6"/>
+    <path d="M41,41 Q43,37 45,41" fill="#FF5722" opacity="0.6"/>
+    <rect x="14" y="44" width="10" height="1.5" rx="0.5" fill="#FFD54F" opacity="0.4"/>
+    <rect x="41" y="44" width="10" height="1.5" rx="0.5" fill="#FFD54F" opacity="0.4"/>`,
+};
+
+// SVG turtle generator — each turtle has unique shell shape, pattern and body color
+function turtleSVG(shell, body, pattern, accent, accessories) {
+  const accSvg = (accessories || []).map(a => ACCESSORY_SVG[a] || '').join('\n');
+  return `<svg viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- legs -->
+    <ellipse cx="18" cy="38" rx="5" ry="7" fill="${body}" transform="rotate(-15,18,38)"/>
+    <ellipse cx="44" cy="38" rx="5" ry="7" fill="${body}" transform="rotate(15,44,38)"/>
+    <ellipse cx="15" cy="20" rx="5" ry="6" fill="${body}" transform="rotate(-25,15,20)"/>
+    <ellipse cx="47" cy="20" rx="5" ry="6" fill="${body}" transform="rotate(25,47,20)"/>
+    <!-- tail -->
+    <ellipse cx="8" cy="28" rx="6" ry="3" fill="${body}"/>
+    <!-- body -->
+    <ellipse cx="32" cy="28" rx="20" ry="14" fill="${body}"/>
+    <!-- shell -->
+    <ellipse cx="32" cy="25" rx="17" ry="13" fill="${shell}"/>
+    <ellipse cx="32" cy="25" rx="17" ry="13" fill="url(#shellGrad_${accent.replace('#','')})" opacity="0.4"/>
+    <!-- shell pattern: ${pattern} -->
+    ${pattern === 'hexagon' ? `
+      <polygon points="32,14 38,18 38,25 32,29 26,25 26,18" fill="${accent}" opacity="0.5"/>
+      <polygon points="32,16 36,19 36,24 32,27 28,24 28,19" fill="none" stroke="${accent}" stroke-width="0.8"/>
+    ` : pattern === 'stripes' ? `
+      <line x1="22" y1="18" x2="42" y2="18" stroke="${accent}" stroke-width="2" opacity="0.5"/>
+      <line x1="20" y1="23" x2="44" y2="23" stroke="${accent}" stroke-width="2" opacity="0.5"/>
+      <line x1="22" y1="28" x2="42" y2="28" stroke="${accent}" stroke-width="2" opacity="0.5"/>
+    ` : pattern === 'dots' ? `
+      <circle cx="27" cy="20" r="2.5" fill="${accent}" opacity="0.5"/>
+      <circle cx="37" cy="20" r="2.5" fill="${accent}" opacity="0.5"/>
+      <circle cx="32" cy="26" r="2.5" fill="${accent}" opacity="0.5"/>
+      <circle cx="25" cy="28" r="1.8" fill="${accent}" opacity="0.4"/>
+      <circle cx="39" cy="28" r="1.8" fill="${accent}" opacity="0.4"/>
+    ` : pattern === 'star' ? `
+      <polygon points="32,15 34,21 40,21 35,25 37,31 32,27 27,31 29,25 24,21 30,21" fill="${accent}" opacity="0.5"/>
+    ` : pattern === 'spiral' ? `
+      <path d="M32,18 Q38,18 38,24 Q38,30 32,30 Q26,30 28,24" fill="none" stroke="${accent}" stroke-width="2" opacity="0.5"/>
+      <circle cx="32" cy="23" r="2" fill="${accent}" opacity="0.5"/>
+    ` : pattern === 'diamond' ? `
+      <polygon points="32,15 40,24 32,33 24,24" fill="none" stroke="${accent}" stroke-width="2" opacity="0.5"/>
+      <polygon points="32,19 37,24 32,29 27,24" fill="${accent}" opacity="0.3"/>
+    ` : pattern === 'cross' ? `
+      <rect x="30" y="16" width="4" height="16" rx="1" fill="${accent}" opacity="0.4"/>
+      <rect x="24" y="22" width="16" height="4" rx="1" fill="${accent}" opacity="0.4"/>
+    ` : pattern === 'crown' ? `
+      <polygon points="24,28 26,18 29,24 32,16 35,24 38,18 40,28" fill="${accent}" opacity="0.5"/>
+    ` : pattern === 'rainbow' ? `
+      <line x1="20" y1="16" x2="44" y2="16" stroke="#FF0000" stroke-width="2.2" opacity="0.7"/>
+      <line x1="19" y1="19" x2="45" y2="19" stroke="#FF8800" stroke-width="2.2" opacity="0.7"/>
+      <line x1="18" y1="22" x2="46" y2="22" stroke="#FFFF00" stroke-width="2.2" opacity="0.7"/>
+      <line x1="18" y1="25" x2="46" y2="25" stroke="#00CC44" stroke-width="2.2" opacity="0.7"/>
+      <line x1="19" y1="28" x2="45" y2="28" stroke="#0088FF" stroke-width="2.2" opacity="0.7"/>
+      <line x1="20" y1="31" x2="44" y2="31" stroke="#AA00FF" stroke-width="2.2" opacity="0.7"/>
+      <circle cx="32" cy="23" r="5" fill="none" stroke="white" stroke-width="1.2" opacity="0.5"/>
+      <animateTransform attributeName="transform" type="rotate" values="0 32 24;5 32 24;-5 32 24;0 32 24" dur="2s" repeatCount="indefinite" additive="sum"/>
+    ` : ''}
+    <!-- shell rim -->
+    <ellipse cx="32" cy="25" rx="17" ry="13" fill="none" stroke="${accent}" stroke-width="1" opacity="0.3"/>
+    <!-- head -->
+    <ellipse cx="52" cy="24" rx="8" ry="7" fill="${body}"/>
+    <!-- eye -->
+    <circle cx="55" cy="22" r="2.5" fill="white"/>
+    <circle cx="56" cy="22" r="1.5" fill="#222"/>
+    <circle cx="56.5" cy="21.5" r="0.5" fill="white"/>
+    <!-- mouth -->
+    <path d="M57,26 Q58,27 57,28" fill="none" stroke="#555" stroke-width="0.8"/>
+    <!-- gradient def -->
+    <defs>
+      <radialGradient id="shellGrad_${accent.replace('#','')}" cx="40%" cy="30%">
+        <stop offset="0%" stop-color="white"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </radialGradient>
+    </defs>
+    <!-- accessories -->
+    ${accSvg}
+  </svg>`;
+}
+
+const ALL_TURTLES = [
+  { id: 'speedy', name: 'Speedy', speed: 85, color: '#4EEAAC', shell: '#2B9E6E', body: '#5BB88A', pattern: 'hexagon', accent: '#8BFFD0', cost: 0 },
+  { id: 'flash', name: 'Flash', speed: 78, color: '#FF6B6B', shell: '#C0392B', body: '#E07B6B', pattern: 'stripes', accent: '#FF9999', cost: 0 },
+  { id: 'bolt', name: 'Bolt', speed: 72, color: '#FFB347', shell: '#D4851F', body: '#E8A94E', pattern: 'dots', accent: '#FFD88A', cost: 0 },
+  { id: 'slowjoe', name: 'Slow Joe', speed: 65, color: '#A78BFA', shell: '#6C4DC4', body: '#9B85D6', pattern: 'star', accent: '#C9B8FF', cost: 0 },
+  { id: 'ninja', name: 'Ninja', speed: 90, color: '#E879F9', shell: '#9B30A0', body: '#C060CC', pattern: 'spiral', accent: '#F0A0FF', cost: 500 },
+  { id: 'rocket', name: 'Rocket', speed: 92, color: '#F97316', shell: '#C44B08', body: '#E8752E', pattern: 'diamond', accent: '#FFB070', cost: 1000 },
+  { id: 'ghost', name: 'Ghost', speed: 70, color: '#94A3B8', shell: '#5A6878', body: '#8899AA', pattern: 'cross', accent: '#B8C8D8', cost: 300 },
+  { id: 'golden', name: 'Golden', speed: 99, color: '#FACC15', shell: '#B8960F', body: '#D4B830', pattern: 'crown', accent: '#FFE566', cost: 2000 },
+  { id: 'rainbow', name: 'Rainbow', speed: 100, color: '#FF6EFF', shell: '#8B00FF', body: '#FF69B4', pattern: 'rainbow', accent: '#FFFFFF', cost: 8888 },
+];
+
+let raceTurtles = ALL_TURTLES.slice(0, 4); // default to first 4
+let raceStartTime = 0;
+const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#4A5568'];
+
+let state = {
+  coins: 9999, wins: 0, totalWins: 0, round: 1, maxRounds: 5,
+  selected: -1, racing: false, progress: [0, 0, 0, 0], finished: [],
+  betAmount: 100, usedItems: [], pickPhase: false, trackPickPhase: false,
+  unlockedTurtles: ['speedy', 'flash', 'bolt', 'slowjoe'], highScore: 0,
+  ownedCosmetics: [], equippedCosmetics: [], winStreak: 0,
+  ownedShoes: [], equippedShoe: null,
+};
+
+let muted = false;
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
+
+// === ENHANCED SOUND SYSTEM ===
+
+function playSound(type) {
+  if (muted) return;
+  try {
+    ensureAudio();
+    const now = audioCtx.currentTime;
+    switch (type) {
+      case 'tick': {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = 600;
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15); break;
+      }
+      case 'go': {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = 900;
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3); break;
+      }
+      case 'win': {
+        // Triumphant fanfare - 6 note ascending melody with harmony
+        const notes = [523, 659, 784, 1047, 784, 1047];
+        const times = [0, 0.12, 0.24, 0.36, 0.5, 0.65];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = idx < 4 ? 'square' : 'sawtooth';
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0, now + times[idx]);
+          gain.gain.linearRampToValueAtTime(0.18, now + times[idx] + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + times[idx] + 0.2);
+          osc.start(now + times[idx]); osc.stop(now + times[idx] + 0.25);
+        });
+        // Add a shimmering harmony
+        const harm = audioCtx.createOscillator();
+        const hGain = audioCtx.createGain();
+        harm.type = 'sine'; harm.connect(hGain); hGain.connect(audioCtx.destination);
+        harm.frequency.setValueAtTime(1047, now + 0.36);
+        harm.frequency.linearRampToValueAtTime(1568, now + 0.9);
+        hGain.gain.setValueAtTime(0.08, now + 0.36);
+        hGain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+        harm.start(now + 0.36); harm.stop(now + 1.0);
+        break;
+      }
+      case 'lose': {
+        // Sad descending trombone "wah wah wah wahhh"
+        const freqs = [390, 370, 349, 260];
+        const starts = [0, 0.25, 0.5, 0.75];
+        const durations = [0.22, 0.22, 0.22, 0.6];
+        freqs.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(freq, now + starts[idx]);
+          if (idx === 3) osc.frequency.linearRampToValueAtTime(220, now + starts[idx] + durations[idx]);
+          gain.gain.setValueAtTime(0, now + starts[idx]);
+          gain.gain.linearRampToValueAtTime(0.15, now + starts[idx] + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + starts[idx] + durations[idx]);
+          osc.start(now + starts[idx]); osc.stop(now + starts[idx] + durations[idx] + 0.05);
+        });
+        break;
+      }
+      case 'select': {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = 700; osc.type = 'sine';
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1); break;
+      }
+      case 'coin': {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.setValueAtTime(1600, now + 0.05);
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2); break;
+      }
+      case 'finishLine': {
+        // Dramatic finish horn + crowd cheer noise
+        // Horn blast
+        const horn = audioCtx.createOscillator();
+        const hGain = audioCtx.createGain();
+        horn.type = 'sawtooth'; horn.connect(hGain); hGain.connect(audioCtx.destination);
+        horn.frequency.setValueAtTime(440, now);
+        horn.frequency.linearRampToValueAtTime(880, now + 0.15);
+        hGain.gain.setValueAtTime(0.25, now);
+        hGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        horn.start(now); horn.stop(now + 0.5);
+        // Quick ascending arpeggio
+        [880, 1047, 1319, 1568].forEach((f, i) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.type = 'square'; o.connect(g); g.connect(audioCtx.destination);
+          o.frequency.value = f;
+          const t = now + 0.1 + i * 0.07;
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(0.12, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+          o.start(t); o.stop(t + 0.18);
+        });
+        // Crowd cheer - filtered noise burst
+        const bufSize = audioCtx.sampleRate * 0.8;
+        const noiseBuffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuffer;
+        const bandpass = audioCtx.createBiquadFilter();
+        bandpass.type = 'bandpass'; bandpass.frequency.value = 2000; bandpass.Q.value = 0.5;
+        const nGain = audioCtx.createGain();
+        noise.connect(bandpass); bandpass.connect(nGain); nGain.connect(audioCtx.destination);
+        nGain.gain.setValueAtTime(0, now + 0.15);
+        nGain.gain.linearRampToValueAtTime(0.12, now + 0.3);
+        nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        noise.start(now + 0.15); noise.stop(now + 0.85);
+        break;
+      }
+      case 'running': {
+        // Quick rhythmic footstep taps
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle'; osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(120 + Math.random() * 40, now);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+        osc.start(now); osc.stop(now + 0.07);
+        break;
+      }
+      case 'swimming': {
+        // Water splash/swoosh
+        const bufSize = audioCtx.sampleRate * 0.12;
+        const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        const lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = 800 + Math.random() * 400;
+        const g = audioCtx.createGain();
+        src.connect(lp); lp.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.06, now);
+        g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        src.start(now); src.stop(now + 0.12);
+        break;
+      }
+    }
+  } catch (e) { /* silent fail */ }
+}
+
+// === BACKGROUND MUSIC SYSTEM ===
+let bgMusic = null;
+let bgMusicGain = null;
+let bgMusicPlaying = false;
+
+function startBgMusic() {
+  if (muted || bgMusicPlaying) return;
+  try {
+    ensureAudio();
+    bgMusicPlaying = true;
+
+    // Master gain for bg music
+    bgMusicGain = audioCtx.createGain();
+    bgMusicGain.gain.value = 0.08;
+    bgMusicGain.connect(audioCtx.destination);
+
+    // Exciting race atmosphere - looping bass + percussion + melody
+    const bpm = 140;
+    const beat = 60 / bpm;
+    const barLen = beat * 4;
+    const totalBars = 64; // ~110 seconds of music (enough for any race)
+    const totalTime = totalBars * barLen;
+
+    // --- Bass line ---
+    const bassNotes = [130.8, 146.8, 164.8, 146.8]; // C3 D3 E3 D3
+    for (let bar = 0; bar < totalBars; bar++) {
+      const baseNote = bassNotes[bar % bassNotes.length];
+      for (let b = 0; b < 4; b++) {
+        const t = audioCtx.currentTime + bar * barLen + b * beat;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.connect(g); g.connect(bgMusicGain);
+        osc.frequency.value = baseNote;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.35, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.01, t + beat * 0.7);
+        osc.start(t); osc.stop(t + beat * 0.8);
+      }
+    }
+
+    // --- Percussion (kick + hi-hat pattern) ---
+    for (let bar = 0; bar < totalBars; bar++) {
+      for (let b = 0; b < 8; b++) {
+        const t = audioCtx.currentTime + bar * barLen + b * (beat / 2);
+        const isKick = b % 4 === 0;
+        const isSnare = b % 4 === 2;
+
+        if (isKick) {
+          // Kick drum - low freq burst
+          const osc = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          osc.connect(g); g.connect(bgMusicGain);
+          osc.frequency.setValueAtTime(150, t);
+          osc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+          g.gain.setValueAtTime(0.5, t);
+          g.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+          osc.start(t); osc.stop(t + 0.16);
+        }
+
+        if (isSnare) {
+          // Snare - noise burst
+          const bufSize = Math.floor(audioCtx.sampleRate * 0.08);
+          const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+          const src = audioCtx.createBufferSource();
+          src.buffer = buf;
+          const hp = audioCtx.createBiquadFilter();
+          hp.type = 'highpass'; hp.frequency.value = 2000;
+          const g = audioCtx.createGain();
+          src.connect(hp); hp.connect(g); g.connect(bgMusicGain);
+          g.gain.setValueAtTime(0.3, t);
+          g.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+          src.start(t); src.stop(t + 0.1);
+        }
+
+        // Hi-hat on every 8th note
+        const hBufSize = Math.floor(audioCtx.sampleRate * 0.03);
+        const hBuf = audioCtx.createBuffer(1, hBufSize, audioCtx.sampleRate);
+        const hData = hBuf.getChannelData(0);
+        for (let i = 0; i < hBufSize; i++) hData[i] = Math.random() * 2 - 1;
+        const hSrc = audioCtx.createBufferSource();
+        hSrc.buffer = hBuf;
+        const hHp = audioCtx.createBiquadFilter();
+        hHp.type = 'highpass'; hHp.frequency.value = 8000;
+        const hG = audioCtx.createGain();
+        hSrc.connect(hHp); hHp.connect(hG); hG.connect(bgMusicGain);
+        hG.gain.setValueAtTime(b % 2 === 0 ? 0.15 : 0.08, t);
+        hG.gain.exponentialRampToValueAtTime(0.01, t + 0.03);
+        hSrc.start(t); hSrc.stop(t + 0.04);
+      }
+    }
+
+    // --- Melody (exciting synth riff, plays every 2 bars) ---
+    const melodyPattern = [
+      [523, 0], [659, 0.5], [784, 1.0], [659, 1.5], [784, 2.0], [1047, 2.5], [784, 3.0], [659, 3.5],
+    ];
+    for (let bar = 0; bar < totalBars; bar += 2) {
+      melodyPattern.forEach(([freq, offset]) => {
+        const t = audioCtx.currentTime + bar * barLen + offset * beat;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'square';
+        osc.connect(g); g.connect(bgMusicGain);
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.12, t + 0.03);
+        g.gain.setValueAtTime(0.1, t + beat * 0.3);
+        g.gain.exponentialRampToValueAtTime(0.01, t + beat * 0.45);
+        osc.start(t); osc.stop(t + beat * 0.5);
+      });
+    }
+
+    // Store the stop time
+    bgMusic = { stopTime: audioCtx.currentTime + totalTime };
+  } catch (e) { /* silent fail */ }
+}
+
+function stopBgMusic() {
+  if (!bgMusicPlaying) return;
+  bgMusicPlaying = false;
+  try {
+    if (bgMusicGain) {
+      const now = audioCtx.currentTime;
+      bgMusicGain.gain.setValueAtTime(bgMusicGain.gain.value, now);
+      bgMusicGain.gain.linearRampToValueAtTime(0, now + 0.5);
+      // Disconnect after fade
+      setTimeout(() => {
+        try { bgMusicGain.disconnect(); } catch(e) {}
+        bgMusicGain = null;
+        bgMusic = null;
+      }, 600);
+    }
+  } catch (e) { bgMusic = null; bgMusicGain = null; }
+}
+
+// Ambient sound timers for running/swimming
+let ambientSoundTimer = 0;
+
+function toggleMute() {
+  muted = !muted;
+  const b = document.getElementById('muteBtn');
+  if (b) b.textContent = muted ? '🔇' : '🔊';
+  if (muted) stopBgMusic();
+}
+const SAVE_KEY = 'turtle-race-save';
+
+function saveGame() {
+  const data = {
+    coins: state.coins,
+    totalWins: state.totalWins,
+    unlockedTurtles: state.unlockedTurtles,
+    highScore: state.highScore,
+    ownedCosmetics: state.ownedCosmetics,
+    equippedCosmetics: state.equippedCosmetics,
+    ownedShoes: state.ownedShoes,
+    equippedShoe: state.equippedShoe,
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    state.coins = data.coins ?? 1000;
+    state.totalWins = data.totalWins ?? 0;
+    state.unlockedTurtles = data.unlockedTurtles ?? ['speedy','flash','bolt','slowjoe'];
+    state.highScore = data.highScore ?? 0;
+    state.ownedCosmetics = data.ownedCosmetics ?? [];
+    state.equippedCosmetics = data.equippedCosmetics ?? [];
+    state.ownedShoes = data.ownedShoes ?? [];
+    state.equippedShoe = data.equippedShoe ?? null;
+  } catch (e) { /* ignore corrupted save */ }
+}
+
+function pickRaceTurtles(myTurtleId) {
+  const pool = ALL_TURTLES.filter(t => state.unlockedTurtles.includes(t.id));
+  if (myTurtleId) {
+    // Player chose their turtle — put it first, fill 3 random opponents from remaining
+    const mine = pool.find(t => t.id === myTurtleId);
+    const others = pool.filter(t => t.id !== myTurtleId).sort(() => Math.random() - 0.5);
+    raceTurtles = [mine, ...others.slice(0, 3)];
+    state.selected = 0; // player's turtle is always index 0
+  } else {
+    // Fallback: random 4
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    raceTurtles = shuffled.slice(0, Math.min(4, shuffled.length));
+  }
+}
+
+function renderShop() {
+  const area = document.getElementById('shopArea');
+  const coinsEl = document.getElementById('shopCoins');
+  if (!area) return;
+  if (coinsEl) coinsEl.textContent = state.coins.toLocaleString();
+  area.innerHTML = '';
+
+  // Section title: Turtles
+  const turtleTitle = document.createElement('div');
+  turtleTitle.className = 'shop-section-title';
+  turtleTitle.textContent = '🐢 乌龟';
+  area.appendChild(turtleTitle);
+
+  ALL_TURTLES.forEach(t => {
+    const unlocked = state.unlockedTurtles.includes(t.id);
+    const card = document.createElement('div');
+    card.className = 'shop-card' + (unlocked ? '' : ' locked') + (t.id === 'rainbow' ? ' rainbow-card' : '');
+    card.innerHTML = `
+      <div class="turtle-preview" style="width:80px;height:60px">${turtleSVG(t.shell, t.body, t.pattern, t.accent)}</div>
+      <div style="font-size:16px;font-weight:700;color:${t.color}">${t.name}</div>
+      <div style="font-size:14px;color:var(--text-muted)">Speed ⚡ ${t.speed}${t.id === 'rainbow' ? ' 🌈' : ''}</div>
+      ${unlocked
+        ? '<div style="color:var(--accent);font-weight:700">✓ 已解锁</div>'
+        : `<button class="shop-buy-btn" style="background:${t.color};color:#0A1628"
+            onclick="buyTurtle('${t.id}')" ${state.coins < t.cost ? 'disabled' : ''}>
+            🪙 ${t.cost} 解锁</button>`}
+    `;
+    area.appendChild(card);
+  });
+
+  // Section title: Cosmetics
+  const cosTitle = document.createElement('div');
+  cosTitle.className = 'shop-section-title';
+  cosTitle.textContent = '✨ 装饰品';
+  area.appendChild(cosTitle);
+
+  COSMETIC_ITEMS.forEach(c => {
+    const owned = (state.ownedCosmetics || []).includes(c.id);
+    const card = document.createElement('div');
+    const isLegendary = c.extraStats != null;
+    card.className = 'shop-card' + (owned ? '' : ' locked') + (isLegendary ? ' legendary-card' : '');
+    card.innerHTML = `
+      <div style="line-height:1">${renderItemIcon(c.emoji, isLegendary ? 48 : 36)}</div>
+      <div style="font-size:16px;font-weight:700;color:${isLegendary ? '#FFD700' : '#fff'}">${c.name}${isLegendary ? ' ⭐' : ''}</div>
+      <div style="font-size:12px;color:var(--gold);font-weight:600">${c.desc}</div>
+      ${owned
+        ? '<div style="color:var(--accent);font-weight:700">✓ 已拥有</div>'
+        : `<button class="shop-buy-btn" style="background:${isLegendary ? 'linear-gradient(135deg,#FFD700,#FF8C00)' : 'var(--gold)'};color:#0A1628"
+            onclick="buyCosmetic('${c.id}')" ${state.coins < c.cost ? 'disabled' : ''}>
+            🪙 ${c.cost.toLocaleString()} 购买</button>`}
+    `;
+    area.appendChild(card);
+  });
+
+  // Section title: Shoes
+  const shoeTitle = document.createElement('div');
+  shoeTitle.className = 'shop-section-title';
+  shoeTitle.textContent = '👟 场地鞋';
+  area.appendChild(shoeTitle);
+
+  SHOE_ITEMS.forEach(s => {
+    const owned = (state.ownedShoes || []).includes(s.id);
+    const isEquipped = state.equippedShoe === s.id;
+    const terrainEmoji = TRACK_THEMES.find(t => t.id === s.terrain)?.name.split(' ')[0] || '';
+    const card = document.createElement('div');
+    card.className = 'shop-card' + (owned ? '' : ' locked');
+    card.innerHTML = `
+      <div style="font-size:36px">${s.emoji}</div>
+      <div style="font-size:16px;font-weight:700;color:#fff">${s.name}</div>
+      <div style="font-size:12px;color:var(--text-muted)">通用 +5% 速度</div>
+      <div style="font-size:13px;font-weight:700;color:var(--gold)">${terrainEmoji} ${s.desc}</div>
+      ${owned
+        ? (isEquipped
+            ? '<div style="color:var(--accent);font-weight:700">✓ 穿着中</div>'
+            : `<button class="shop-buy-btn" style="background:var(--accent);color:#0A1628"
+                onclick="equipShoe('${s.id}')">穿上</button>`)
+        : `<button class="shop-buy-btn" style="background:var(--gold);color:#0A1628"
+            onclick="buyShoe('${s.id}')" ${state.coins < s.cost ? 'disabled' : ''}>
+            🪙 ${s.cost} 购买</button>`}
+    `;
+    area.appendChild(card);
+  });
+}
+
+function buyShoe(shoeId) {
+  const shoe = SHOE_ITEMS.find(s => s.id === shoeId);
+  if (!shoe || state.coins < shoe.cost) return;
+  if (!state.ownedShoes) state.ownedShoes = [];
+  if (state.ownedShoes.includes(shoeId)) return;
+  state.coins -= shoe.cost;
+  state.ownedShoes.push(shoeId);
+  state.equippedShoe = shoeId;
+  playSound('coin');
+  saveGame();
+  renderShop();
+}
+
+function equipShoe(shoeId) {
+  state.equippedShoe = shoeId;
+  playSound('select');
+  saveGame();
+  renderShop();
+}
+
+function buyCosmetic(itemId) {
+  const item = COSMETIC_ITEMS.find(c => c.id === itemId);
+  if (!item || state.coins < item.cost) return;
+  if (!state.ownedCosmetics) state.ownedCosmetics = [];
+  if (state.ownedCosmetics.includes(itemId)) return;
+  state.coins -= item.cost;
+  state.ownedCosmetics.push(itemId);
+  if (!state.equippedCosmetics) state.equippedCosmetics = [];
+  state.equippedCosmetics.push(itemId); // auto-equip on purchase
+  playSound('coin');
+  saveGame();
+  renderShop();
+}
+
+function buyTurtle(id) {
+  const t = ALL_TURTLES.find(x => x.id === id);
+  if (!t || state.coins < t.cost || state.unlockedTurtles.includes(id)) return;
+  state.coins -= t.cost;
+  state.unlockedTurtles.push(id);
+  playSound('coin');
+  saveGame();
+  renderShop();
+}
+
+const LB_KEY = 'turtle-race-leaderboard';
+
+function addRaceRecord(turtleName, turtleColor, trackName, timeSec, reward) {
+  const entries = JSON.parse(localStorage.getItem(LB_KEY) || '[]');
+  entries.push({
+    turtle: turtleName,
+    color: turtleColor,
+    track: trackName,
+    time: timeSec,
+    reward,
+    date: new Date().toLocaleDateString('zh-CN'),
+    ts: Date.now(),
+  });
+  entries.sort((a, b) => a.time - b.time); // fastest first
+  localStorage.setItem(LB_KEY, JSON.stringify(entries.slice(0, 20)));
+}
+
+function renderLeaderboard() {
+  const area = document.getElementById('leaderboardArea');
+  if (!area) return;
+  const entries = JSON.parse(localStorage.getItem(LB_KEY) || '[]');
+  if (entries.length === 0) {
+    area.innerHTML = '<p style="color:var(--text-muted);margin-top:40px;font-size:16px">暂无记录，赢一场比赛试试!</p>';
+    return;
+  }
+  area.innerHTML = `
+    <div style="font-size:14px;color:var(--text-muted);margin:8px 0 4px">🏆 最快完赛记录（共 ${entries.length} 场胜利）</div>
+    <div class="leaderboard-list">${entries.map((e, i) =>
+    `<div class="lb-row">
+      <div class="lb-rank" style="color:${rankColors[i] || '#fff'}">#${i+1}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:700;color:${e.color || '#fff'}">🐢 ${e.turtle}</span>
+          <span style="font-size:22px;font-weight:800;color:var(--gold)">⏱ ${e.time}s</span>
+        </div>
+        <div class="lb-date">${e.track || ''} · +${e.reward || 0}🪙 · ${e.date}</div>
+      </div>
+    </div>`
+  ).join('')}</div>`;
+}
+
+const BET_OPTIONS = [50, 100, 200, 500];
+
+function renderBetBtns() {
+  const container = document.getElementById('betBtns');
+  if (!container) return;
+  container.innerHTML = '';
+  BET_OPTIONS.forEach(amt => {
+    const btn = document.createElement('button');
+    btn.className = 'bet-btn' + (state.betAmount === amt ? ' active' : '');
+    btn.textContent = '🪙' + amt;
+    btn.disabled = state.racing || state.coins < amt;
+    btn.onclick = () => { state.betAmount = amt; render(); };
+    container.appendChild(btn);
+  });
+}
+
+// === Consumable items (per-race buffs) ===
+const BUFF_ITEMS = [
+  { id: 'boost', emoji: '⚡', name: '加速', cost: 150, desc: '+20% 速度' },
+  { id: 'slow', emoji: '🌀', name: '减速', cost: 200, desc: '对手 -20%' },
+  { id: 'lucky', emoji: '🍀', name: '幸运', cost: 100, desc: '增大运气' },
+];
+
+// Kuromi mini SVG icon for shop/UI display
+function kuromiIcon(size) {
+  const s = size || 28;
+  return `<svg viewBox="0 0 32 32" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">
+    <!-- hood -->
+    <path d="M6,18 Q5,6 12,4 Q16,0 20,4 Q27,6 26,18 Q24,22 16,22 Q8,22 6,18Z" fill="#2D2D2D"/>
+    <!-- hood ears -->
+    <path d="M8,12 L5,3 L12,9Z" fill="#2D2D2D"/>
+    <path d="M24,12 L27,3 L20,9Z" fill="#2D2D2D"/>
+    <path d="M9,11 L6.5,5 L11,9Z" fill="#FF69B4" opacity="0.5"/>
+    <path d="M23,11 L25.5,5 L21,9Z" fill="#FF69B4" opacity="0.5"/>
+    <!-- face -->
+    <ellipse cx="16" cy="16" rx="8" ry="7.5" fill="white"/>
+    <!-- eyes -->
+    <ellipse cx="12.5" cy="14.5" rx="2" ry="2.5" fill="#2D2D2D"/>
+    <ellipse cx="19.5" cy="14.5" rx="2" ry="2.5" fill="#2D2D2D"/>
+    <circle cx="13.2" cy="13.8" r="0.6" fill="white"/>
+    <circle cx="20.2" cy="13.8" r="0.6" fill="white"/>
+    <!-- nose/mouth -->
+    <ellipse cx="16" cy="17.5" rx="1" ry="0.6" fill="#FFB6C1"/>
+    <path d="M14,19.5 Q16,21 18,19.5" fill="none" stroke="#2D2D2D" stroke-width="0.7"/>
+    <!-- skull on hood -->
+    <circle cx="16" cy="7" r="3" fill="#FF69B4"/>
+    <circle cx="14.5" cy="6.5" r="0.9" fill="#2D2D2D"/>
+    <circle cx="17.5" cy="6.5" r="0.9" fill="#2D2D2D"/>
+    <ellipse cx="16" cy="8.5" rx="1.2" ry="0.6" fill="#2D2D2D"/>
+  </svg>`;
+}
+
+// Render item emoji — supports both regular emoji and custom SVG icons
+function renderItemIcon(emoji, size) {
+  if (emoji === 'kuromi_icon') return kuromiIcon(size || 28);
+  return `<span style="font-size:${size || 28}px">${emoji}</span>`;
+}
+
+// === Cosmetic accessories (buy in shop, free to equip/unequip, each gives a stat bonus) ===
+const COSMETIC_ITEMS = [
+  { id: 'tophat', emoji: '🎩', name: '礼帽', cost: 200, effect: 'tophat', stat: 'stamina', bonus: 0.08, desc: '体力 +8%' },
+  { id: 'crown_acc', emoji: '👑', name: '皇冠', cost: 500, effect: 'crown', stat: 'speed', bonus: 0.10, desc: '速度 +10%' },
+  { id: 'bow', emoji: '🎀', name: '蝴蝶结', cost: 150, effect: 'bow', stat: 'luck', bonus: 0.15, desc: '运气 +15%' },
+  { id: 'flower', emoji: '🌸', name: '花朵', cost: 120, effect: 'flower', stat: 'recovery', bonus: 0.12, desc: '恢复 +12%' },
+  { id: 'sunglasses', emoji: '😎', name: '墨镜', cost: 180, effect: 'sunglasses', stat: 'focus', bonus: 0.10, desc: '专注 +10%' },
+  { id: 'bandana', emoji: '🔴', name: '头巾', cost: 160, effect: 'bandana', stat: 'burst', bonus: 0.20, desc: '爆发 +20%' },
+  { id: 'wizard', emoji: '🧙', name: '巫师帽', cost: 350, effect: 'wizard', stat: 'chaos', bonus: 0.25, desc: '混乱 +25%' },
+  { id: 'cape', emoji: '🦸', name: '披风', cost: 280, effect: 'cape', stat: 'sprint', bonus: 0.15, desc: '冲刺 +15%' },
+  { id: 'antenna', emoji: '👽', name: '触角', cost: 250, effect: 'antenna', stat: 'dodge', bonus: 0.18, desc: '闪避 +18%' },
+  { id: 'scarf', emoji: '🧣', name: '围巾', cost: 130, effect: 'scarf', stat: 'warmup', bonus: 0.12, desc: '热身 +12%' },
+  // Kuromi 酷洛米系列
+  { id: 'kuromi_hood', emoji: 'kuromi_icon', name: '酷洛米头巾', cost: 400, effect: 'kuromi_hood', stat: 'speed', bonus: 0.12, desc: '速度 +12%' },
+  { id: 'kuromi_ears', emoji: 'kuromi_icon', name: '恶魔耳朵', cost: 250, effect: 'kuromi_ears', stat: 'dodge', bonus: 0.20, desc: '闪避 +20%' },
+  { id: 'kuromi_tail', emoji: 'kuromi_icon', name: '恶魔尾巴', cost: 300, effect: 'kuromi_tail', stat: 'chaos', bonus: 0.30, desc: '混乱 +30%' },
+  { id: 'kuromi_necklace', emoji: 'kuromi_icon', name: '骷髅项链', cost: 220, effect: 'kuromi_necklace', stat: 'burst', bonus: 0.25, desc: '爆发 +25%' },
+  { id: 'kuromi_wings', emoji: 'kuromi_icon', name: '蝙蝠翅膀', cost: 500, effect: 'kuromi_wings', stat: 'sprint', bonus: 0.20, desc: '冲刺 +20%' },
+  { id: 'kuromi_bow', emoji: 'kuromi_icon', name: '骷髅蝴蝶结', cost: 180, effect: 'kuromi_bow', stat: 'luck', bonus: 0.18, desc: '运气 +18%' },
+  // === 传说级道具 ===
+  { id: 'angel_wings', emoji: '👼', name: '天使之翼', cost: 6666, effect: 'angel_wings', stat: 'speed', bonus: 0.15, desc: '速度+15% 体力+12% 冲刺+15%', extraStats: { stamina: 0.12, sprint: 0.15 } },
+  { id: 'bunny_mount', emoji: '🐰', name: '小兔子坐骑', cost: 8888, effect: 'bunny_mount', stat: 'speed', bonus: 0.18, desc: '速度+18% 爆发+20% 闪避+15%', extraStats: { burst: 0.20, dodge: 0.15 } },
+];
+
+// === SHOE ITEMS (terrain-specific footwear) ===
+const SHOE_ITEMS = [
+  { id: 'shoe_spikes', emoji: '👟', name: '钉鞋', cost: 180, effect: 'shoe_spikes', terrain: 'grass',
+    desc: '草地+30% 速度', baseBonus: 0.05, terrainBonus: 0.30 },
+  { id: 'shoe_flippers', emoji: '🤿', name: '蛙鞋', cost: 200, effect: 'shoe_flippers', terrain: 'beach',
+    desc: '沙滩+30% 速度', baseBonus: 0.05, terrainBonus: 0.30 },
+  { id: 'shoe_snowboard', emoji: '🏂', name: '滑板', cost: 220, effect: 'shoe_snowboard', terrain: 'snow',
+    desc: '雪地+30% 速度', baseBonus: 0.05, terrainBonus: 0.30 },
+  { id: 'shoe_glow', emoji: '💜', name: '荧光鞋', cost: 250, effect: 'shoe_glow', terrain: 'night',
+    desc: '夜光+30% 速度', baseBonus: 0.05, terrainBonus: 0.30 },
+  { id: 'shoe_fireproof', emoji: '🔥', name: '防火靴', cost: 280, effect: 'shoe_fireproof', terrain: 'volcano',
+    desc: '火山+30% 速度', baseBonus: 0.05, terrainBonus: 0.30 },
+  { id: 'shoe_triathlon', emoji: '🏅', name: '铁人鞋', cost: 350, effect: 'shoe_spikes', terrain: 'triathlon',
+    desc: '铁人三项+30%', baseBonus: 0.05, terrainBonus: 0.30 },
+];
+
+function getEquippedShoe() {
+  const equipped = state.equippedShoe || null;
+  return SHOE_ITEMS.find(s => s.id === equipped) || null;
+}
+
+function getShoeBonus() {
+  const shoe = getEquippedShoe();
+  if (!shoe) return 0;
+  if (currentTrack && currentTrack.id === shoe.terrain) return shoe.terrainBonus;
+  return shoe.baseBonus;
+}
+
+function getShoeAccessory() {
+  const shoe = getEquippedShoe();
+  return shoe ? shoe.effect : null;
+}
+
+// Calculate total stat bonuses from equipped cosmetics
+function getCosmeticBonuses() {
+  const bonuses = {};
+  (state.equippedCosmetics || []).forEach(id => {
+    const item = COSMETIC_ITEMS.find(c => c.id === id);
+    if (item && (state.ownedCosmetics || []).includes(id)) {
+      bonuses[item.stat] = (bonuses[item.stat] || 0) + item.bonus;
+      // Legendary items have extra stats
+      if (item.extraStats) {
+        Object.entries(item.extraStats).forEach(([stat, val]) => {
+          bonuses[stat] = (bonuses[stat] || 0) + val;
+        });
+      }
+    }
+  });
+  return bonuses;
+}
+
+function getMyAccessories() {
+  const acc = (state.ownedCosmetics || []).filter(id => (state.equippedCosmetics || []).includes(id))
+    .map(id => COSMETIC_ITEMS.find(c => c.id === id)?.effect).filter(Boolean);
+  const shoe = getShoeAccessory();
+  if (shoe) acc.push(shoe);
+  return acc;
+}
+
+function renderItemBtns() {
+  const container = document.getElementById('itemBtns');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Buff items
+  BUFF_ITEMS.forEach(item => {
+    const btn = document.createElement('button');
+    const used = state.usedItems.includes(item.id);
+    btn.className = 'item-btn' + (used ? ' used' : '');
+    btn.textContent = `${item.emoji} ${item.name} 🪙${item.cost}`;
+    btn.disabled = state.racing || used || state.coins < item.cost || state.pickPhase;
+    btn.title = item.desc;
+    btn.onclick = () => buyBuffItem(item.id);
+    container.appendChild(btn);
+  });
+
+  // Cosmetic shop button
+  const cosBtn = document.createElement('button');
+  cosBtn.className = 'item-btn';
+  cosBtn.style.borderColor = 'var(--accent)';
+  cosBtn.style.color = 'var(--accent)';
+  cosBtn.textContent = '✨ 装扮';
+  cosBtn.disabled = state.racing;
+  cosBtn.onclick = () => showCosmeticModal();
+  container.appendChild(cosBtn);
+}
+
+function buyBuffItem(itemId) {
+  const item = BUFF_ITEMS.find(i => i.id === itemId);
+  if (!item || state.coins < item.cost || state.usedItems.includes(itemId)) return;
+  state.coins -= item.cost;
+  state.usedItems.push(itemId);
+  playSound('coin');
+  render();
+}
+
+// === Cosmetic Modal ===
+function showCosmeticModal() {
+  let overlay = document.getElementById('cosmeticModal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'cosmeticModal';
+    overlay.className = 'modal-overlay show';
+    document.body.appendChild(overlay);
+  } else {
+    overlay.classList.add('show');
+  }
+  renderCosmeticModal(overlay);
+}
+
+function renderCosmeticModal(overlay) {
+  const owned = state.ownedCosmetics || [];
+  const equipped = state.equippedCosmetics || [];
+  const myTurtle = raceTurtles[state.selected] || ALL_TURTLES.find(t => state.unlockedTurtles.includes(t.id)) || ALL_TURTLES[0];
+  const previewAcc = getMyAccessories();
+  const bonuses = getCosmeticBonuses();
+  const bonusText = Object.entries(bonuses).map(([k,v]) => {
+    const names = {speed:'速度',stamina:'体力',luck:'运气',recovery:'恢复',focus:'专注',burst:'爆发',chaos:'混乱',sprint:'冲刺',dodge:'闪避',warmup:'热身'};
+    return `${names[k]||k} +${Math.round(v*100)}%`;
+  }).join(' · ') || '无加成';
+
+  const ownedItems = COSMETIC_ITEMS.filter(c => owned.includes(c.id));
+
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:520px;padding:28px 32px">
+      <h2 style="color:var(--accent);margin-bottom:12px">✨ 装备管理</h2>
+      <div style="display:flex;justify-content:center;margin-bottom:8px">
+        <div style="width:120px;height:90px">${turtleSVG(myTurtle.shell, myTurtle.body, myTurtle.pattern, myTurtle.accent, previewAcc)}</div>
+      </div>
+      <div style="font-size:12px;color:var(--gold);margin-bottom:6px;text-align:center">⚡ ${bonusText}</div>
+      ${(() => {
+        const shoe = getEquippedShoe();
+        const shoeMatch = shoe && currentTrack && currentTrack.id === shoe.terrain;
+        return shoe
+          ? `<div style="font-size:12px;margin-bottom:10px;text-align:center;color:${shoeMatch ? '#4EEAAC' : 'var(--text-muted)'}">
+              👟 ${shoe.name} ${shoeMatch ? '✨ 场地匹配! +' + (shoe.terrainBonus*100) + '%' : '+' + (shoe.baseBonus*100) + '% 速度'}</div>`
+          : '<div style="font-size:12px;margin-bottom:10px;color:var(--text-muted);text-align:center">👟 未装备鞋子</div>';
+      })()}
+      ${ownedItems.length === 0 && !(state.ownedShoes||[]).length ? '<div style="color:var(--text-muted);padding:24px;font-size:15px">还没有装备，去商店购买吧！</div>' : `
+      <div class="cosmetic-grid">
+        ${ownedItems.map(c => {
+          const isEquipped = equipped.includes(c.id);
+          return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}" onclick="toggleCosmetic('${c.id}')">
+            <span class="cosmetic-emoji">${renderItemIcon(c.emoji, 22)}</span>
+            <span class="cosmetic-name">${c.name}</span>
+            <span style="font-size:10px;color:var(--gold)">${c.desc}</span>
+            ${isEquipped ? '<span class="cosmetic-status">✓ 已装备</span>' :
+              '<span class="cosmetic-status" style="color:var(--text-muted)">点击装备</span>'}
+          </div>`;
+        }).join('')}
+      </div>`}
+      ${(state.ownedShoes||[]).length ? `
+      <div style="font-size:14px;font-weight:700;color:var(--text-secondary);margin:12px 0 6px;text-align:left">👟 鞋子（只能穿一双）</div>
+      <div class="cosmetic-grid">
+        ${SHOE_ITEMS.filter(s => (state.ownedShoes||[]).includes(s.id)).map(s => {
+          const isEquipped = state.equippedShoe === s.id;
+          const terrainMatch = currentTrack && currentTrack.id === s.terrain;
+          const terrainEmoji = TRACK_THEMES.find(t => t.id === s.terrain)?.name.split(' ')[0] || '';
+          return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}" onclick="switchShoe('${s.id}')">
+            <span class="cosmetic-emoji">${s.emoji}</span>
+            <span class="cosmetic-name">${s.name}</span>
+            <span style="font-size:10px;color:${terrainMatch ? 'var(--accent)' : 'var(--text-muted)'}">${terrainEmoji} ${terrainMatch ? '✨匹配!' : s.desc}</span>
+            ${isEquipped ? '<span class="cosmetic-status">✓ 穿着</span>' :
+              '<span class="cosmetic-status" style="color:var(--text-muted)">点击穿上</span>'}
+          </div>`;
+        }).join('')}
+        <div class="cosmetic-item ${!state.equippedShoe ? 'equipped' : ''}" onclick="switchShoe(null)">
+          <span class="cosmetic-emoji">🦶</span>
+          <span class="cosmetic-name">光脚</span>
+          <span style="font-size:10px;color:var(--text-muted)">不穿鞋</span>
+          ${!state.equippedShoe ? '<span class="cosmetic-status">✓ 当前</span>' : '<span class="cosmetic-status" style="color:var(--text-muted)">点击脱下</span>'}
+        </div>
+      </div>` : ''}
+      <div style="margin-top:14px;display:flex;gap:10px;justify-content:center">
+        <button onclick="closeCosmeticModal()" style="flex:1">完成</button>
+        <button onclick="closeCosmeticModal();showScene('scene-shop')" style="flex:1;background:linear-gradient(to bottom,var(--gold),#E89830)">🛒 去商店</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCosmetic(itemId) {
+  if (!state.equippedCosmetics) state.equippedCosmetics = [];
+  const idx = state.equippedCosmetics.indexOf(itemId);
+  if (idx >= 0) {
+    state.equippedCosmetics.splice(idx, 1);
+  } else {
+    state.equippedCosmetics.push(itemId);
+  }
+  playSound('select');
+  saveGame();
+  renderCosmeticModal(document.getElementById('cosmeticModal'));
+  render();
+}
+
+function switchShoe(shoeId) {
+  state.equippedShoe = shoeId;
+  playSound('select');
+  saveGame();
+  renderCosmeticModal(document.getElementById('cosmeticModal'));
+  render();
+}
+
+function closeCosmeticModal() {
+  const m = document.getElementById('cosmeticModal');
+  if (m) m.classList.remove('show');
+}
+
+function startCountdown(callback) {
+  const overlay = document.createElement('div');
+  overlay.className = 'countdown-overlay';
+  document.body.appendChild(overlay);
+  const nums = ['3', '2', '1', '🏁 GO!'];
+  let i = 0;
+  function showNext() {
+    if (i >= nums.length) { overlay.remove(); callback(); return; }
+    overlay.innerHTML = `<div class="countdown-text">${nums[i]}</div>`;
+    playSound(i < 3 ? 'tick' : 'go');
+    i++;
+    setTimeout(showNext, 800);
+  }
+  showNext();
+}
+
+function showScene(sceneId) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  document.getElementById(sceneId).classList.add('active');
+  if (sceneId === 'scene-start') {
+    const hsEl = document.getElementById('highScore');
+    if (hsEl) hsEl.textContent = state.highScore.toLocaleString();
+    const scEl = document.getElementById('startCoins');
+    if (scEl) scEl.textContent = state.coins.toLocaleString();
+  }
+  if (sceneId === 'scene-leaderboard') renderLeaderboard();
+  if (sceneId === 'scene-shop') renderShop();
+}
+
+const CAISHEN_BLESSINGS = [
+  '财神爷摸了摸你的头 🪙+100',
+  '恭喜发财，红包拿来！🪙+100',
+  '财神驾到，黄金万两！🪙+100',
+  '财运亨通，日进斗金！🪙+100',
+  '财神爷说：好好比赛！🪙+100',
+  '招财进宝，财源滚滚！🪙+100',
+  '财神爷给你的乌龟加了油 🪙+100',
+];
+
+function prayCaiShen() {
+  state.coins += 100;
+  playSound('coin');
+  saveGame();
+  const msg = CAISHEN_BLESSINGS[Math.floor(Math.random() * CAISHEN_BLESSINGS.length)];
+  const el = document.getElementById('caishenMsg');
+  if (el) {
+    el.textContent = msg;
+    el.style.animation = 'none';
+    el.offsetHeight; // force reflow
+    el.style.animation = 'caishenFade 2s ease forwards';
+  }
+  const scEl = document.getElementById('startCoins');
+  if (scEl) scEl.textContent = state.coins.toLocaleString();
+}
+
+function confirmBackToHome() {
+  if (state.racing) return; // can't leave mid-race
+  if (state.round > 1 || state.wins > 0) {
+    if (!confirm('确定返回主页吗？当前比赛进度将丢失。')) return;
+  }
+  showScene('scene-start');
+}
+
+function startNewGame() {
+  state.round = 1; state.wins = 0; state.selected = -1;
+  state.progress = [0, 0, 0, 0]; state.finished = [];
+  state.betAmount = 100; state.usedItems = [];
+  state.pickPhase = true; // player needs to pick their turtle first
+  raceTurtles = []; // clear until player picks
+  showScene('scene-race');
+  document.getElementById('raceTitle').textContent = '🐢 选择你的参赛乌龟！';
+  render();
+}
+
+function render() {
+  const coinsEl = document.getElementById('coins');
+  const winsEl = document.getElementById('wins');
+  const roundEl = document.getElementById('round');
+  if (coinsEl) coinsEl.textContent = state.coins.toLocaleString();
+  if (winsEl) winsEl.textContent = state.wins;
+  if (roundEl) roundEl.textContent = state.round;
+
+  // Track lanes
+  const trackEl = document.getElementById('trackLanes');
+  if (!trackEl) { renderBetBtns(); renderItemBtns(); return; }
+
+  // === Pick Phase: show all unlocked turtles in a grid ===
+  if (state.pickPhase) {
+    trackEl.style.display = 'none';
+    let picker = document.getElementById('turtlePicker');
+    if (!picker) {
+      picker = document.createElement('div');
+      picker.id = 'turtlePicker';
+      trackEl.parentElement.appendChild(picker);
+    }
+    const unlocked = ALL_TURTLES.filter(t => state.unlockedTurtles.includes(t.id));
+    picker.innerHTML = '<div class="turtle-picker-grid">' + unlocked.map(t =>
+      `<div class="picker-card" onclick="confirmTurtlePick('${t.id}')">
+        <div style="width:70px;height:55px">${turtleSVG(t.shell, t.body, t.pattern, t.accent, getMyAccessories())}</div>
+        <div class="picker-name" style="color:${t.color}">${t.name}</div>
+        <div class="picker-speed">Speed ⚡ ${t.speed}</div>
+      </div>`
+    ).join('') + '</div>';
+    // Hide bottom bar controls during pick phase
+    const pickBtnsEl = document.getElementById('pickBtns');
+    if (pickBtnsEl) pickBtnsEl.innerHTML = '';
+    const startBtnEl = document.getElementById('startBtn');
+    if (startBtnEl) startBtnEl.style.display = 'none';
+    renderBetBtns(); renderItemBtns();
+    return;
+  }
+
+  // === Track Pick Phase: show track selector ===
+  if (state.trackPickPhase) {
+    trackEl.style.display = 'none';
+    let picker = document.getElementById('turtlePicker');
+    if (!picker) {
+      picker = document.createElement('div');
+      picker.id = 'turtlePicker';
+      trackEl.parentElement.appendChild(picker);
+    }
+    const shoe = getEquippedShoe();
+    picker.innerHTML = '<div class="turtle-picker-grid">' +
+      // Random option
+      `<div class="picker-card" onclick="confirmTrackPick(-1)" style="border-color:var(--gold)">
+        <div style="font-size:40px">🎲</div>
+        <div class="picker-name" style="color:var(--gold)">随机赛道</div>
+        <div class="picker-speed">随缘出发！</div>
+      </div>` +
+      TRACK_THEMES.map((t, i) => {
+        const shoeMatch = shoe && shoe.terrain === t.id;
+        return `<div class="picker-card" onclick="confirmTrackPick(${i})">
+          <div style="font-size:40px">${t.name.split(' ')[0]}</div>
+          <div class="picker-name" style="color:#fff">${t.name}</div>
+          <div class="picker-speed">${t.isTriathlon ? '🏃🏊🧗 三段赛制' : '常规赛道'}${shoeMatch ? '<br><span style="color:#4EEAAC">✨ 鞋子匹配!</span>' : ''}</div>
+        </div>`;
+      }).join('') +
+    '</div>';
+    const pickBtnsEl = document.getElementById('pickBtns');
+    if (pickBtnsEl) pickBtnsEl.innerHTML = '';
+    const startBtnEl = document.getElementById('startBtn');
+    if (startBtnEl) startBtnEl.style.display = 'none';
+    renderBetBtns(); renderItemBtns();
+    return;
+  }
+
+  // === Normal race view ===
+  trackEl.style.display = '';
+  const picker = document.getElementById('turtlePicker');
+  if (picker) picker.remove();
+  const startBtnEl2 = document.getElementById('startBtn');
+  if (startBtnEl2) startBtnEl2.style.display = '';
+
+  // Remove old lanes but keep start-line and finish-line
+  trackEl.querySelectorAll('.track-lane').forEach(l => l.remove());
+
+  raceTurtles.forEach((t, i) => {
+    const lane = document.createElement('div');
+    lane.className = 'track-lane' + (state.selected === i ? ' selected' : '');
+    if (state.finished.length && state.finished[0] === i) lane.classList.add('winner');
+    // No lane click — player already picked their turtle in pick phase
+
+    // Lane label (left side)
+    const label = document.createElement('div');
+    label.className = 'lane-label';
+    label.innerHTML = `<span class="lane-name" style="color:${t.color}">${t.name}</span>
+      <span class="lane-speed">⚡${t.speed}</span>`;
+    lane.appendChild(label);
+
+    // Turtle runner — positioned by progress
+    const trackWidth = trackEl.offsetWidth || 800;
+    const startX = 90; // after start line
+    const endX = trackWidth - 70; // before finish line
+    const turtleX = startX + (state.progress[i] / 100) * (endX - startX);
+
+    const runner = document.createElement('div');
+    runner.className = 'turtle-runner' + (state.racing && state.progress[i] < 100 ? ' racing' : '') + (state.progress[i] >= 100 ? ' finished' : '');
+    runner.id = 'turtle' + i;
+    runner.style.left = turtleX + 'px';
+    runner.style.top = 'calc(50% - 22px)';
+    const acc = (i === state.selected) ? getMyAccessories() : [];
+    runner.innerHTML = turtleSVG(t.shell, t.body, t.pattern, t.accent, acc);
+    lane.appendChild(runner);
+
+    // Rank badge (right side, only after race)
+    if (state.finished.length > 0) {
+      const rank = state.finished.indexOf(i);
+      if (rank >= 0) {
+        const badge = document.createElement('div');
+        badge.className = 'lane-rank-badge';
+        badge.style.background = rankColors[rank];
+        badge.style.color = rank === 3 ? '#fff' : '#0A1628';
+        badge.textContent = rank + 1;
+        lane.appendChild(badge);
+      }
+    }
+
+    trackEl.appendChild(lane);
+  });
+
+  // Odds display
+  const oddsEl = document.getElementById('raceOdds');
+  if (oddsEl && raceTurtles.length > 0 && !state.racing) {
+    const odds = calculateOdds();
+    oddsEl.innerHTML = odds.map(o => `<span class="odds-tag" style="color:${o.color}">
+      ${o.name} <span style="color:var(--gold)">${o.odds}x</span></span>`).join('');
+  } else if (oddsEl && state.racing) {
+    oddsEl.innerHTML = '';
+  }
+
+  // Streak display
+  const streakEl = document.getElementById('streakDisplay');
+  if (streakEl) {
+    const streak = state.winStreak || 0;
+    streakEl.innerHTML = streak >= 2
+      ? `<span class="streak-badge">🔥 ${streak}连胜 x${getStreakMultiplier()}</span>` : '';
+  }
+
+  // Pick buttons — show raceTurtles with player's highlighted
+  const pickEl = document.getElementById('pickBtns');
+  if (pickEl) {
+    pickEl.innerHTML = '';
+    pickEl.style.display = 'flex';
+    pickEl.style.gap = '8px';
+    raceTurtles.forEach((t, i) => {
+      const tag = document.createElement('span');
+      tag.className = 'pick-btn' + (i === state.selected ? ' active' : '');
+      tag.style.background = i === state.selected ? t.color : 'rgba(255,255,255,0.1)';
+      tag.style.color = i === state.selected ? '#0A1628' : t.color;
+      tag.style.cursor = 'default';
+      tag.style.padding = '8px 14px';
+      tag.style.fontSize = '13px';
+      tag.textContent = (i === state.selected ? '★ ' : '') + t.name;
+      pickEl.appendChild(tag);
+    });
+  }
+
+  const startBtnEl = document.getElementById('startBtn');
+  if (startBtnEl) startBtnEl.disabled = state.selected < 0 || state.racing;
+  renderBetBtns();
+  renderItemBtns();
+}
+
+function confirmTurtlePick(turtleId) {
+  playSound('select');
+  pickRaceTurtles(turtleId);
+  state.pickPhase = false;
+  state.trackPickPhase = true;
+  state.progress = [0, 0, 0, 0];
+  state.finished = [];
+  document.getElementById('raceTitle').textContent = '🗺️ 选择赛道';
+  render();
+}
+
+function confirmTrackPick(trackIdx) {
+  playSound('select');
+  state.trackPickPhase = false;
+  if (trackIdx === -1) {
+    // Random
+    applyTrackTheme();
+  } else {
+    currentTrack = TRACK_THEMES[trackIdx];
+    applyTrackTheme_apply();
+  }
+  document.getElementById('raceTitle').textContent = '🏁 准备好了？开始比赛吧！';
+  render();
+}
+
+// Apply theme without re-randomizing
+function applyTrackTheme_apply() {
+  const container = document.querySelector('.track-container');
+  if (!container) return;
+  container.style.setProperty('--track-bg', currentTrack.bg);
+  const header = container.querySelector('.track-header');
+  if (header) {
+    const shoe = getEquippedShoe();
+    const match = shoe && shoe.terrain === currentTrack.id;
+    header.querySelector('span').innerHTML = currentTrack.name +
+      (match ? ` <span style="color:#4EEAAC;font-size:12px">✨ ${shoe.name}匹配! +${shoe.terrainBonus*100}%</span>` : '');
+  }
+  document.querySelectorAll('.track-lane').forEach((lane, i) => {
+    lane.style.background = i % 2 === 0 ? currentTrack.laneOdd : currentTrack.laneEven;
+  });
+  // Triathlon zones
+  const trackLanes = document.getElementById('trackLanes');
+  trackLanes.querySelectorAll('.zone-overlay,.zone-divider').forEach(e => e.remove());
+  if (currentTrack.isTriathlon && currentTrack.zones) {
+    generateTriathlonAbilities();
+    // Use percentage positioning so zones always fill the full track
+    currentTrack.zones.forEach((zone, zi) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'zone-overlay';
+      if (zone.cssClass) overlay.classList.add(zone.cssClass);
+      overlay.style.left = zone.start + '%';
+      overlay.style.width = (zone.end - zone.start) + '%';
+      overlay.innerHTML = `<span class="zone-label">${zone.name}</span>`;
+      trackLanes.appendChild(overlay);
+      if (zi > 0) {
+        const divider = document.createElement('div');
+        divider.className = 'zone-divider';
+        divider.style.left = zone.start + '%';
+        divider.setAttribute('data-icon', zone.name.split(' ')[0]);
+        trackLanes.appendChild(divider);
+      }
+    });
+  }
+}
+
+function selectTurtle(i) {
+  state.selected = i;
+  playSound('select');
+  render();
+}
+
+function startRace() {
+  if (state.selected < 0 || state.racing) return;
+  state.racing = true;
+  state.progress = [0, 0, 0, 0];
+  state.finished = [];
+  state._swimAnnounced = false;
+  state._climbAnnounced = false;
+  state.coins -= state.betAmount;
+  playSound('coin');
+  document.getElementById('raceTitle').textContent = '🏁 Racing... Go go go!';
+  document.getElementById('startBtn').disabled = true;
+  render();
+  startCountdown(() => beginRaceAnimation());
+}
+
+const RACE_EVENTS = [
+  { emoji: '🌊', text: '海浪来袭！{name} 被减速了!', effect: 'slow_random' },
+  { emoji: '💨', text: '顺风！{name} 加速前进!', effect: 'boost_random' },
+  { emoji: '🪨', text: '前方落石！{name} 紧急刹车!', effect: 'slow_leader' },
+];
+
+function triggerRaceEvent(speeds) {
+  const evt = RACE_EVENTS[Math.floor(Math.random() * RACE_EVENTS.length)];
+  let targetIdx;
+
+  if (evt.effect === 'slow_leader') {
+    let maxProg = -1;
+    state.progress.forEach((p, i) => { if (p > maxProg) { maxProg = p; targetIdx = i; } });
+  } else {
+    targetIdx = Math.floor(Math.random() * raceTurtles.length);
+  }
+
+  const multiplier = evt.effect.startsWith('boost') ? 1.5 : 0.5;
+  const originalSpeed = speeds[targetIdx];
+  speeds[targetIdx] *= multiplier;
+
+  setTimeout(() => { speeds[targetIdx] = originalSpeed; }, 2000);
+
+  const div = document.createElement('div');
+  div.className = 'race-event';
+  div.textContent = evt.emoji + ' ' + evt.text.replace('{name}', raceTurtles[targetIdx]?.name || '乌龟');
+  document.body.appendChild(div);
+  playSound(evt.effect.startsWith('boost') ? 'go' : 'tick');
+  setTimeout(() => div.remove(), 2500);
+}
+
+// === TRACK THEMES ===
+const TRACK_THEMES = [
+  { id: 'grass', name: '🌿 草地赛道', bg: '#2d5a1b', laneOdd: 'rgba(34,80,22,0.5)', laneEven: 'rgba(28,70,18,0.5)', strip: '#3a7a20', dust: 'rgba(200,180,140,0.5)' },
+  { id: 'beach', name: '🏖️ 沙滩赛道', bg: '#b8860b', laneOdd: 'rgba(180,140,60,0.5)', laneEven: 'rgba(160,120,40,0.5)', strip: '#d4a030', dust: 'rgba(220,200,150,0.6)' },
+  { id: 'snow', name: '❄️ 雪地赛道', bg: '#4a6fa5', laneOdd: 'rgba(180,200,230,0.3)', laneEven: 'rgba(160,185,220,0.3)', strip: '#8ab4e8', dust: 'rgba(230,240,255,0.6)' },
+  { id: 'night', name: '🌙 夜光赛道', bg: '#1a0a2e', laneOdd: 'rgba(40,20,80,0.5)', laneEven: 'rgba(30,15,60,0.5)', strip: '#4a2080', dust: 'rgba(150,100,255,0.4)' },
+  { id: 'volcano', name: '🌋 火山赛道', bg: '#3d1008', laneOdd: 'rgba(80,20,10,0.5)', laneEven: 'rgba(60,15,8,0.5)', strip: '#8b2500', dust: 'rgba(255,150,50,0.5)' },
+  { id: 'triathlon', name: '🏅 铁人三项', bg: '#1a4a1a',
+    laneOdd: 'rgba(34,80,22,0.3)', laneEven: 'rgba(28,70,18,0.3)',
+    strip: '#2a6a2a', dust: 'rgba(200,180,140,0.4)',
+    isTriathlon: true,
+    zones: [
+      { name: '🏃 跑步', start: 0, end: 33, cssClass: 'zone-run', zone: 'run' },
+      { name: '🏊 游泳', start: 33, end: 66, cssClass: 'zone-swim', zone: 'swim' },
+      { name: '🐸 蛙跳', start: 66, end: 100, cssClass: 'zone-climb', zone: 'climb' },
+    ],
+  },
+];
+
+// Triathlon zone speed modifiers per turtle (randomized per race)
+let triathlonAbilities = [];
+
+function generateTriathlonAbilities() {
+  triathlonAbilities = raceTurtles.map(() => ({
+    run: 0.9 + Math.random() * 0.4,    // 0.9 ~ 1.3 跑步正常速度
+    swim: 0.5 + Math.random() * 0.45,  // 0.5 ~ 0.95 游泳明显慢（水阻力）
+    climb: 0.7 + Math.random() * 0.5,  // 0.7 ~ 1.2 蛙跳中等偏慢
+  }));
+}
+
+function getZone(progress) {
+  if (progress < 33) return 'run';
+  if (progress < 66) return 'swim';
+  return 'climb';
+}
+
+function getZoneMultiplier(turtleIdx, progress) {
+  if (!currentTrack?.isTriathlon || !triathlonAbilities[turtleIdx]) return 1.0;
+  const zone = getZone(progress);
+  return triathlonAbilities[turtleIdx][zone];
+}
+let currentTrack = TRACK_THEMES[0];
+
+function applyTrackTheme() {
+  currentTrack = TRACK_THEMES[Math.floor(Math.random() * TRACK_THEMES.length)];
+  applyTrackTheme_apply();
+}
+
+// === COMMENTARY SYSTEM ===
+const COMMENTARY = {
+  start: ['各就各位，比赛开始！', '出发了！谁能拿下冠军？', '乌龟们冲出起跑线！', '精彩的比赛即将上演！'],
+  takeLeadFirst: ['{name} 率先冲到前面！', '{name} 抢到了领先位置！', '{name} 一马当先！'],
+  leadChange: ['反超了！{name} 冲到第一！', '局势逆转！{name} 抢到领先！', '天哪！{name} 完成超越！', '精彩！{name} 杀到前面了！'],
+  bigGap: ['{name} 遥遥领先！其他选手还有机会吗？', '{name} 已经拉开差距了！'],
+  closeFight: ['胶着战！前两名差距极小！', '太紧张了！并驾齐驱！', '难分高下！谁能笑到最后？'],
+  comeback: ['{name} 正在疯狂追赶！', '逆袭ing！{name} 越来越近了！', '不要放弃！{name} 在加速！'],
+  sprint: ['最后冲刺阶段！', '终点就在眼前！所有乌龟全力加速！', '冲啊！最后100米！'],
+  almostFinish: ['马上就到终点了！心跳加速！', '只差一点点！谁先到？！'],
+  playerLead: ['你的 {name} 跑在最前面！加油！', '漂亮！{name} 状态火热！'],
+  playerBehind: ['你的 {name} 落后了…还有机会！', '别着急，{name} 还能追！'],
+  finished: ['{name} 率先冲线！🏆', '比赛结束！冠军是 {name}！'],
+  // Triathlon zone transitions
+  enterSwim: ['扑通！跳入水中！🌊 水里速度会变慢哦！', '进入水域！🏊 水的阻力好大！', '游泳赛段！乌龟们艰难前行…谁能游得快？'],
+  enterClimb: ['蛙跳赛段！🐸 跳起来！', '开始蛙跳！弹跳力的较量！', '最后一关！蹦蹦跳跳冲终点！💪'],
+  swimStruggle: ['{name} 在水里挣扎！不太会游泳啊！😰', '{name} 的泳姿有点抱歉…🏊'],
+  swimFast: ['{name} 像鱼一样快！🐟 游泳天赋！', '{name} 在水中如鱼得水！'],
+  climbStruggle: ['{name} 爬得好慢！手短腿短的劣势！😫', '{name} 在岩壁上挂着不动了！'],
+  climbFast: ['{name} 攀岩如飞！蜘蛛龟！🕷️', '{name} 像壁虎一样灵活！'],
+};
+
+let lastCommentary = '';
+let commentaryTimer = 0;
+
+function showCommentary(category, turtleName) {
+  const lines = COMMENTARY[category];
+  if (!lines) return;
+  let text = lines[Math.floor(Math.random() * lines.length)];
+  if (turtleName) text = text.replace('{name}', turtleName);
+  if (text === lastCommentary) return;
+  lastCommentary = text;
+
+  let bar = document.querySelector('.commentary-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'commentary-bar';
+    const trackLanes = document.getElementById('trackLanes');
+    if (trackLanes) trackLanes.appendChild(bar);
+  }
+  bar.innerHTML = `<span class="commentary-avatar">🎙️</span><span class="commentary-text">${text}</span>`;
+}
+
+// === TURTLE SPEECH BUBBLES ===
+const BUBBLE_HAPPY = ['😤 冲！', '💪 加油！', '🔥 快快快！', '✨ 耶！', '😎 稳了', '🚀 起飞！'];
+const BUBBLE_SAD = ['😰 不妙…', '😱 追不上', '🥺 等等我', '😫 好累', '💦 呼…', '😤 可恶'];
+const BUBBLE_TAUNT = ['😏 拜拜~', '✌️ 太慢啦', '🤭 嘿嘿', '💅 轻松'];
+
+function showBubble(turtleIdx, type) {
+  const runner = document.getElementById('turtle' + turtleIdx);
+  if (!runner) return;
+  // Don't spam bubbles
+  if (runner.querySelector('.turtle-bubble')) return;
+  const pool = type === 'happy' ? BUBBLE_HAPPY : type === 'sad' ? BUBBLE_SAD : BUBBLE_TAUNT;
+  const bubble = document.createElement('div');
+  bubble.className = 'turtle-bubble';
+  bubble.textContent = pool[Math.floor(Math.random() * pool.length)];
+  runner.appendChild(bubble);
+  setTimeout(() => bubble.remove(), 2000);
+}
+
+// === WIN STREAK ===
+function getStreakMultiplier() {
+  const streak = state.winStreak || 0;
+  if (streak >= 5) return 3.0;
+  if (streak >= 3) return 2.0;
+  if (streak >= 2) return 1.5;
+  return 1.0;
+}
+
+// === ODDS CALCULATION ===
+function calculateOdds() {
+  if (!raceTurtles.length) return [];
+  const totalSpeed = raceTurtles.reduce((s, t) => s + t.speed, 0);
+  return raceTurtles.map((t, i) => {
+    let winProb = t.speed / totalSpeed;
+    // Player's equipped cosmetics boost their turtle's odds slightly
+    if (i === state.selected) {
+      const cb = getCosmeticBonuses();
+      winProb *= 1 + (cb.speed || 0) + (cb.sprint || 0) * 0.5;
+    }
+    const odds = Math.max(1.2, (1 / winProb)).toFixed(1);
+    return { name: t.name, color: t.color, odds: parseFloat(odds) };
+  });
+}
+
+function beginRaceAnimation() {
+  // Start background race music
+  startBgMusic();
+  ambientSoundTimer = 0;
+
+  // Target ~20 seconds at 60fps = ~1200 frames, need avg 100/1200 ≈ 0.083 per frame
+  const baseSpeeds = raceTurtles.map(t => t.speed / 100);
+
+  // Get cosmetic bonuses for player's turtle
+  const cb = (state.selected >= 0) ? getCosmeticBonuses() : {};
+  // stat bonuses:
+  //   speed    → base speed multiplier
+  //   stamina  → slower stamina drain for leader
+  //   luck     → wider luck range
+  //   recovery → faster underdog recovery
+  //   focus    → smaller jitter (more consistent)
+  //   burst    → stronger burst speed
+  //   chaos    → opponents get more momentum swings
+  //   sprint   → stronger final sprint
+  //   dodge    → resist slow events
+  //   warmup   → start with higher momentum
+
+  const turtleState = raceTurtles.map((t, i) => {
+    const isPlayer = i === state.selected;
+    const lucky = state.usedItems.includes('lucky') && isPlayer;
+    return {
+      baseSpeed: t.speed / 100 * (isPlayer ? 1 + (cb.speed || 0) + getShoeBonus() : 1),
+      momentum: 0.8 + Math.random() * 0.4 + (isPlayer ? (cb.warmup || 0) : 0),
+      stamina: 1.0,
+      burstTimer: 0,
+      slowTimer: 0,
+      nextShiftAt: 15 + Math.random() * 20 * ((!isPlayer && cb.chaos) ? 0.6 : 1),
+      luckyBoost: lucky ? 1.15 + (cb.luck || 0) : 1.0,
+      isPlayer,
+    };
+  });
+
+  // Apply item boosts to base
+  if (state.usedItems.includes('boost')) {
+    turtleState[state.selected].baseSpeed *= 1.2;
+  }
+  if (state.usedItems.includes('slow')) {
+    const opponents = [0,1,2,3].filter(i => i !== state.selected);
+    const target = opponents[Math.floor(Math.random() * opponents.length)];
+    turtleState[target].baseSpeed *= 0.8;
+  }
+
+  let frameCount = 0;
+  raceStartTime = performance.now();
+  let lastEventProgress = 0;
+
+  let animId;
+  function tick() {
+    frameCount++;
+
+    for (let i = 0; i < 4; i++) {
+      if (state.progress[i] >= 100) continue;
+
+      const ts = turtleState[i];
+
+      // === Dynamic momentum shifts — the core drama engine ===
+      // Every turtle hits shift points where their speed changes dramatically
+      if (state.progress[i] >= ts.nextShiftAt) {
+        // Big momentum swing: can speed up OR slow down significantly
+        const swing = 0.5 + Math.random() * 1.2; // range 0.5x to 1.7x
+        ts.momentum = swing;
+        const shiftInterval = (!ts.isPlayer && cb.chaos) ? (8 + Math.random() * 10) : (8 + Math.random() * 18);
+        ts.nextShiftAt = state.progress[i] + shiftInterval;
+      }
+
+      // === Random speed bursts — sudden surges forward ===
+      if (ts.burstTimer > 0) {
+        ts.burstTimer--;
+      } else if (Math.random() < 0.005) {
+        ts.burstTimer = 30 + Math.floor(Math.random() * 60);
+        ts.momentum = 1.4 + Math.random() * 0.5 + (ts.isPlayer ? (cb.burst || 0) : 0);
+      }
+
+      // === Random slowdowns — turtle gets tired or distracted ===
+      if (ts.slowTimer > 0) {
+        // dodge bonus: player's turtle resists slowdowns
+        const dodged = ts.isPlayer && (cb.dodge || 0) > 0 && Math.random() < (cb.dodge || 0);
+        if (!dodged) { ts.slowTimer--; ts.momentum *= 0.6; }
+        else { ts.slowTimer = 0; } // shrug off the slowdown
+      } else if (Math.random() < 0.003) {
+        ts.slowTimer = 20 + Math.floor(Math.random() * 40);
+      }
+
+      // === Stamina system — leaders tire, trailers get second wind ===
+      const maxProgress = Math.max(...state.progress);
+      const isLeader = state.progress[i] === maxProgress && state.progress[i] > 30;
+      const isBehind = state.progress[i] < maxProgress - 15;
+
+      if (isLeader && state.progress[i] > 50) {
+        const staminaDrain = ts.isPlayer ? 0.001 * (1 - (cb.stamina || 0)) : 0.001;
+        ts.stamina = Math.max(0.6, ts.stamina - staminaDrain);
+      }
+      if (isBehind && state.progress[i] > 40) {
+        const recoveryRate = ts.isPlayer ? 0.003 * (1 + (cb.recovery || 0)) : 0.003;
+        ts.stamina = Math.min(1.3, ts.stamina + recoveryRate);
+      }
+
+      // === Final sprint — everyone speeds up past 85% for exciting finish ===
+      const sprintMult = ts.isPlayer ? 1 + (cb.sprint || 0) : 1;
+      const sprintBoost = state.progress[i] > 85 ? (1.2 + (state.progress[i] - 85) * 0.02) * sprintMult : 1.0;
+
+      // === Calculate final speed with all factors ===
+      // focus bonus: player's turtle has less speed variation (more consistent)
+      const jitterRange = ts.isPlayer ? 0.3 * (1 - (cb.focus || 0)) : 0.3;
+      const jitter = 0.85 + Math.random() * jitterRange;
+      const zoneMult = getZoneMultiplier(i, state.progress[i]);
+      const effectiveSpeed = ts.baseSpeed * ts.momentum * ts.stamina * ts.luckyBoost * sprintBoost * jitter * zoneMult;
+
+      // Scale to ~20 second race: base increment ~0.08 per frame
+      state.progress[i] += effectiveSpeed * 0.09;
+
+      if (state.progress[i] >= 100) {
+        state.progress[i] = 100;
+        if (!state.finished.includes(i)) {
+          state.finished.push(i);
+          playSound('finishLine');
+        }
+      }
+    }
+
+    // Random race events — more frequent window, wider range
+    const avgProgress = state.progress.reduce((a, b) => a + b, 0) / 4;
+    if (avgProgress > 15 && avgProgress < 85 && avgProgress - lastEventProgress > 12 && Math.random() < 0.008) {
+      // Affect turtleState momentum instead of the old speeds array
+      const evt = RACE_EVENTS[Math.floor(Math.random() * RACE_EVENTS.length)];
+      let targetIdx;
+      if (evt.effect === 'slow_leader') {
+        let maxProg = -1;
+        state.progress.forEach((p, i) => { if (p > maxProg && p < 100) { maxProg = p; targetIdx = i; } });
+      } else {
+        targetIdx = Math.floor(Math.random() * raceTurtles.length);
+      }
+      if (targetIdx !== undefined) {
+        const ts = turtleState[targetIdx];
+        if (evt.effect.startsWith('boost')) {
+          ts.burstTimer = 60; ts.momentum = 1.6;
+        } else {
+          ts.slowTimer = 50; ts.momentum = 0.4;
+        }
+        const div = document.createElement('div');
+        div.className = 'race-event';
+        div.textContent = evt.emoji + ' ' + evt.text.replace('{name}', raceTurtles[targetIdx]?.name || '乌龟');
+        document.body.appendChild(div);
+        playSound(evt.effect.startsWith('boost') ? 'go' : 'tick');
+        setTimeout(() => div.remove(), 2500);
+        lastEventProgress = avgProgress;
+      }
+    }
+
+    render();
+
+    // === AMBIENT RACE SOUNDS ===
+    ambientSoundTimer++;
+    if (ambientSoundTimer % 12 === 0) { // ~5 times per second at 60fps
+      const playerProg2 = state.progress[state.selected] || 0;
+      if (playerProg2 > 0 && playerProg2 < 100) {
+        const playerZone = currentTrack?.isTriathlon ? getZone(playerProg2) : 'run';
+        if (playerZone === 'swim') {
+          playSound('swimming');
+        } else {
+          playSound('running');
+        }
+      }
+    }
+
+    // === COMMENTARY & BUBBLES ===
+    commentaryTimer++;
+    const avgProg = state.progress.reduce((a,b) => a+b, 0) / 4;
+    // Find leader
+    let leadIdx = 0; let leadProg = 0;
+    state.progress.forEach((p,i) => { if (p > leadProg) { leadProg = p; leadIdx = i; } });
+    const playerProg = state.progress[state.selected] || 0;
+
+    if (commentaryTimer === 1) {
+      showCommentary('start');
+    }
+    if (commentaryTimer === 60) {
+      showCommentary('takeLeadFirst', raceTurtles[leadIdx]?.name);
+    }
+    // Lead changes
+    if (commentaryTimer > 60 && commentaryTimer % 30 === 0) {
+      const sorted = [...state.progress].map((p,i)=>({p,i})).sort((a,b)=>b.p-a.p);
+      const gap = sorted[0].p - sorted[1].p;
+      if (gap < 3 && avgProg > 30) {
+        showCommentary('closeFight');
+      } else if (gap > 15) {
+        showCommentary('bigGap', raceTurtles[sorted[0].i]?.name);
+      }
+    }
+    // Player-specific commentary
+    if (commentaryTimer % 80 === 0 && avgProg > 20 && avgProg < 80) {
+      if (leadIdx === state.selected) {
+        showCommentary('playerLead', raceTurtles[state.selected]?.name);
+      } else if (leadProg - playerProg > 10) {
+        showCommentary('playerBehind', raceTurtles[state.selected]?.name);
+      }
+    }
+    // Comeback detection
+    if (commentaryTimer % 60 === 0) {
+      const sorted = [...state.progress].map((p,i)=>({p,i})).sort((a,b)=>b.p-a.p);
+      for (let ri = 1; ri < sorted.length; ri++) {
+        if (sorted[0].p - sorted[ri].p < 5 && sorted[ri].p > 50) {
+          showCommentary('comeback', raceTurtles[sorted[ri].i]?.name);
+          break;
+        }
+      }
+    }
+    // Sprint phase
+    if (avgProg > 82 && commentaryTimer % 100 === 0) {
+      showCommentary('sprint');
+    }
+    if (avgProg > 92 && commentaryTimer % 60 === 0) {
+      showCommentary('almostFinish');
+    }
+    // Triathlon zone transitions
+    if (currentTrack?.isTriathlon) {
+      const leaderProg = Math.max(...state.progress);
+      // Trigger zone transition commentary once
+      if (!state._swimAnnounced && leaderProg >= 33) {
+        state._swimAnnounced = true;
+        showCommentary('enterSwim');
+      }
+      if (!state._climbAnnounced && leaderProg >= 66) {
+        state._climbAnnounced = true;
+        showCommentary('enterClimb');
+      }
+      // Zone-specific performance commentary
+      if (commentaryTimer % 90 === 0 && triathlonAbilities.length > 0) {
+        for (let ti = 0; ti < raceTurtles.length; ti++) {
+          const zone = getZone(state.progress[ti]);
+          const ability = triathlonAbilities[ti]?.[zone] || 1;
+          if (ability < 0.85 && state.progress[ti] > 5 && state.progress[ti] < 95) {
+            showCommentary(zone === 'swim' ? 'swimStruggle' : zone === 'climb' ? 'climbStruggle' : 'playerBehind', raceTurtles[ti]?.name);
+            break;
+          } else if (ability > 1.15 && state.progress[ti] > 5 && state.progress[ti] < 95) {
+            showCommentary(zone === 'swim' ? 'swimFast' : zone === 'climb' ? 'climbFast' : 'playerLead', raceTurtles[ti]?.name);
+            break;
+          }
+        }
+      }
+    }
+
+    // Random speech bubbles
+    if (Math.random() < 0.004) {
+      const sorted = [...state.progress].map((p,i)=>({p,i})).sort((a,b)=>b.p-a.p);
+      if (sorted[0].p - sorted[sorted.length-1].p > 10) {
+        showBubble(sorted[0].i, 'happy');
+        showBubble(sorted[sorted.length-1].i, 'sad');
+      }
+    }
+
+    // Spawn zone-specific particles + update turtle zone class
+    if (Math.random() < 0.4) {
+      raceTurtles.forEach((_, i) => {
+        if (state.progress[i] > 0 && state.progress[i] < 100) {
+          const runner = document.getElementById('turtle' + i);
+          if (!runner || !runner.parentElement) return;
+          const zone = getZone(state.progress[i]);
+          const isTri = currentTrack?.isTriathlon;
+          const laneEl = runner.parentElement;
+          const rx = parseFloat(runner.style.left) || 0;
+          const cy = laneEl.offsetHeight / 2;
+
+          // Update turtle zone animation class
+          runner.classList.remove('in-water', 'in-climb');
+          if (isTri && zone === 'swim') runner.classList.add('in-water');
+          if (isTri && zone === 'climb') runner.classList.add('in-climb');
+
+          if (isTri && zone === 'swim') {
+            // Water splash: multiple droplets
+            for (let d = 0; d < 3; d++) {
+              const sp = document.createElement('div');
+              sp.className = 'splash';
+              sp.style.width = (5 + Math.random() * 8) + 'px';
+              sp.style.height = sp.style.width;
+              sp.style.left = (rx - 8 + Math.random() * 12) + 'px';
+              sp.style.top = (cy + (Math.random() - 0.5) * 24) + 'px';
+              laneEl.appendChild(sp);
+              setTimeout(() => sp.remove(), 700);
+            }
+            // Water drops falling
+            if (Math.random() < 0.5) {
+              const drop = document.createElement('div');
+              drop.className = 'splash-drop';
+              drop.style.left = (rx + 10 + Math.random() * 20) + 'px';
+              drop.style.top = (cy - 10 + Math.random() * 8) + 'px';
+              laneEl.appendChild(drop);
+              setTimeout(() => drop.remove(), 500);
+            }
+            // Water ripple behind turtle
+            if (Math.random() < 0.3) {
+              const ripple = document.createElement('div');
+              ripple.className = 'water-ripple';
+              ripple.style.left = (rx - 15) + 'px';
+              ripple.style.top = (cy - 5) + 'px';
+              laneEl.appendChild(ripple);
+              setTimeout(() => ripple.remove(), 1000);
+            }
+          } else if (isTri && zone === 'climb') {
+            // Rock particles + sparks
+            const rock = document.createElement('div');
+            rock.className = 'rock-particle';
+            rock.style.width = (4 + Math.random() * 6) + 'px';
+            rock.style.height = (4 + Math.random() * 5) + 'px';
+            rock.style.left = (rx - 5 + Math.random() * 15) + 'px';
+            rock.style.top = (cy + (Math.random() - 0.5) * 20) + 'px';
+            laneEl.appendChild(rock);
+            setTimeout(() => rock.remove(), 800);
+            if (Math.random() < 0.4) {
+              const spark = document.createElement('div');
+              spark.className = 'rock-spark';
+              spark.style.left = (rx + Math.random() * 10) + 'px';
+              spark.style.top = (cy - 5 + Math.random() * 10) + 'px';
+              laneEl.appendChild(spark);
+              setTimeout(() => spark.remove(), 400);
+            }
+          } else {
+            // Normal dust
+            const dust = document.createElement('div');
+            dust.className = 'dust';
+            dust.style.left = (rx - 5 + Math.random() * 6) + 'px';
+            dust.style.top = (cy + (Math.random() - 0.5) * 20) + 'px';
+            laneEl.appendChild(dust);
+            setTimeout(() => dust.remove(), 600);
+          }
+        }
+      });
+    }
+
+    if (state.finished.length < 4) {
+      animId = requestAnimationFrame(tick);
+    } else {
+      finishRace();
+    }
+  }
+  animId = requestAnimationFrame(tick);
+}
+
+function finishRace() {
+  state.racing = false;
+  stopBgMusic();
+  const winner = state.finished[0];
+  const won = winner === state.selected;
+  const raceTime = ((performance.now() - raceStartTime) / 1000).toFixed(2);
+
+  // Commentary: finish
+  showCommentary('finished', raceTurtles[winner]?.name);
+
+  // Streak + reward calc
+  const streakMult = getStreakMultiplier();
+  let netReward = 0;
+  if (won) {
+    const reward = Math.round(state.betAmount * 4 * streakMult);
+    netReward = reward - state.betAmount; // net gain for display
+    state.coins += reward;
+    state.wins++;
+    state.winStreak = (state.winStreak || 0) + 1;
+    playSound('win');
+    showConfetti();
+    showBubble(winner, 'taunt');
+    // Record to leaderboard
+    addRaceRecord(
+      raceTurtles[winner].name,
+      raceTurtles[winner].color,
+      currentTrack?.name || '🌿 草地赛道',
+      raceTime,
+      netReward
+    );
+  } else {
+    state.winStreak = 0;
+    playSound('lose');
+    showBubble(state.selected, 'sad');
+    showBubble(winner, 'taunt');
+  }
+
+  render();
+
+  setTimeout(() => {
+    const modal = document.getElementById('modal');
+    const streakText = won && state.winStreak >= 2 ? ` (🔥${state.winStreak}连胜 x${getStreakMultiplier()})` : '';
+    document.getElementById('modalTitle').textContent = won ? '🎉 You Won!' : '😅 Better Luck Next Time';
+    document.getElementById('modalTitle').style.color = won ? '#4EEAAC' : '#FF6B6B';
+    document.getElementById('modalEmoji').textContent = won ? '🏆' : '💔';
+    document.getElementById('modalText').textContent = `Winner: ${raceTurtles[winner].name}${streakText}`;
+    document.getElementById('modalText').innerHTML += `<br><span style="font-size:22px;color:var(--gold)">⏱ ${raceTime}s</span>`;
+    document.getElementById('modalReward').textContent = won ? `+${netReward} coins!` : `-${state.betAmount} coins`;
+    document.getElementById('modalReward').style.color = won ? '#FFD700' : '#FF6B6B';
+    modal.classList.add('show');
+  }, 800);
+
+  saveGame();
+}
+
+function showGameOver() {
+  if (state.coins > state.highScore) {
+    state.highScore = state.coins;
+  }
+  state.totalWins += state.wins;
+  saveGame();
+  // Race records are now added per-win in finishRace()
+
+  document.getElementById('gameoverEmoji').textContent = state.wins >= 3 ? '🏆' : '🐢';
+  document.getElementById('gameoverTitle').textContent =
+    state.wins >= 3 ? '太厉害了!' : state.wins > 0 ? '不错的比赛!' : '再接再厉!';
+  document.getElementById('gameoverTitle').style.color =
+    state.wins >= 3 ? 'var(--gold)' : 'var(--accent)';
+
+  document.getElementById('gameoverStats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">🪙 ${state.coins.toLocaleString()}</div><div class="stat-label">最终金币</div></div>
+    <div class="stat-card"><div class="stat-value">🏆 ${state.wins}</div><div class="stat-label">胜利场次</div></div>
+    <div class="stat-card"><div class="stat-value">${state.maxRounds}</div><div class="stat-label">总轮次</div></div>
+    <div class="stat-card"><div class="stat-value">${state.highScore.toLocaleString()}</div><div class="stat-label">历史最高</div></div>
+  `;
+
+  if (state.wins >= 3) showConfetti();
+  playSound(state.wins > 0 ? 'win' : 'lose');
+  showScene('scene-gameover');
+}
+
+function nextRound() {
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('confetti').innerHTML = '';
+
+  if (state.round >= state.maxRounds) {
+    showGameOver();
+    return;
+  }
+
+  state.round++;
+  state.selected = -1;
+  state.progress = [0, 0, 0, 0];
+  state.finished = [];
+  state.usedItems = [];
+  state.pickPhase = true;
+  raceTurtles = [];
+  document.getElementById('raceTitle').textContent = '🐢 选择你的参赛乌龟！';
+  render();
+  saveGame();
+}
+
+function showConfetti() {
+  const container = document.getElementById('confetti');
+  const colors = ['#FFD700', '#4EEAAC', '#FF6B6B', '#FFB347', '#A78BFA', '#fff'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.width = (6 + Math.random() * 8) + 'px';
+    el.style.height = (6 + Math.random() * 8) + 'px';
+    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    el.style.animationDuration = (2 + Math.random() * 3) + 's';
+    el.style.animationDelay = Math.random() * 1.5 + 's';
+    container.appendChild(el);
+  }
+}
+
+loadGame();
+const hsEl = document.getElementById('highScore');
+if (hsEl) hsEl.textContent = state.highScore.toLocaleString();
+const scEl = document.getElementById('startCoins');
+if (scEl) scEl.textContent = state.coins.toLocaleString();
+render();
+</script>
+</body>
+</html>
