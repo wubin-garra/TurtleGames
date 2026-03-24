@@ -9,11 +9,22 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;touch-action:none;user-select:none;-webkit-user-select:none}
 canvas{display:block}
+body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
 <script>
+// Prevent pull-to-refresh and bounce scroll in WeChat
+document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+// Prevent double-tap zoom
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd < 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
 // === ROUNDRECT POLYFILL ===
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
@@ -282,6 +293,64 @@ function detectCollisions(bodies, area) {
   return pairs;
 }
 
+function detectCollisionsOptimized(bodies, area) {
+  if (bodies.length < 20) return detectCollisions(bodies, area);
+
+  const cellSize = 160; // larger than biggest turtle diameter
+  const grid = new Map();
+
+  for (const body of bodies) {
+    const cx = Math.floor(body.x / cellSize);
+    const cy = Math.floor(body.y / cellSize);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const key = `${cx+dx},${cy+dy}`;
+        if (!grid.has(key)) grid.set(key, []);
+        grid.get(key).push(body);
+      }
+    }
+  }
+
+  const pairs = [];
+  const checked = new Set();
+
+  for (const cell of grid.values()) {
+    for (let i = 0; i < cell.length; i++) {
+      for (let j = i + 1; j < cell.length; j++) {
+        const a = cell[i], b = cell[j];
+        const pairKey = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
+        if (checked.has(pairKey)) continue;
+        checked.add(pairKey);
+
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const minDist = a.radius + b.radius;
+        if (dist < minDist) {
+          const nx = dist > 0.0001 ? dx / dist : 0;
+          const ny = dist > 0.0001 ? dy / dist : 1;
+          pairs.push({ a, b, nx, ny, overlap: minDist - dist });
+        }
+      }
+    }
+  }
+
+  // Wall collisions
+  const left = area.x + GAME.wallThickness;
+  const right = area.x + area.w - GAME.wallThickness;
+  const bottom = area.y + area.h;
+  for (const body of bodies) {
+    if (body.x - body.radius < left)
+      pairs.push({ a: body, b: null, nx: 1, ny: 0, overlap: left - (body.x - body.radius), wall: 'left' });
+    if (body.x + body.radius > right)
+      pairs.push({ a: body, b: null, nx: -1, ny: 0, overlap: (body.x + body.radius) - right, wall: 'right' });
+    if (body.y + body.radius > bottom)
+      pairs.push({ a: body, b: null, nx: 0, ny: -1, overlap: (body.y + body.radius) - bottom, wall: 'bottom' });
+  }
+
+  return pairs;
+}
+
 function solveCollision(pair) {
   const { a, b, nx, ny, overlap } = pair;
   if (!b) {
@@ -360,7 +429,7 @@ function physicsStep(dt) {
       body.y += body.vy * fixedDt;
     }
     for (let iter = 0; iter < PHYSICS.solverIterations; iter++) {
-      const pairs = detectCollisions(world.bodies, layout.gameArea);
+      const pairs = detectCollisionsOptimized(world.bodies, layout.gameArea);
       for (const pair of pairs) {
         solveCollision(pair);
       }
