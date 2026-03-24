@@ -668,6 +668,118 @@ function shareScore() {
   });
 }
 
+// === UI LAYER ===
+function renderHUD(ctx) {
+  const tb = layout.topBar;
+  ctx.fillStyle = '#12122a';
+  ctx.fillRect(tb.x, tb.y, tb.w, tb.h);
+  ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('分数', tb.x + 12, tb.y + 14);
+  ctx.fillStyle = '#FFD54F'; ctx.font = 'bold 18px sans-serif';
+  ctx.fillText(game.score.toLocaleString(), tb.x + 12, tb.y + 34);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('🐢 合成大乌龟', tb.x + tb.w / 2, tb.y + 28);
+  ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('最高', tb.x + tb.w - 12, tb.y + 14);
+  ctx.fillStyle = '#aaa'; ctx.font = '14px sans-serif';
+  ctx.fillText(game.highScore.toLocaleString(), tb.x + tb.w - 12, tb.y + 34);
+}
+
+function renderDifficultyBar(ctx) {
+  const db = layout.diffBar;
+  ctx.fillStyle = '#12122a';
+  ctx.fillRect(db.x, db.y, db.w, db.h);
+  const diffs = ['easy', 'normal', 'hard'];
+  const labels = ['简单', '普通', '困难'];
+  const colors = ['#8BC34A', '#FFD54F', '#FF5252'];
+  const btnW = 50, btnH = 18;
+  const startX = db.x + (db.w - diffs.length * (btnW + 8)) / 2;
+  diffs.forEach((d, i) => {
+    const bx = startX + i * (btnW + 8);
+    const by = db.y + (db.h - btnH) / 2;
+    const active = game.difficulty === d;
+    ctx.fillStyle = active ? colors[i] : '#2a2a4a';
+    ctx.beginPath(); ctx.roundRect(bx, by, btnW, btnH, 9); ctx.fill();
+    ctx.fillStyle = active ? (d === 'normal' ? '#333' : '#fff') : '#888';
+    ctx.font = `${active ? 'bold ' : ''}10px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], bx + btnW / 2, by + 13);
+  });
+}
+
+function renderPreview(ctx) {
+  const pv = layout.preview;
+  ctx.fillStyle = '#12122a';
+  ctx.fillRect(pv.x, pv.y, pv.w, pv.h);
+  ctx.fillStyle = '#666'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('下一个:', pv.x + pv.w / 2 - 15, pv.y + 19);
+  drawTurtle(ctx, pv.x + pv.w / 2 + 20, pv.y + 15, game.nextLevel, 0.35);
+}
+
+function renderDropZone(ctx) {
+  const dz = layout.dropZone;
+  if (game.currentTurtle && game.canDrop) {
+    const t = game.currentTurtle;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = `${TURTLES[t.level].color}44`;
+    ctx.beginPath(); ctx.moveTo(t.x, dz.y); ctx.lineTo(t.x, layout.gameArea.y + layout.gameArea.h);
+    ctx.stroke(); ctx.setLineDash([]);
+    drawTurtle(ctx, t.x, dz.y + dz.h / 2, t.level, 0.8);
+  }
+}
+
+function renderGameArea(ctx) {
+  const ga = layout.gameArea;
+  const grad = ctx.createLinearGradient(0, ga.y, 0, ga.y + ga.h);
+  grad.addColorStop(0, '#1a1a2e'); grad.addColorStop(1, '#162447');
+  ctx.fillStyle = grad; ctx.fillRect(ga.x, ga.y, ga.w, ga.h);
+  ctx.fillStyle = '#2a2a4a';
+  ctx.fillRect(ga.x, ga.y, GAME.wallThickness, ga.h);
+  ctx.fillRect(ga.x + ga.w - GAME.wallThickness, ga.y, GAME.wallThickness, ga.h);
+  ctx.setLineDash([6, 4]); ctx.strokeStyle = 'rgba(255,0,0,0.3)';
+  ctx.beginPath(); ctx.moveTo(ga.x, layout.gameOverLineY); ctx.lineTo(ga.x + ga.w, layout.gameOverLineY);
+  ctx.stroke(); ctx.setLineDash([]);
+  for (const body of world.bodies) {
+    drawTurtle(ctx, body.x, body.y, body.level);
+    game.discoveredLevels.add(body.level);
+  }
+  renderParticles(ctx);
+}
+
+function renderBottomBar(ctx) {
+  const bb = layout.bottomBar;
+  ctx.fillStyle = '#12122a'; ctx.fillRect(bb.x, bb.y, bb.w, bb.h);
+  const totalW = TURTLES.length * 28;
+  let startX = bb.x + (bb.w - totalW) / 2;
+  TURTLES.forEach((t, i) => {
+    ctx.globalAlpha = game.discoveredLevels.has(i) ? 1 : 0.25;
+    drawTurtle(ctx, startX + i * 28 + 14, bb.y + bb.h / 2, i, 0.25);
+  });
+  ctx.globalAlpha = 1;
+}
+
+function renderGameOverPanel(ctx) {
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(0, 0, layout.width, layout.height);
+  const pw = 260, ph = 220;
+  const px = (layout.width - pw) / 2, py = (layout.height - ph) / 2;
+  ctx.fillStyle = '#1e1e3a'; ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 16); ctx.fill();
+  ctx.strokeStyle = '#3a3a6a'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('游戏结束', px + pw / 2, py + 40);
+  ctx.fillStyle = '#FFD54F'; ctx.font = 'bold 36px sans-serif';
+  ctx.fillText(game.score.toLocaleString(), px + pw / 2, py + 90);
+  ctx.fillStyle = '#888'; ctx.font = '13px sans-serif';
+  ctx.fillText(`最高分: ${game.highScore.toLocaleString()}`, px + pw / 2, py + 115);
+  ctx.fillStyle = '#4CAF50'; ctx.beginPath(); ctx.roundRect(px + 20, py + 140, 100, 40, 10); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 15px sans-serif';
+  ctx.fillText('再来一局', px + 70, py + 165);
+  ctx.fillStyle = '#2196F3'; ctx.beginPath(); ctx.roundRect(px + 140, py + 140, 100, 40, 10); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.fillText('分享', px + 190, py + 165);
+  game.restartBtn = { x: px + 20, y: py + 140, w: 100, h: 40 };
+  game.shareBtn = { x: px + 140, y: py + 140, w: 100, h: 40 };
+}
+
 // === GAME LOOP (placeholder) ===
 let lastTime = null;
 
