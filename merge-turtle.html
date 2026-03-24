@@ -14,6 +14,23 @@ canvas{display:block}
 <body>
 <canvas id="gameCanvas"></canvas>
 <script>
+// === ROUNDRECT POLYFILL ===
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === 'number') r = [r, r, r, r];
+    this.moveTo(x + r[0], y);
+    this.lineTo(x + w - r[1], y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r[1]);
+    this.lineTo(x + w, y + h - r[2]);
+    this.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
+    this.lineTo(x + r[3], y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r[3]);
+    this.lineTo(x, y + r[0]);
+    this.quadraticCurveTo(x, y, x + r[0], y);
+    this.closePath();
+  };
+}
+
 // === CANVAS SETUP ===
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -366,7 +383,58 @@ function physicsStep(dt) {
 const particles = [];
 const scorePopups = [];
 let chainCount = 0;
-const game = { score: 0 };
+
+// === GAME STATE ===
+const game = {
+  state: 'menu',
+  difficulty: 'normal',
+  score: 0,
+  highScore: parseInt(localStorage.getItem('turtle_merge_high_score') || '0'),
+  currentTurtle: null,
+  nextLevel: 0,
+  dropX: 0,
+  canDrop: true,
+  dropCooldownTimer: 0,
+  gameOverTimer: 0,
+  discoveredLevels: new Set(),
+
+  reset() {
+    this.score = 0;
+    this.state = 'playing';
+    this.canDrop = true;
+    this.dropCooldownTimer = 0;
+    this.gameOverTimer = 0;
+    this.discoveredLevels = new Set();
+    world.bodies = [];
+    world.mergeQueue = [];
+    particles.length = 0;
+    scorePopups.length = 0;
+    this.spawnNext();
+  },
+
+  spawnNext() {
+    const maxDrop = DIFFICULTY[this.difficulty].maxDrop;
+    this.nextLevel = Math.floor(Math.random() * maxDrop);
+    if (this.currentTurtle === null) {
+      this.currentTurtle = { level: this.nextLevel, x: layout.width / 2 };
+      this.nextLevel = Math.floor(Math.random() * maxDrop);
+    }
+  },
+
+  dropTurtle() {
+    if (!this.canDrop || this.state !== 'playing') return;
+    const t = this.currentTurtle;
+    const dropY = layout.dropZone.y + layout.dropZone.h;
+    world.addBody(t.x, dropY, t.level);
+    this.discoveredLevels.add(t.level);
+    playDropSound();
+    this.canDrop = false;
+    this.dropCooldownTimer = GAME.dropCooldown;
+    this.currentTurtle = { level: this.nextLevel, x: layout.width / 2 };
+    const maxDrop = DIFFICULTY[this.difficulty].maxDrop;
+    this.nextLevel = Math.floor(Math.random() * maxDrop);
+  },
+};
 
 function processMerges() {
   for (const { a, b } of world.mergeQueue) {
@@ -509,17 +577,99 @@ function playGameOverSound() {
   osc.start(); osc.stop(audioCtx.currentTime + 0.5);
 }
 
-// === GAME LOOP ===
-let lastTime = null;
+// === INPUT HANDLER ===
+let touching = false;
 
-canvas.addEventListener('click', (e) => {
+function getEventX(e) {
+  if (e.touches && e.touches.length > 0) return e.touches[0].clientX;
+  return e.clientX;
+}
+function getEventY(e) {
+  if (e.touches && e.touches.length > 0) return e.touches[0].clientY;
+  return e.clientY;
+}
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
   initAudio();
-  const rect = canvas.getBoundingClientRect();
-  const clickX = e.clientX - rect.left;
-  const spawnY = layout.dropZone.y + layout.dropZone.h;
-  const level = Math.floor(Math.random() * 4);
-  world.addBody(clickX, spawnY, level);
+  touching = true;
+  const x = getEventX(e), y = getEventY(e);
+  handleTap(x, y);
+  handlePointerMove(x);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (touching) handlePointerMove(getEventX(e));
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  if (touching && game.state === 'playing') game.dropTurtle();
+  touching = false;
+}, { passive: false });
+
+canvas.addEventListener('mousedown', (e) => {
+  initAudio();
+  touching = true;
+  handleTap(e.clientX, e.clientY);
+  handlePointerMove(e.clientX);
 });
+canvas.addEventListener('mousemove', (e) => {
+  if (touching) handlePointerMove(e.clientX);
+});
+canvas.addEventListener('mouseup', () => {
+  if (touching && game.state === 'playing') game.dropTurtle();
+  touching = false;
+});
+
+function handlePointerMove(x) {
+  if (game.state === 'playing' && game.currentTurtle) {
+    const r = TURTLES[game.currentTurtle.level].radius;
+    const left = layout.gameArea.x + GAME.wallThickness + r;
+    const right = layout.gameArea.x + layout.gameArea.w - GAME.wallThickness - r;
+    game.currentTurtle.x = Math.max(left, Math.min(right, x));
+  }
+}
+
+function handleTap(x, y) {
+  if (game.state === 'gameover') {
+    if (hitTest(x, y, game.restartBtn)) { game.reset(); return; }
+    if (hitTest(x, y, game.shareBtn)) { shareScore(); return; }
+    return;
+  }
+  if (world.bodies.length === 0) {
+    const db = layout.diffBar;
+    const diffs = ['easy', 'normal', 'hard'];
+    const btnW = 50, btnH = 18;
+    const startX = db.x + (db.w - diffs.length * (btnW + 8)) / 2;
+    diffs.forEach((d, i) => {
+      const bx = startX + i * (btnW + 8);
+      const by = db.y + (db.h - btnH) / 2;
+      if (x >= bx && x <= bx + btnW && y >= by && y <= by + btnH) {
+        game.difficulty = d;
+        localStorage.setItem('turtle_merge_difficulty', d);
+        game.reset();
+      }
+    });
+  }
+}
+
+function hitTest(x, y, rect) {
+  return rect && x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
+}
+
+function shareScore() {
+  const maxTurtle = Math.max(...game.discoveredLevels);
+  const name = TURTLES[maxTurtle]?.name || '草龟';
+  const text = `🐢 我在【合成大乌龟】中获得了 ${game.score} 分！最高合成到了${name}！来挑战我吧 →`;
+  navigator.clipboard?.writeText(text).then(() => {
+    scorePopups.push({ x: layout.width / 2, y: layout.height / 2 - 50, text: '已复制到剪贴板!', life: 1.5, maxLife: 1.5, fontSize: 16 });
+  });
+}
+
+// === GAME LOOP (placeholder) ===
+let lastTime = null;
 
 function drawGame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
