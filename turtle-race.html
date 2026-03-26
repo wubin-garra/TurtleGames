@@ -27,34 +27,99 @@
   .start-screen {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at 50% 30%, #0E2240 0%, #0A1628 70%);
-    gap: 8px;
+    background: radial-gradient(ellipse at 50% 25%, #122a4a 0%, #0E2240 30%, #0A1628 70%);
+    gap: 8px; position: relative; overflow: hidden;
   }
-  .start-logo { font-size: 96px; animation: turtleBounce 2s ease-in-out infinite; }
+  /* Animated background particles */
+  .start-screen::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(2px 2px at 10% 20%, rgba(78,234,172,0.3) 50%, transparent 50%),
+      radial-gradient(2px 2px at 30% 60%, rgba(255,215,0,0.2) 50%, transparent 50%),
+      radial-gradient(2px 2px at 50% 10%, rgba(167,139,250,0.3) 50%, transparent 50%),
+      radial-gradient(2px 2px at 70% 80%, rgba(78,234,172,0.2) 50%, transparent 50%),
+      radial-gradient(2px 2px at 90% 40%, rgba(255,215,0,0.3) 50%, transparent 50%),
+      radial-gradient(3px 3px at 20% 85%, rgba(255,107,107,0.2) 50%, transparent 50%),
+      radial-gradient(2px 2px at 80% 15%, rgba(78,234,172,0.25) 50%, transparent 50%),
+      radial-gradient(2px 2px at 60% 50%, rgba(167,139,250,0.2) 50%, transparent 50%);
+    animation: starFloat 20s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes starFloat {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-30px); }
+  }
+  /* Decorative ground line */
+  .start-screen::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+    background: linear-gradient(to top, rgba(45,90,27,0.3), transparent);
+    pointer-events: none;
+  }
+  .start-logo {
+    font-size: 100px;
+    animation: turtleBounce 2s ease-in-out infinite;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.4));
+  }
   @keyframes turtleBounce {
     0%, 100% { transform: translateY(0) rotate(0deg); }
-    25% { transform: translateY(-15px) rotate(-5deg); }
+    25% { transform: translateY(-18px) rotate(-5deg); }
     75% { transform: translateY(-5px) rotate(5deg); }
   }
   .start-title {
-    font-size: 56px; font-weight: 900; color: var(--accent);
-    text-shadow: 0 0 40px rgba(78,234,172,0.3);
+    font-size: 52px; font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), #FFD700, var(--accent));
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: titleShine 3s linear infinite;
+    text-shadow: none;
   }
-  .start-subtitle { font-size: 20px; color: var(--text-secondary); margin-bottom: 32px; }
-  .start-menu { display: flex; flex-direction: column; gap: 14px; width: 280px; }
+  @keyframes titleShine {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+  .start-subtitle {
+    font-size: 18px; color: var(--text-secondary); margin-bottom: 28px;
+    letter-spacing: 4px; text-transform: uppercase;
+  }
+  .start-menu {
+    display: flex; flex-direction: column; gap: 12px; width: 300px;
+    position: relative; z-index: 1;
+  }
   .menu-btn {
-    border: none; border-radius: 14px; padding: 16px 32px;
-    font-size: 18px; font-weight: 700; cursor: pointer;
-    background: var(--bg-panel); color: var(--text-secondary);
-    border: 2px solid var(--border); transition: all 0.2s;
+    border: none; border-radius: 14px; padding: 15px 32px;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    background: rgba(13,31,60,0.8); color: var(--text-secondary);
+    border: 2px solid var(--border); transition: all 0.25s;
+    backdrop-filter: blur(4px);
+    position: relative; overflow: hidden;
   }
-  .menu-btn:hover { border-color: var(--accent); color: #fff; transform: translateY(-2px); }
+  .menu-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(78,234,172,0.05), transparent);
+    transform: translateX(-100%); transition: transform 0.4s;
+  }
+  .menu-btn:hover::before { transform: translateX(100%); }
+  .menu-btn:hover {
+    border-color: var(--accent); color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
   .menu-btn.primary {
-    background: linear-gradient(to bottom, var(--accent), #2BC48A);
+    background: linear-gradient(135deg, var(--accent), #2BC48A);
     color: var(--bg-dark); border-color: transparent;
+    font-size: 19px;
   }
-  .menu-btn.primary:hover { box-shadow: 0 4px 20px rgba(78,234,172,0.4); }
-  .start-highscore { margin-top: 8px; font-size: 15px; color: var(--text-muted); }
+  .menu-btn.primary:hover {
+    box-shadow: 0 6px 30px rgba(78,234,172,0.5);
+    transform: translateY(-3px) scale(1.02);
+  }
+  .start-highscore {
+    margin-top: 12px; font-size: 14px; color: var(--text-muted);
+    position: relative; z-index: 1;
+    background: rgba(0,0,0,0.3); padding: 8px 20px; border-radius: 12px;
+    backdrop-filter: blur(4px);
+  }
   @keyframes caishenFade {
     0% { opacity: 0; transform: translateY(10px) scale(0.8); }
     20% { opacity: 1; transform: translateY(0) scale(1.05); }
@@ -106,9 +171,62 @@
   }
 
   /* === COSMETIC MODAL === */
+  .slot-section { margin-bottom: 10px; text-align: left; }
+  .slot-header {
+    font-size: 14px; font-weight: 700; color: var(--text-secondary);
+    padding: 6px 4px 4px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+  }
   .cosmetic-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 8px; max-height: 280px; overflow-y: auto; padding: 4px;
+    gap: 8px; overflow-y: auto; padding: 4px;
+  }
+  .cosmetic-item.legendary {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+    background: var(--bg-panel);
+    background-clip: padding-box;
+    box-shadow: 0 0 10px rgba(255,215,0,0.2);
+    transition: all 0.2s;
+  }
+  .cosmetic-item.legendary::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00cc44, #0088ff, #aa00ff, #ff0000);
+    background-size: 200% 100%;
+    border-radius: inherit;
+    z-index: 0;
+    animation: rainbowBorder 3s linear infinite;
+  }
+  .cosmetic-item.legendary::after {
+    content: '⭐';
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 10px;
+    z-index: 2;
+  }
+  .cosmetic-item.legendary > * { position: relative; z-index: 1; }
+  .cosmetic-item.legendary:hover {
+    box-shadow: 0 0 20px rgba(255,215,0,0.4), 0 0 40px rgba(170,0,255,0.15);
+    transform: translateY(-3px) scale(1.04);
+  }
+  .cosmetic-item.legendary .cosmetic-name {
+    color: var(--gold);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    font-size: 12px;
+  }
+  .cosmetic-item.legendary .cosmetic-emoji { font-size: 26px; }
+  .cosmetic-item.terrain-match {
+    border-color: rgba(78,234,172,0.4);
+    background: rgba(78,234,172,0.06);
+    box-shadow: 0 0 6px rgba(78,234,172,0.15);
+  }
+  .cosmetic-item.terrain-partial {
+    border-color: rgba(255,183,77,0.4);
+    background: rgba(255,183,77,0.05);
+    box-shadow: 0 0 6px rgba(255,183,77,0.1);
   }
   .cosmetic-item {
     display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -127,18 +245,45 @@
 
   /* === TURTLE PICKER === */
   .turtle-picker-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 14px; padding: 20px; flex: 1;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px; padding: 20px; flex: 1; align-content: center;
+  }
+  .picker-title {
+    grid-column: 1 / -1; text-align: center;
+    font-size: 20px; font-weight: 800; color: var(--accent);
+    padding: 8px 0 4px; letter-spacing: 1px;
   }
   .picker-card {
-    background: var(--bg-lane-odd); border-radius: 14px; padding: 18px 12px;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+    background: rgba(13,31,60,0.7); border-radius: 16px; padding: 16px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    border: 2px solid var(--border); cursor: pointer; transition: all 0.25s;
+    backdrop-filter: blur(4px); position: relative; overflow: hidden;
   }
-  .picker-card:hover { border-color: var(--accent); transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
-  .picker-name { font-size: 15px; font-weight: 700; }
+  .picker-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .picker-card:hover {
+    border-color: var(--accent); transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 15px rgba(78,234,172,0.15);
+  }
+  .picker-card:active { transform: translateY(-2px) scale(0.98); }
+  .picker-name { font-size: 15px; font-weight: 800; letter-spacing: 0.5px; }
   .picker-speed { font-size: 12px; color: var(--text-muted); }
+  .picker-stat-bar {
+    width: 80%; height: 4px; background: rgba(255,255,255,0.1);
+    border-radius: 2px; overflow: hidden; margin-top: 2px;
+  }
+  .picker-stat-fill {
+    height: 100%; border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .picker-tag {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 6px; background: rgba(78,234,172,0.15);
+    color: var(--accent);
+  }
 
   /* === RACE TRACK === */
   .track-container {
@@ -151,7 +296,7 @@
     display: flex; justify-content: space-between; padding: 10px 16px;
     background: rgba(0,0,0,0.2); font-size: 13px; color: rgba(255,255,255,0.7);
   }
-  .track-lanes { flex: 1; display: flex; flex-direction: column; position: relative; }
+  .track-lanes { flex: 1; display: flex; flex-direction: column; position: relative; padding-bottom: 4px; }
 
   .track-lane {
     flex: 1; position: relative; display: flex; align-items: center;
@@ -167,12 +312,20 @@
   .track-lane.winner .turtle-runner { filter: drop-shadow(0 0 12px gold); }
 
   .lane-label {
-    position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
-    z-index: 2; width: 70px;
+    position: absolute; left: 4px; top: 3px; bottom: 3px;
+    display: flex; flex-direction: column; justify-content: center; gap: 1px;
+    z-index: 2; width: 82px; padding: 2px 4px;
+    background: rgba(0,0,0,0.45); border-radius: 6px;
+    pointer-events: none;
   }
-  .lane-name { font-size: 12px; font-weight: 700; white-space: nowrap; }
-  .lane-speed { font-size: 10px; color: rgba(255,255,255,0.6); }
+  .lane-name { font-size: 11px; font-weight: 700; white-space: nowrap; text-align: center; }
+  .lane-speed { font-size: 10px; color: rgba(255,255,255,0.6); text-align: center; }
+  .lane-stam-wrap {
+    width: 100%; height: 5px; background: rgba(0,0,0,0.5);
+    border-radius: 3px; overflow: hidden;
+  }
+  .lane-stam-fill { height: 100%; border-radius: 3px; transition: width 0.15s; }
+  .lane-state { font-size: 9px; font-weight: 600; text-align: center; white-space: nowrap; }
 
   .finish-line {
     position: absolute; right: 40px; top: 0; bottom: 0; width: 20px;
@@ -184,6 +337,25 @@
   .start-line {
     position: absolute; left: 85px; top: 0; bottom: 0; width: 3px;
     background: rgba(255,255,255,0.3); z-index: 1;
+  }
+
+  .track-obstacle {
+    position: absolute; z-index: 2; top: 50%; transform: translate(-50%, -50%) scale(0);
+    font-size: 24px; pointer-events: none; transition: transform 0.3s ease, opacity 0.3s ease;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+    opacity: 0;
+  }
+  .track-obstacle.visible {
+    transform: translate(-50%, -50%) scale(1); opacity: 1;
+    animation: obstacleIdle 1.5s ease-in-out infinite;
+  }
+  .track-obstacle.hit {
+    transform: translate(-50%, -50%) scale(1.5); opacity: 0;
+    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+  }
+  @keyframes obstacleIdle {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
   }
 
   .turtle-runner {
@@ -210,10 +382,175 @@
   .turtle-runner.finished svg {
     animation: none;
   }
+
+  /* State-based turtle transforms */
+  /* 爆发 = ⚡电光效果（蓝黄闪电，短暂猛烈） */
+  .turtle-runner.state-burst {
+    filter: drop-shadow(0 0 10px rgba(100,200,255,0.7)) drop-shadow(0 0 20px rgba(50,150,255,0.4));
+  }
+  .turtle-runner.state-burst svg {
+    width: 64px !important; height: 50px !important;
+    filter: brightness(1.5) saturate(1.2) contrast(1.1);
+    animation: turtleBurst 0.08s ease-in-out infinite !important;
+  }
+  .turtle-runner.state-burst::before {
+    content: '⚡'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 18px;
+    animation: burstSpark 0.3s ease infinite;
+    text-shadow: 0 0 10px rgba(100,200,255,0.9);
+  }
+  .turtle-runner.state-burst::after {
+    content: ''; position: absolute; inset: -4px;
+    border: 2px solid rgba(100,200,255,0.5);
+    border-radius: 50%;
+    animation: burstRing 0.4s ease infinite;
+    pointer-events: none;
+  }
+  @keyframes turtleBurst {
+    0%, 100% { transform: translateX(0) scaleX(1.06); }
+    25% { transform: translateX(2px) scaleX(1.1); }
+    75% { transform: translateX(-2px) scaleX(1.1); }
+  }
+  @keyframes burstSpark {
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.5; transform: translateX(-50%) scale(1.3) rotate(15deg); }
+  }
+  @keyframes burstRing {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    50% { transform: scale(1.3); opacity: 0; }
+    100% { transform: scale(0.8); opacity: 0.6; }
+  }
+
+  .turtle-runner.state-slow svg {
+    width: 48px !important; height: 38px !important;
+    filter: brightness(0.65) saturate(0.4);
+    animation: turtleSlow 0.5s ease-in-out infinite !important;
+  }
+  @keyframes turtleSlow {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    30% { transform: translateY(1px) rotate(-3deg); }
+    70% { transform: translateY(2px) rotate(3deg); }
+  }
+
+  .turtle-runner.state-tired svg {
+    width: 52px !important; height: 40px !important;
+    filter: brightness(0.8) saturate(0.7);
+    animation: turtleTired 0.8s ease-in-out infinite !important;
+  }
+  .turtle-runner.state-tired::before {
+    content: '💦'; position: absolute; top: -14px; right: 2px;
+    font-size: 12px; animation: sweatDrop 0.8s ease infinite;
+  }
+  @keyframes turtleTired {
+    0%, 100% { transform: translateY(0) scaleY(1); }
+    50% { transform: translateY(2px) scaleY(0.92); }
+  }
+  @keyframes staminaFlash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  @keyframes sweatDrop {
+    0% { opacity: 0.3; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(3px); }
+    100% { opacity: 0.3; transform: translateY(6px); }
+  }
+
+  .turtle-runner.state-recover svg {
+    width: 60px !important; height: 47px !important;
+    filter: brightness(1.15) saturate(1.2);
+    animation: turtleRecover 0.25s ease-in-out infinite !important;
+  }
+  .turtle-runner.state-recover::before {
+    content: '💪'; position: absolute; top: -14px; right: 0;
+    font-size: 12px;
+  }
+  @keyframes turtleRecover {
+    0%, 100% { transform: translateY(0) scaleX(1.02); }
+    50% { transform: translateY(-2px) scaleX(1.06); }
+  }
+
+  /* 冲刺 = 🔥火焰尾迹（红橙色，持续燃烧，前倾） */
+  .turtle-runner.state-sprint {
+    filter: drop-shadow(0 0 10px rgba(255,80,30,0.6)) drop-shadow(0 0 20px rgba(255,30,0,0.3));
+  }
+  .turtle-runner.state-sprint svg {
+    width: 68px !important; height: 52px !important;
+    filter: brightness(1.3) contrast(1.15) saturate(1.4);
+    animation: turtleSprint 0.12s ease-in-out infinite !important;
+  }
+  /* Fire trail behind turtle */
+  .turtle-runner.state-sprint::before {
+    content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    width: 40px; height: 20px;
+    background: radial-gradient(ellipse at 0% 50%, rgba(255,100,0,0.7), rgba(255,50,0,0.4) 40%, rgba(255,200,0,0.2) 70%, transparent);
+    border-radius: 0 50% 50% 0;
+    animation: fireTrail 0.15s ease infinite alternate;
+    filter: blur(2px);
+  }
+  .turtle-runner.state-sprint::after {
+    content: '🔥🔥'; position: absolute; left: -16px; top: 50%;
+    transform: translateY(-50%); font-size: 12px; letter-spacing: -4px;
+    animation: sprintFlames 0.18s ease infinite alternate;
+    text-shadow: 0 0 6px rgba(255,80,0,0.8);
+  }
+  @keyframes turtleSprint {
+    0%, 100% { transform: translateY(-1px) scaleX(1.12) rotate(-3deg); }
+    50% { transform: translateY(1px) scaleX(1.16) rotate(-1deg); }
+  }
+  @keyframes fireTrail {
+    0% { width: 30px; opacity: 0.6; }
+    100% { width: 45px; opacity: 1; }
+  }
+  @keyframes sprintFlames {
+    0% { transform: translateY(-50%) scale(0.85); opacity: 0.6; }
+    100% { transform: translateY(-55%) scale(1.1); opacity: 1; }
+  }
+
+  .turtle-runner.state-leader svg {
+    width: 60px !important; height: 47px !important;
+  }
   @keyframes turtleWalk {
     0%, 100% { transform: translateY(0) rotate(0deg); }
     25% { transform: translateY(-3px) rotate(2deg); }
     75% { transform: translateY(1px) rotate(-1deg); }
+  }
+
+  /* Lap badge on each lane */
+  .lane-lap-badge {
+    position: absolute; right: 50px; top: 4px;
+    font-size: 10px; font-weight: 700; z-index: 4;
+    padding: 2px 8px; border-radius: 8px;
+    background: rgba(0,0,0,0.6); color: var(--text-secondary);
+    white-space: nowrap; pointer-events: none;
+  }
+  .lane-lap-badge.final-lap {
+    background: rgba(255,60,60,0.3); color: #FF6B6B;
+    animation: finalLapPulse 0.8s ease-in-out infinite;
+  }
+  @keyframes finalLapPulse {
+    0%, 100% { box-shadow: 0 0 4px rgba(255,60,60,0.3); }
+    50% { box-shadow: 0 0 12px rgba(255,60,60,0.6); }
+  }
+
+  /* Big lap transition overlay */
+  .lap-announce {
+    position: absolute; inset: 0; display: flex;
+    align-items: center; justify-content: center; z-index: 10;
+    pointer-events: none;
+    animation: lapAnnounceIn 1.5s ease-out forwards;
+  }
+  .lap-announce-text {
+    font-size: 48px; font-weight: 900; color: #fff;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8), 0 0 40px var(--lap-glow);
+    padding: 12px 40px; border-radius: 16px;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    border: 2px solid var(--lap-glow);
+  }
+  @keyframes lapAnnounceIn {
+    0% { opacity: 0; transform: scale(1.8); }
+    15% { opacity: 1; transform: scale(1); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: scale(0.9); }
   }
 
   .lane-rank-badge {
@@ -223,19 +560,81 @@
     font-size: 13px; font-weight: 800; color: #0A1628; z-index: 4;
   }
 
-  /* Grass decoration strips */
+  /* Track decoration strips — dynamic per theme */
   .track-container::before, .track-container::after {
     content: ''; display: block; height: 12px;
-    background: repeating-linear-gradient(90deg, #3a7a20 0px, #2d6a18 20px, #3a7a20 40px);
+    background: var(--strip-bg, repeating-linear-gradient(90deg, #3a7a20 0px, #2d6a18 20px, #3a7a20 40px));
+  }
+
+  /* Track atmosphere overlays */
+  .track-atmos {
+    position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden;
+  }
+
+  /* 🌿 Grass: floating leaves */
+  .track-atmos.atmos-grass .leaf {
+    position: absolute; font-size: 14px; opacity: 0.3;
+    animation: leafDrift linear infinite;
+  }
+  @keyframes leafDrift {
+    0% { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.3; }
+    90% { opacity: 0.3; }
+    100% { transform: translate(-60px, calc(100% + 20px)) rotate(360deg); opacity: 0; }
+  }
+
+  /* 🏖️ Beach: heat shimmer */
+  .track-atmos.atmos-beach {
+    background: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,200,100,0.03) 40px, rgba(255,200,100,0.03) 42px);
+    animation: heatShimmer 2s ease-in-out infinite alternate;
+  }
+  @keyframes heatShimmer {
+    0% { transform: translateY(0) scaleY(1); }
+    100% { transform: translateY(1px) scaleY(1.002); }
+  }
+
+  /* ❄️ Snow: falling snowflakes */
+  .track-atmos.atmos-snow .flake {
+    position: absolute; width: 4px; height: 4px; background: white;
+    border-radius: 50%; opacity: 0.4;
+    animation: snowFall linear infinite;
+  }
+  @keyframes snowFall {
+    0% { transform: translate(0, -10px); opacity: 0; }
+    10% { opacity: 0.5; }
+    90% { opacity: 0.3; }
+    100% { transform: translate(-30px, calc(100% + 10px)); opacity: 0; }
+  }
+
+  /* 🌙 Night: twinkling stars */
+  .track-atmos.atmos-night .star {
+    position: absolute; width: 2px; height: 2px; background: #fff;
+    border-radius: 50%;
+    animation: starTwinkle ease-in-out infinite;
+  }
+  @keyframes starTwinkle {
+    0%, 100% { opacity: 0.1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.5); }
+  }
+
+  /* 🌋 Volcano: rising embers */
+  .track-atmos.atmos-volcano .ember {
+    position: absolute; width: 3px; height: 3px; border-radius: 50%;
+    animation: emberRise ease-out infinite;
+  }
+  @keyframes emberRise {
+    0% { transform: translateY(0); opacity: 0; }
+    20% { opacity: 0.8; }
+    100% { transform: translateY(calc(-100% - 20px)) translateX(var(--drift)); opacity: 0; }
   }
 
   /* === COMMENTARY BAR === */
   .commentary-bar {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
-    padding: 10px 16px 8px; z-index: 10;
+    background: rgba(0,0,0,0.7);
+    padding: 8px 16px; z-index: 20;
     display: flex; align-items: center; gap: 10px;
-    min-height: 40px; pointer-events: none;
+    min-height: 36px; pointer-events: none;
+    border-radius: 0 0 12px 12px;
   }
   .commentary-avatar { font-size: 22px; flex-shrink: 0; }
   .commentary-text {
@@ -351,6 +750,80 @@
   .zone-climb::after {
     content: ''; position: absolute; inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.15), transparent 40%);
+  }
+
+  /* Rainbow track zones */
+  .zone-rb-red {
+    background: linear-gradient(180deg, rgba(255,30,30,0.5) 0%, rgba(200,20,20,0.4) 50%, rgba(255,30,30,0.5) 100%);
+  }
+  .zone-rb-red::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,100,50,0.2) 0%, transparent 70%);
+    animation: zoneGlow 2s ease-in-out infinite alternate;
+  }
+  .zone-rb-orange {
+    background: linear-gradient(180deg, rgba(255,140,0,0.5) 0%, rgba(220,120,0,0.4) 50%, rgba(255,140,0,0.5) 100%);
+  }
+  .zone-rb-orange::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,180,50,0.2) 0%, transparent 70%);
+    animation: zoneGlow 2.2s ease-in-out infinite alternate;
+  }
+  .zone-rb-yellow {
+    background: linear-gradient(180deg, rgba(255,220,0,0.45) 0%, rgba(220,190,0,0.35) 50%, rgba(255,220,0,0.45) 100%);
+  }
+  .zone-rb-yellow::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(135deg, transparent 0px, rgba(255,255,150,0.15) 4px, transparent 8px);
+    animation: zoneGlow 1.8s ease-in-out infinite alternate;
+  }
+  .zone-rb-green {
+    background: linear-gradient(180deg, rgba(0,180,60,0.5) 0%, rgba(0,150,50,0.4) 50%, rgba(0,180,60,0.5) 100%);
+  }
+  .zone-rb-green::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 40%, rgba(100,255,100,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(100,255,100,0.1) 0%, transparent 60%);
+    animation: zoneGlow 2.5s ease-in-out infinite alternate;
+  }
+  .zone-rb-blue {
+    background: linear-gradient(180deg, rgba(0,80,220,0.55) 0%, rgba(0,60,180,0.45) 50%, rgba(0,80,220,0.55) 100%);
+  }
+  .zone-rb-blue::before {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg, transparent 0px, rgba(100,200,255,0.12) 12px, transparent 24px);
+    animation: waveShift 3s linear infinite;
+  }
+  .zone-rb-blue::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(180deg, transparent 0px, rgba(255,255,255,0.06) 16px, transparent 32px);
+    animation: waveShift 5s linear infinite reverse;
+  }
+  .zone-rb-indigo {
+    background: linear-gradient(180deg, rgba(100,0,200,0.5) 0%, rgba(80,0,160,0.4) 50%, rgba(100,0,200,0.5) 100%);
+  }
+  .zone-rb-indigo::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(180,100,255,0.2) 0%, transparent 60%);
+    animation: zoneGlow 2s ease-in-out infinite alternate;
+  }
+  .zone-rb-violet {
+    background: linear-gradient(180deg, rgba(180,0,255,0.45) 0%, rgba(140,0,200,0.35) 50%, rgba(180,0,255,0.45) 100%);
+  }
+  .zone-rb-violet::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,200,255,0.15), transparent, rgba(200,150,255,0.1), transparent);
+    background-size: 200% 100%;
+    animation: rainbowBorder 4s linear infinite;
+  }
+  .zone-rb-violet::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,150,255,0.15) 0%, transparent 70%);
+    animation: zoneGlow 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes zoneGlow {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
   }
 
   .zone-divider {
@@ -478,8 +951,16 @@
     background: #0D1F3C; border-radius: 20px; padding: 40px 48px;
     text-align: center; border: 2px solid #1A3A5C;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 420px;
-    animation: modalIn 0.4s ease;
+    animation: modalIn 0.4s ease; position: relative;
   }
+  .modal-close {
+    position: absolute; top: 12px; right: 14px; width: 32px; height: 32px;
+    border: none; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1;
+    background: rgba(255,255,255,0.1); color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; z-index: 10;
+  }
+  .modal-close:hover { background: rgba(255,107,107,0.3); color: #FF6B6B; transform: scale(1.1); }
   @keyframes modalIn {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
@@ -510,22 +991,89 @@
   .gameover-screen {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at 50% 40%, #0E2240 0%, #0A1628 70%);
-    gap: 16px;
+    background: radial-gradient(ellipse at 50% 30%, #0E2240 0%, #0A1628 70%);
+    gap: 10px; padding: 20px; overflow-y: auto;
   }
-  .gameover-emoji { font-size: 80px; animation: turtleBounce 2s ease-in-out infinite; }
-  .gameover-title { font-size: 42px; font-weight: 900; color: var(--accent); }
-  .gameover-stats {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    margin: 24px 0; width: 360px;
+  .gameover-banner {
+    font-size: 14px; font-weight: 700; padding: 6px 24px;
+    border-radius: 20px; letter-spacing: 2px; text-transform: uppercase;
+    animation: fadeSlideUp 0.6s ease;
+  }
+  .gameover-banner.win { background: rgba(78,234,172,0.15); color: var(--accent); border: 1px solid rgba(78,234,172,0.3); }
+  .gameover-banner.lose { background: rgba(255,107,107,0.15); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
+  .gameover-title { font-size: 32px; font-weight: 900; color: var(--accent); }
+  .gameover-subtitle { font-size: 14px; color: var(--text-secondary); }
+
+  /* Main content: podium left + stats right */
+  .gameover-body {
+    display: flex; gap: 24px; width: 90vw; max-width: 800px;
+    animation: fadeSlideUp 0.5s ease 0.2s both;
+  }
+
+  /* Podium */
+  .podium-area {
+    flex: 1; min-width: 280px; background: var(--bg-panel);
+    border-radius: 16px; border: 1px solid var(--border); padding: 16px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .podium-area h3 { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+  .podium {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 6px; width: 100%; height: 200px; position: relative;
+  }
+  .podium-slot {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    animation: fadeSlideUp 0.5s ease both;
+  }
+  .podium-slot:nth-child(1) { animation-delay: 0.4s; }
+  .podium-slot:nth-child(2) { animation-delay: 0.2s; }
+  .podium-slot:nth-child(3) { animation-delay: 0.6s; }
+  .podium-turtle { width: 60px; height: 48px; }
+  .podium-name { font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .podium-medal { font-size: 20px; }
+  .podium-you { font-size: 9px; color: var(--accent); font-weight: 700; }
+  .podium-block {
+    width: 80px; border-radius: 8px 8px 0 0; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 900; color: rgba(255,255,255,0.3);
+  }
+  .podium-block.p1 { height: 100px; background: linear-gradient(180deg, #FFD700, #B8960F); color: rgba(0,0,0,0.2); }
+  .podium-block.p2 { height: 70px; background: linear-gradient(180deg, #C0C0C0, #8A8A8A); color: rgba(0,0,0,0.15); }
+  .podium-block.p3 { height: 45px; background: linear-gradient(180deg, #CD7F32, #8B5A2B); color: rgba(0,0,0,0.15); }
+  .podium-4th {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    font-size: 12px; color: var(--text-muted); padding: 6px 12px;
+    background: rgba(0,0,0,0.2); border-radius: 8px; width: 100%;
+  }
+
+  /* Stats panel */
+  .stats-area {
+    flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 10px;
   }
   .stat-card {
-    background: var(--bg-panel); border-radius: 14px; padding: 20px;
+    background: var(--bg-panel); border-radius: 12px; padding: 12px 16px;
     text-align: center; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    animation: fadeSlideUp 0.4s ease both;
   }
-  .stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--gold); }
-  .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-  .gameover-actions { display: flex; gap: 14px; margin-top: 8px; }
+  .stat-card:nth-child(1) { animation-delay: 0.3s; }
+  .stat-card:nth-child(2) { animation-delay: 0.4s; }
+  .stat-card:nth-child(3) { animation-delay: 0.5s; }
+  .stat-card:nth-child(4) { animation-delay: 0.6s; }
+  .stat-card .stat-label { font-size: 13px; color: var(--text-muted); }
+  .stat-card .stat-value { font-size: 20px; font-weight: 800; color: var(--gold); }
+  .stat-card.highlight { border-color: var(--gold); background: rgba(255,215,0,0.08); box-shadow: 0 0 12px rgba(255,215,0,0.1); }
+
+  .gameover-actions { display: flex; gap: 14px; margin-top: 8px; animation: fadeSlideUp 0.5s ease 0.7s both; }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (max-width: 700px) {
+    .gameover-body { flex-direction: column; }
+    .podium-area { min-width: auto; }
+    .stats-area { min-width: auto; }
+  }
 
   /* Shop Area */
   .shop-area {
@@ -540,63 +1088,83 @@
   .shop-card:hover { border-color: var(--accent); }
   .shop-card.locked { opacity: 0.7; }
   .shop-card.rainbow-card {
-    background: linear-gradient(135deg, rgba(255,0,0,0.08), rgba(255,136,0,0.08), rgba(255,255,0,0.08), rgba(0,204,68,0.08), rgba(0,136,255,0.08), rgba(170,0,255,0.08));
-    border: 2px solid transparent;
-    background-clip: padding-box;
     position: relative;
     overflow: hidden;
+    border: 3px solid transparent;
+    background: var(--bg-panel);
+    background-clip: padding-box;
+    transition: all 0.25s;
   }
   .shop-card.rainbow-card::before {
     content: '';
     position: absolute;
-    inset: -2px;
+    inset: -3px;
     background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00cc44, #0088ff, #aa00ff, #ff0000);
     background-size: 200% 100%;
-    z-index: -1;
     border-radius: inherit;
+    z-index: 0;
     animation: rainbowBorder 3s linear infinite;
   }
   .shop-card.rainbow-card::after {
     content: '✨ 传说级 ✨';
     position: absolute;
-    top: 6px;
-    right: 8px;
-    font-size: 10px;
-    color: #FFD700;
-    text-shadow: 0 0 4px rgba(255,215,0,0.5);
+    top: 8px;
+    right: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #E879F9;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(170,0,255,0.4);
+    background: rgba(0,0,0,0.6);
+    padding: 2px 8px;
+    border-radius: 6px;
+    z-index: 2;
+  }
+  /* Inner background to cover ::before, keeping text readable */
+  .shop-card.rainbow-card > * { position: relative; z-index: 1; }
+  .shop-card.rainbow-card:hover {
+    box-shadow: 0 0 24px rgba(170,0,255,0.4), 0 0 48px rgba(255,0,200,0.15);
+    transform: translateY(-4px) scale(1.02);
   }
   @keyframes rainbowBorder {
     0% { background-position: 0% 50%; }
     100% { background-position: 200% 50%; }
   }
   .shop-card.legendary-card {
-    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.08), rgba(255,215,0,0.1));
-    border: 2px solid transparent;
     position: relative;
     overflow: hidden;
+    border: 3px solid transparent;
+    background: var(--bg-panel);
+    background-clip: padding-box;
+    transition: all 0.25s;
   }
   .shop-card.legendary-card::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    background: linear-gradient(90deg, #FFD700, #FF8C00, #FFD700, #FFF8DC, #FFD700);
+    inset: -3px;
+    background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00cc44, #0088ff, #aa00ff, #ff0000);
     background-size: 200% 100%;
-    z-index: -1;
     border-radius: inherit;
-    animation: legendaryBorder 4s linear infinite;
+    z-index: 0;
+    animation: rainbowBorder 3s linear infinite;
   }
   .shop-card.legendary-card::after {
     content: '🏆 传说级';
     position: absolute;
-    top: 6px;
-    right: 8px;
-    font-size: 10px;
+    top: 8px;
+    right: 10px;
+    font-size: 11px;
+    font-weight: 700;
     color: #FFD700;
-    text-shadow: 0 0 6px rgba(255,215,0,0.6);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(255,215,0,0.4);
+    background: rgba(0,0,0,0.6);
+    padding: 2px 8px;
+    border-radius: 6px;
+    z-index: 2;
   }
-  @keyframes legendaryBorder {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
+  .shop-card.legendary-card > * { position: relative; z-index: 1; }
+  .shop-card.legendary-card:hover {
+    box-shadow: 0 0 24px rgba(255,215,0,0.5), 0 0 48px rgba(255,215,0,0.2);
+    transform: translateY(-4px) scale(1.02);
   }
   .shop-card .turtle-preview { font-size: 48px; }
   .shop-buy-btn {
@@ -651,10 +1219,25 @@
     border: 2px solid var(--border); border-radius: 10px; padding: 8px 12px;
     font-size: 13px; font-weight: 600; cursor: pointer;
     background: var(--bg-dark); color: #fff; transition: all 0.15s;
+    position: relative;
   }
-  .item-btn:hover { border-color: var(--accent); }
+  .item-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .item-btn:hover .item-tooltip { display: block; }
   .item-btn.used { opacity: 0.4; border-color: transparent; cursor: not-allowed; }
   .item-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .item-btn:disabled:hover { transform: none; }
+  .item-tooltip {
+    display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%); white-space: nowrap;
+    background: rgba(0,0,0,0.9); color: #fff; font-size: 12px; font-weight: 400;
+    padding: 6px 12px; border-radius: 8px; z-index: 30;
+    border: 1px solid var(--border); pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .item-tooltip::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: rgba(0,0,0,0.9);
+  }
 
   /* Countdown Overlay */
   .countdown-overlay {
@@ -685,6 +1268,351 @@
   @keyframes eventSlide {
     from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
     to { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+
+  /* Event effects on turtles */
+  .turtle-runner.evt-slow {
+    animation: evtSlow 0.15s ease-in-out 6 !important;
+    filter: brightness(0.6) saturate(0.5);
+  }
+  .turtle-runner.evt-slow::after {
+    content: '💫'; position: absolute; top: -16px; left: 50%;
+    transform: translateX(-50%); font-size: 18px;
+    animation: evtIconBounce 0.5s ease infinite;
+  }
+  @keyframes evtSlow {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px) rotate(-5deg); }
+    75% { transform: translateX(4px) rotate(5deg); }
+  }
+
+  /* Banana slip: slide, flip upside down, wiggle, flip back */
+  .turtle-runner.evt-banana {
+    animation: bananaSlip 1.8s ease-in-out !important;
+  }
+  .turtle-runner.evt-banana::after {
+    content: '🍌'; position: absolute; bottom: -4px; left: 40%;
+    font-size: 18px; z-index: 6;
+    animation: bananaIcon 0.3s ease 1;
+  }
+  .turtle-runner.evt-banana::before {
+    content: '💫'; position: absolute; top: -16px; left: 50%;
+    transform: translateX(-50%); font-size: 14px;
+    animation: evtIconBounce 0.4s ease infinite;
+    opacity: 0; animation-delay: 0.3s; animation-fill-mode: forwards;
+  }
+  @keyframes bananaSlip {
+    /* Slip: feet fly out */
+    0% { transform: translateX(0) rotate(0deg) scaleY(1); }
+    8% { transform: translateX(12px) rotate(20deg) scaleY(0.6); }
+    /* Flip upside down */
+    18% { transform: translateX(6px) rotate(90deg) scaleY(1); }
+    28% { transform: translateX(0) rotate(180deg) scaleY(1); }
+    /* Land on back, bounce */
+    35% { transform: translateX(-4px) rotate(180deg) scaleY(0.5) translateY(8px); }
+    42% { transform: translateX(-2px) rotate(180deg) scaleY(1.1) translateY(2px); }
+    /* Wiggle upside down (struggling) */
+    48% { transform: translateX(-6px) rotate(175deg) scaleY(1); }
+    54% { transform: translateX(2px) rotate(185deg) scaleY(1); }
+    60% { transform: translateX(-4px) rotate(178deg) scaleY(1); }
+    /* Flip back over */
+    72% { transform: translateX(0) rotate(270deg) scaleY(1); }
+    82% { transform: translateX(2px) rotate(340deg) scaleY(0.8); }
+    90% { transform: translateX(0) rotate(355deg) scaleY(0.6); }
+    95% { transform: translateX(0) rotate(360deg) scaleY(1.15); }
+    100% { transform: translateX(0) rotate(360deg) scaleY(1); }
+  }
+  @keyframes bananaIcon {
+    0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateX(-15px) rotate(-30deg); opacity: 0; }
+  }
+
+  /* Wind blow: pushed backwards with wind lines */
+  .turtle-runner.evt-wind {
+    animation: windBlow 1.5s ease-in-out !important;
+  }
+  .turtle-runner.evt-wind::before {
+    content: ''; position: absolute; top: 20%; right: -50px; width: 100px; height: 60%;
+    background:
+      linear-gradient(0deg, transparent 30%, rgba(200,230,255,0.4) 30%, rgba(200,230,255,0.4) 33%, transparent 33%),
+      linear-gradient(0deg, transparent 50%, rgba(200,230,255,0.3) 50%, rgba(200,230,255,0.3) 52%, transparent 52%),
+      linear-gradient(0deg, transparent 70%, rgba(200,230,255,0.35) 70%, rgba(200,230,255,0.35) 73%, transparent 73%);
+    animation: windLines 0.3s linear infinite;
+    pointer-events: none; z-index: 5;
+  }
+  .turtle-runner.evt-wind::after {
+    content: '🌬️🌬️'; position: absolute; top: -10px; right: -30px;
+    font-size: 16px; letter-spacing: -4px;
+    animation: windIcon 0.25s ease infinite alternate;
+    text-shadow: 0 0 8px rgba(150,200,255,0.6);
+  }
+  @keyframes windBlow {
+    0% { transform: translateX(0) skewX(0deg); }
+    10% { transform: translateX(4px) skewX(5deg); }
+    25% { transform: translateX(-15px) skewX(-12deg); }
+    40% { transform: translateX(-30px) skewX(-18deg); }
+    55% { transform: translateX(-25px) skewX(-14deg); }
+    65% { transform: translateX(-35px) skewX(-16deg); }
+    75% { transform: translateX(-28px) skewX(-10deg); }
+    85% { transform: translateX(-15px) skewX(-5deg); }
+    95% { transform: translateX(-5px) skewX(-1deg); }
+    100% { transform: translateX(0) skewX(0deg); }
+  }
+  @keyframes windLines {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-30px); }
+  }
+  @keyframes windIcon {
+    0% { transform: translateX(0); opacity: 0.5; }
+    100% { transform: translateX(12px); opacity: 1; }
+  }
+
+  /* Lightning strike: shake + flash white */
+  .turtle-runner.evt-lightning {
+    animation: lightningHit 0.8s ease !important;
+  }
+  .turtle-runner.evt-lightning svg {
+    filter: brightness(3) saturate(0) !important;
+    animation: lightningFlash 0.15s ease infinite !important;
+  }
+  .turtle-runner.evt-lightning::after {
+    content: '⚡'; position: absolute; top: -20px; left: 50%;
+    transform: translateX(-50%); font-size: 24px;
+    animation: lightningBolt 0.2s ease infinite alternate;
+    text-shadow: 0 0 12px rgba(255,255,100,0.9);
+  }
+  .turtle-runner.evt-lightning::before {
+    content: ''; position: absolute; inset: -8px;
+    background: radial-gradient(circle, rgba(255,255,150,0.3) 0%, transparent 70%);
+    border-radius: 50%; animation: lightningGlow 0.2s ease infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes lightningHit {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    10% { transform: translateX(-6px) translateY(-4px); }
+    20% { transform: translateX(8px) translateY(2px); }
+    30% { transform: translateX(-4px) translateY(-2px); }
+    40% { transform: translateX(6px) translateY(4px); }
+    50% { transform: translateX(-8px) translateY(0); }
+    60% { transform: translateX(4px) translateY(-3px); }
+    70% { transform: translateX(-3px) translateY(2px); }
+    80% { transform: translateX(2px) translateY(-1px); }
+  }
+  @keyframes lightningFlash {
+    0%, 100% { filter: brightness(3) saturate(0); }
+    50% { filter: brightness(1) saturate(0.5); }
+  }
+  @keyframes lightningBolt {
+    0% { transform: translateX(-50%) scale(1) rotate(-5deg); }
+    100% { transform: translateX(-50%) scale(1.3) rotate(5deg); }
+  }
+  @keyframes lightningGlow {
+    0% { opacity: 0.8; transform: scale(1); }
+    100% { opacity: 0.3; transform: scale(1.5); }
+  }
+
+  /* Earthquake: all shaking + ground cracks */
+  .turtle-runner.evt-quake {
+    animation: quakeShake 0.12s ease-in-out infinite !important;
+    filter: brightness(0.7) sepia(0.3);
+  }
+  .turtle-runner.evt-quake::after {
+    content: '🌍'; position: absolute; top: -16px; left: 50%;
+    transform: translateX(-50%); font-size: 16px;
+    animation: evtIconBounce 0.3s ease infinite;
+  }
+  .turtle-runner.evt-quake::before {
+    content: ''; position: absolute; bottom: -2px; left: -10px; right: -10px; height: 4px;
+    background: repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(255,100,50,0.5) 4px, rgba(255,100,50,0.5) 6px);
+    animation: quakeCrack 0.15s linear infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes quakeShake {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(-5px) translateY(2px); }
+    75% { transform: translateX(5px) translateY(-1px); }
+  }
+  @keyframes quakeCrack {
+    0% { transform: translateX(-2px); }
+    100% { transform: translateX(2px); }
+  }
+
+  /* Rocket: zoom forward + fire trail */
+  .turtle-runner.evt-rocket {
+    animation: rocketZoom 0.6s ease-out !important;
+    filter: drop-shadow(0 0 12px rgba(255,100,0,0.8));
+  }
+  .turtle-runner.evt-rocket svg {
+    animation: rocketShake 0.06s linear infinite !important;
+    filter: brightness(1.4) !important;
+  }
+  .turtle-runner.evt-rocket::after {
+    content: '🚀'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 20px;
+    text-shadow: 0 0 10px rgba(255,100,0,0.8);
+  }
+  .turtle-runner.evt-rocket::before {
+    content: ''; position: absolute; right: -5px; top: 30%;
+    width: 50px; height: 40%;
+    background: linear-gradient(to left, transparent, rgba(255,80,0,0.8) 20%, rgba(255,200,0,0.4) 60%, transparent);
+    filter: blur(3px); border-radius: 50%;
+    animation: rocketFire 0.1s ease infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes rocketZoom {
+    0% { transform: translateX(0); }
+    30% { transform: translateX(20px); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes rocketShake {
+    0%, 100% { transform: translateY(-1px); }
+    50% { transform: translateY(1px); }
+  }
+  @keyframes rocketFire {
+    0% { width: 40px; opacity: 0.7; }
+    100% { width: 55px; opacity: 1; }
+  }
+
+  /* Heal: green glow + sparkles */
+  .turtle-runner.evt-heal {
+    animation: healPulse 0.8s ease !important;
+  }
+  .turtle-runner.evt-heal svg {
+    filter: brightness(1.3) hue-rotate(-30deg) !important;
+  }
+  .turtle-runner.evt-heal::after {
+    content: '💚'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 18px;
+    animation: healFloat 0.8s ease-out forwards;
+  }
+  .turtle-runner.evt-heal::before {
+    content: ''; position: absolute; inset: -6px;
+    border: 2px solid rgba(78,234,172,0.6);
+    border-radius: 50%;
+    animation: healRing 0.8s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes healPulse {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.15); }
+    60% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  @keyframes healFloat {
+    0% { transform: translateX(-50%) translateY(0); opacity: 1; }
+    100% { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+  }
+  @keyframes healRing {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+
+  /* Shield: blue barrier */
+  .turtle-runner.evt-shield {
+    animation: shieldOn 0.6s ease !important;
+  }
+  .turtle-runner.evt-shield::before {
+    content: ''; position: absolute; inset: -8px;
+    border: 3px solid rgba(100,200,255,0.6);
+    border-radius: 50%;
+    background: rgba(100,200,255,0.08);
+    animation: shieldShimmer 1s ease infinite;
+    pointer-events: none;
+  }
+  .turtle-runner.evt-shield::after {
+    content: '🛡️'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 18px;
+  }
+  @keyframes shieldOn {
+    0% { transform: scale(0.9); }
+    40% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shieldShimmer {
+    0%, 100% { border-color: rgba(100,200,255,0.6); box-shadow: 0 0 8px rgba(100,200,255,0.3); }
+    50% { border-color: rgba(100,200,255,0.3); box-shadow: 0 0 16px rgba(100,200,255,0.5); }
+  }
+
+  .turtle-runner.evt-boost {
+    filter: brightness(1.4) saturate(1.5);
+  }
+  .turtle-runner.evt-boost::after {
+    content: '🔥'; position: absolute; top: -16px; left: 50%;
+    transform: translateX(-50%); font-size: 18px;
+    animation: evtIconBounce 0.4s ease infinite;
+  }
+  @keyframes evtIconBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+
+  /* Lane event banner */
+  .lane-event-banner {
+    position: absolute; left: 92px; top: 50%; transform: translateY(-50%);
+    z-index: 8; pointer-events: none; white-space: nowrap;
+    font-size: 11px; font-weight: 800; padding: 3px 10px;
+    border-radius: 8px; backdrop-filter: blur(3px);
+    animation: laneEventIn 2.5s ease-out forwards;
+  }
+  .lane-event-banner.boost {
+    background: rgba(78,234,172,0.25); color: #4EEAAC;
+    border: 1px solid rgba(78,234,172,0.5);
+    text-shadow: 0 0 6px rgba(78,234,172,0.5);
+  }
+  .lane-event-banner.slow {
+    background: rgba(255,107,107,0.25); color: #FF6B6B;
+    border: 1px solid rgba(255,107,107,0.5);
+    text-shadow: 0 0 6px rgba(255,107,107,0.5);
+  }
+  @keyframes laneEventIn {
+    0% { opacity: 0; transform: translateY(-50%) scale(0.7); }
+    10% { opacity: 1; transform: translateY(-50%) scale(1.05); }
+    20% { transform: translateY(-50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-70%); }
+  }
+
+  /* Shockwave ring effect */
+  .evt-shockwave {
+    position: absolute; pointer-events: none;
+    width: 60px; height: 60px; border-radius: 50%;
+    border: 3px solid; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: shockwaveExpand 0.6s ease-out forwards;
+    z-index: 5;
+  }
+  .evt-shockwave.slow { border-color: rgba(255,107,107,0.8); }
+  .evt-shockwave.boost { border-color: rgba(78,234,172,0.8); }
+  @keyframes shockwaveExpand {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+  }
+
+  /* Impact particles */
+  .evt-particle {
+    position: absolute; pointer-events: none; border-radius: 50%;
+    animation: evtParticleFly 0.7s ease-out forwards;
+    z-index: 5;
+  }
+  @keyframes evtParticleFly {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  /* Screen flash overlay */
+  .evt-flash {
+    position: fixed; inset: 0; pointer-events: none; z-index: 55;
+    animation: evtFlash 0.4s ease-out forwards;
+  }
+  @keyframes evtFlash {
+    0% { background: var(--flash-color); opacity: 0.3; }
+    100% { opacity: 0; }
+  }
+  @keyframes itemBurst {
+    0% { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+    20% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+    50% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%,-60%) scale(1.5); opacity: 0; }
   }
 
   /* Mobile Responsive */
@@ -723,27 +1651,28 @@
   <div class="start-screen">
     <div class="start-logo">🐢</div>
     <h1 class="start-title">Turtle Race</h1>
-    <p class="start-subtitle">乌龟赛跑</p>
+    <p class="start-subtitle">乌 龟 赛 跑</p>
     <div class="start-menu">
-      <button class="menu-btn primary" onclick="startNewGame()">🏁 开始游戏</button>
+      <button class="menu-btn primary" onclick="startNewGame()">🏁 开始比赛</button>
       <button class="menu-btn" onclick="showScene('scene-shop')">🛒 乌龟商店</button>
-      <button class="menu-btn" onclick="showScene('scene-leaderboard')">📊 排行榜</button>
-      <button class="menu-btn" onclick="prayCaiShen()" id="caishenBtn">🧧 拜财神</button>
+      <div style="display:flex;gap:12px">
+        <button class="menu-btn" style="flex:1" onclick="showScene('scene-leaderboard')">📊 排行榜</button>
+        <button class="menu-btn" style="flex:1" onclick="showRulesModal()">📖 规则</button>
+      </div>
+      <button class="menu-btn" onclick="prayCaiShen()" id="caishenBtn">🧧 拜财神 (+100🪙)</button>
     </div>
-    <div id="caishenMsg" style="height:24px;font-size:15px;color:var(--gold);margin-top:8px"></div>
-    <div class="start-highscore">🪙 余额: <span id="startCoins">0</span> · 最高纪录: <span id="highScore">0</span></div>
+    <div id="caishenMsg" style="height:24px;font-size:15px;color:var(--gold);margin-top:6px"></div>
+    <div class="start-highscore">🪙 余额: <span id="startCoins" style="color:var(--gold);font-weight:700">0</span> &nbsp;·&nbsp; 🏆 最高: <span id="highScore" style="color:var(--gold);font-weight:700">0</span></div>
+    <div style="position:absolute;bottom:12px;font-size:11px;color:rgba(255,255,255,0.15)">v2.0 · 装备 · 道具 · 多赛道 · 3圈赛制</div>
   </div>
 </div>
 
 <div class="scene" id="scene-race">
   <div class="top-bar">
-    <div class="logo">🐢 Turtle Race</div>
-    <div class="stats">
-      <span>🪙 <span id="coins">1000</span></span>
-      <span>🏆 <span id="wins">0</span> Wins</span>
-    </div>
-    <div class="round-badge">Round <span id="round">1</span> / 5</div>
     <button class="back-btn" id="raceBackBtn" onclick="confirmBackToHome()">← 返回</button>
+    <div class="logo">🐢 Turtle Race</div>
+    <div class="round-badge">Lap <span id="lapDisplay">1</span> / 2</div>
+    <button class="back-btn" onclick="showRulesModal()">📖</button>
     <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
   </div>
 
@@ -764,6 +1693,7 @@
   </div>
 
   <div class="bottom-bar">
+    <div id="bottomCoins" style="font-size:17px;font-weight:800;color:var(--gold);white-space:nowrap">🪙 <span id="coins">1000</span></div>
     <div class="bet-selector">
       <span class="pick-label">下注:</span>
       <div id="betBtns" class="bet-btns"></div>
@@ -798,9 +1728,13 @@
 
 <div class="scene" id="scene-gameover">
   <div class="gameover-screen">
-    <div class="gameover-emoji" id="gameoverEmoji">🏆</div>
+    <div class="gameover-banner" id="gameoverBanner">RACE COMPLETE</div>
     <h1 class="gameover-title" id="gameoverTitle">Game Over</h1>
-    <div class="gameover-stats" id="gameoverStats"></div>
+    <div class="gameover-subtitle" id="gameoverSubtitle"></div>
+    <div class="gameover-body">
+      <div class="podium-area" id="gameoverPodium"></div>
+      <div class="stats-area" id="gameoverStats"></div>
+    </div>
     <div class="gameover-actions">
       <button class="menu-btn primary" onclick="startNewGame()">🔄 再来一局</button>
       <button class="menu-btn" onclick="showScene('scene-start')">🏠 返回主页</button>
@@ -810,6 +1744,7 @@
 
 <div class="modal-overlay" id="modal">
   <div class="modal">
+    <button class="modal-close" onclick="nextRound()">✕</button>
     <h2 id="modalTitle"></h2>
     <div class="result-emoji" id="modalEmoji"></div>
     <div class="result-text" id="modalText"></div>
@@ -863,9 +1798,9 @@ const ACCESSORY_SVG = {
     <circle cx="58" cy="3" r="2.5" fill="#4444FF"/>
     <circle cx="50" cy="4.5" r="0.8" fill="#FF8888"/>
     <circle cx="58" cy="2.5" r="0.8" fill="#8888FF"/>`,
-  scarf: `<path d="M46,26 Q50,30 56,28 Q58,26 60,27" fill="none" stroke="#27AE60" stroke-width="3" stroke-linecap="round"/>
-    <path d="M46,27 Q44,32 46,36" fill="#27AE60" opacity="0.8" stroke="#1E8449" stroke-width="0.5"/>
-    <line x1="46" y1="28" x2="47" y2="33" stroke="#2ECC71" stroke-width="0.6"/>`,
+  scarf: `<path d="M46,26 Q50,30 56,28 Q58,26 60,27" fill="none" stroke="#E74C3C" stroke-width="3" stroke-linecap="round"/>
+    <path d="M46,27 Q44,32 46,36" fill="#E74C3C" opacity="0.8" stroke="#C0392B" stroke-width="0.5"/>
+    <line x1="46" y1="28" x2="47" y2="33" stroke="#FF6B6B" stroke-width="0.6"/>`,
   // === KUROMI 酷洛米 ACCESSORIES ===
   kuromi_hood: `<!-- 酷洛米头巾 -->
     <path d="M46,16 Q48,4 53,6 Q56,3 58,8 Q63,6 62,16 Q60,18 52,18 Q47,18 46,16Z" fill="#2D2D2D"/>
@@ -905,6 +1840,226 @@ const ACCESSORY_SVG = {
     <ellipse cx="54" cy="15" rx="1" ry="0.5" fill="#2D2D2D"/>
     <path d="M54,16.5 L53,19" stroke="#2D2D2D" stroke-width="0.8"/>
     <path d="M54,16.5 L55,19" stroke="#2D2D2D" stroke-width="0.8"/>`,
+  // === TERRAIN-SPECIFIC ACCESSORIES ===
+  // Head - terrain
+  straw_hat: `<!-- 草帽 -->
+    <ellipse cx="53" cy="16" rx="12" ry="3" fill="#D4A04A"/>
+    <ellipse cx="53" cy="14" rx="8" ry="6" fill="#E8B860"/>
+    <ellipse cx="53" cy="16" rx="12" ry="3" fill="none" stroke="#C49030" stroke-width="0.6"/>
+    <path d="M48,12 Q53,8 58,12" fill="none" stroke="#C49030" stroke-width="0.5"/>
+    <rect x="46" y="14" width="14" height="1.5" rx="0.5" fill="#E74C3C" opacity="0.7"/>`,
+  shell_crown: `<!-- 贝壳冠 -->
+    <path d="M49,14 Q51,6 53,14" fill="#FFB6C1" stroke="#FF69B4" stroke-width="0.5"/>
+    <path d="M51,14 Q53,4 55,14" fill="#FFC0CB" stroke="#FF69B4" stroke-width="0.5"/>
+    <path d="M53,14 Q55,6 57,14" fill="#FFB6C1" stroke="#FF69B4" stroke-width="0.5"/>
+    <circle cx="53" cy="14" r="2" fill="#FF69B4" opacity="0.6"/>
+    <circle cx="51" cy="10" r="0.6" fill="white" opacity="0.6"/>
+    <circle cx="55" cy="8" r="0.6" fill="white" opacity="0.6"/>`,
+  snow_hat: `<!-- 毛线帽 -->
+    <path d="M47,18 Q47,8 53,6 Q59,8 59,18" fill="#E74C3C"/>
+    <circle cx="53" cy="5" r="2.5" fill="white"/>
+    <rect x="46" y="16" width="14" height="3" rx="1.5" fill="#C0392B"/>
+    <line x1="49" y1="10" x2="49" y2="16" stroke="#C0392B" stroke-width="0.8" opacity="0.5"/>
+    <line x1="53" y1="8" x2="53" y2="16" stroke="#C0392B" stroke-width="0.8" opacity="0.5"/>
+    <line x1="57" y1="10" x2="57" y2="16" stroke="#C0392B" stroke-width="0.8" opacity="0.5"/>`,
+  fire_helmet: `<!-- 防火盔 -->
+    <path d="M46,18 Q46,8 53,6 Q60,8 60,18" fill="#E65100"/>
+    <path d="M46,18 Q46,8 53,6 Q60,8 60,18" fill="none" stroke="#FF8F00" stroke-width="0.8"/>
+    <rect x="46" y="16" width="14" height="3" rx="1" fill="#BF360C"/>
+    <rect x="49" y="7" width="8" height="3" rx="1" fill="#FFD54F" opacity="0.5"/>
+    <path d="M51,6 Q53,2 55,6" fill="#FF5722" opacity="0.7"/>`,
+  glow_circlet: `<!-- 荧光环 -->
+    <ellipse cx="53" cy="15" rx="8" ry="3" fill="none" stroke="#B388FF" stroke-width="2"/>
+    <ellipse cx="53" cy="15" rx="10" ry="4" fill="none" stroke="#7C4DFF" stroke-width="0.5" opacity="0.4"/>
+    <circle cx="47" cy="15" r="1.5" fill="#E040FB" opacity="0.8"/>
+    <circle cx="59" cy="15" r="1.5" fill="#E040FB" opacity="0.8"/>
+    <circle cx="53" cy="12" r="1.2" fill="#EA80FC" opacity="0.6"/>`,
+  swim_goggles: `<!-- 泳镜 -->
+    <ellipse cx="51" cy="21" rx="4" ry="3" fill="rgba(0,150,255,0.3)" stroke="#0088FF" stroke-width="1"/>
+    <ellipse cx="57" cy="21" rx="4" ry="3" fill="rgba(0,150,255,0.3)" stroke="#0088FF" stroke-width="1"/>
+    <line x1="54.5" y1="21" x2="53" y2="21" stroke="#0088FF" stroke-width="1.2"/>
+    <line x1="47.5" y1="20" x2="45" y2="18" stroke="#0088FF" stroke-width="1"/>
+    <rect x="48" y="19" width="5" height="1" rx="0.5" fill="rgba(100,200,255,0.4)"/>
+    <rect x="54" y="19" width="5" height="1" rx="0.5" fill="rgba(100,200,255,0.4)"/>`,
+  // Face/Neck - terrain
+  flower_lei: `<!-- 花环 -->
+    <path d="M44,27 Q48,31 53,29 Q58,31 62,27" fill="none" stroke="#2ECC71" stroke-width="2"/>
+    <circle cx="46" cy="28" r="2.5" fill="#FF6B9D"/><circle cx="46" cy="28" r="1" fill="#FFE66D"/>
+    <circle cx="50" cy="30" r="2.5" fill="#FF69B4"/><circle cx="50" cy="30" r="1" fill="#FFE66D"/>
+    <circle cx="54" cy="30" r="2.5" fill="#FF6B9D"/><circle cx="54" cy="30" r="1" fill="#FFE66D"/>
+    <circle cx="58" cy="28" r="2.5" fill="#FF69B4"/><circle cx="58" cy="28" r="1" fill="#FFE66D"/>`,
+  ice_amulet: `<!-- 冰晶符 -->
+    <path d="M48,27 Q51,31 53,28 Q55,31 58,27" fill="none" stroke="#81D4FA" stroke-width="1.5"/>
+    <polygon points="53,28 50,33 53,38 56,33" fill="#4FC3F7" opacity="0.8" stroke="#0288D1" stroke-width="0.5"/>
+    <polygon points="53,30 51.5,33 53,36 54.5,33" fill="#B3E5FC" opacity="0.6"/>
+    <circle cx="53" cy="33" r="1" fill="white" opacity="0.7"/>`,
+  flame_charm: `<!-- 火焰符 -->
+    <path d="M48,27 Q51,31 53,28 Q55,31 58,27" fill="none" stroke="#FF6F00" stroke-width="1.5"/>
+    <path d="M50,32 Q51,28 53,33 Q55,28 56,32 Q53,36 50,32Z" fill="#FF5722" opacity="0.85"/>
+    <path d="M51.5,33 Q52.5,30 53,34 Q53.5,30 54.5,33 Q53,35 51.5,33Z" fill="#FFD54F" opacity="0.7"/>`,
+  coral_pendant: `<!-- 珊瑚坠 -->
+    <path d="M48,27 Q51,30 53,28 Q55,30 58,27" fill="none" stroke="#FF8A65" stroke-width="1.5"/>
+    <path d="M51,32 L51,36 L50,34 M51,33 L49.5,35" stroke="#FF5722" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M55,32 L55,36 L56,34 M55,33 L56.5,35" stroke="#E64A19" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <circle cx="53" cy="31" r="1.5" fill="#FF8A65"/>`,
+  night_pendant: `<!-- 星月坠 -->
+    <path d="M48,27 Q51,30 53,28 Q55,30 58,27" fill="none" stroke="#7C4DFF" stroke-width="1.5"/>
+    <path d="M51,32 Q49,34 51,36 Q53,34 51,32Z" fill="#FFD54F" opacity="0.8"/>
+    <circle cx="55" cy="33" r="2" fill="none" stroke="#FFD54F" stroke-width="0.8" opacity="0.7"/>
+    <circle cx="54" cy="32.5" r="1.5" fill="#1a0a2e"/>
+    <circle cx="52" cy="35" r="0.5" fill="#FFD54F" opacity="0.5"/>`,
+  // Back - terrain
+  leaf_cloak: `<!-- 叶之斗篷 -->
+    <path d="M15,20 Q6,26 10,38 Q16,42 20,36 Q18,28 16,22Z" fill="#27AE60" opacity="0.8"/>
+    <path d="M15,20 Q6,26 10,38" fill="none" stroke="#1E8449" stroke-width="0.8"/>
+    <line x1="14" y1="24" x2="10" y2="30" stroke="#2ECC71" stroke-width="0.6" opacity="0.6"/>
+    <line x1="13" y1="28" x2="11" y2="34" stroke="#2ECC71" stroke-width="0.6" opacity="0.6"/>
+    <circle cx="9" cy="32" r="1.5" fill="#58D68D" opacity="0.5"/>`,
+  surfboard: `<!-- 冲浪板 -->
+    <rect x="1" y="20" width="4" height="22" rx="2" fill="#00BCD4" transform="rotate(-15 3 31)"/>
+    <rect x="1.8" y="22" width="2.4" height="8" rx="1" fill="#4DD0E1" opacity="0.5" transform="rotate(-15 3 31)"/>
+    <line x1="3" y1="28" x2="3" y2="38" stroke="#0097A7" stroke-width="0.5" transform="rotate(-15 3 31)"/>`,
+  ice_wings: `<!-- 冰霜之翼 - 左 -->
+    <path d="M18,16 Q10,8 4,14 Q1,18 4,22 Q8,20 12,17 Q10,12 15,10 Q12,16 14,19 Q16,17 18,16Z" fill="#B3E5FC" opacity="0.85"/>
+    <path d="M18,16 Q10,8 4,14" fill="none" stroke="#4FC3F7" stroke-width="0.6"/>
+    <path d="M14,12 Q10,12 6,16" fill="none" stroke="#81D4FA" stroke-width="0.4" opacity="0.6"/>
+    <!-- 冰霜之翼 - 右 -->
+    <path d="M46,16 Q54,8 60,14 Q63,18 60,22 Q56,20 52,17 Q54,12 49,10 Q52,16 50,19 Q48,17 46,16Z" fill="#B3E5FC" opacity="0.85"/>
+    <path d="M46,16 Q54,8 60,14" fill="none" stroke="#4FC3F7" stroke-width="0.6"/>
+    <circle cx="6" cy="16" r="1" fill="white" opacity="0.6"/>
+    <circle cx="58" cy="16" r="1" fill="white" opacity="0.6"/>`,
+  firefly_wings: `<!-- 萤火翅膀 - 左 -->
+    <path d="M18,16 Q10,10 5,14 Q2,18 5,21 Q10,18 14,16Z" fill="#7C4DFF" opacity="0.5"/>
+    <circle cx="8" cy="14" r="1.5" fill="#EEFF41" opacity="0.8"/>
+    <circle cx="6" cy="18" r="1" fill="#EEFF41" opacity="0.6"/>
+    <!-- 萤火翅膀 - 右 -->
+    <path d="M46,16 Q54,10 59,14 Q62,18 59,21 Q54,18 50,16Z" fill="#7C4DFF" opacity="0.5"/>
+    <circle cx="56" cy="14" r="1.5" fill="#EEFF41" opacity="0.8"/>
+    <circle cx="58" cy="18" r="1" fill="#EEFF41" opacity="0.6"/>`,
+  dragon_wings: `<!-- 龙翼 - 左 -->
+    <path d="M18,16 Q8,6 2,12 Q-1,18 3,22 Q8,18 12,15Z" fill="#BF360C" opacity="0.85"/>
+    <path d="M12,15 Q6,8 2,12" fill="none" stroke="#E65100" stroke-width="0.8"/>
+    <path d="M10,12 Q6,10 3,14" fill="none" stroke="#FF6E40" stroke-width="0.5" opacity="0.6"/>
+    <path d="M8,16 Q5,14 3,18" fill="none" stroke="#FF6E40" stroke-width="0.5" opacity="0.6"/>
+    <!-- 龙翼 - 右 -->
+    <path d="M46,16 Q56,6 62,12 Q65,18 61,22 Q56,18 52,15Z" fill="#BF360C" opacity="0.85"/>
+    <path d="M52,15 Q58,8 62,12" fill="none" stroke="#E65100" stroke-width="0.8"/>
+    <path d="M54,12 Q58,10 61,14" fill="none" stroke="#FF6E40" stroke-width="0.5" opacity="0.6"/>`,
+  // Mount - terrain
+  penguin_mount: `<!-- 企鹅坐骑 -->
+    <ellipse cx="32" cy="44" rx="8" ry="5" fill="#263238"/>
+    <ellipse cx="32" cy="43" rx="6" ry="4.5" fill="#37474F"/>
+    <ellipse cx="32" cy="44" rx="4" ry="3.5" fill="white"/>
+    <!-- 企鹅头 -->
+    <circle cx="24" cy="40" r="4.5" fill="#263238"/>
+    <circle cx="24" cy="40" r="3" fill="#37474F"/>
+    <ellipse cx="24" cy="41" rx="2" ry="2.5" fill="white"/>
+    <!-- 眼睛 -->
+    <circle cx="22.5" cy="39" r="1.2" fill="white"/>
+    <circle cx="22.8" cy="39" r="0.6" fill="#222"/>
+    <!-- 嘴 -->
+    <polygon points="20,40.5 22,41 20,41.5" fill="#FF8F00"/>
+    <!-- 脚 -->
+    <ellipse cx="28" cy="48" rx="3" ry="1.2" fill="#FF8F00"/>
+    <ellipse cx="38" cy="48" rx="3" ry="1.2" fill="#FF8F00"/>
+    <!-- 腮红 -->
+    <circle cx="22" cy="41.5" r="1" fill="#FF8A65" opacity="0.3"/>`,
+  lizard_mount: `<!-- 蜥蜴坐骑 -->
+    <ellipse cx="32" cy="44" rx="10" ry="4.5" fill="#E65100"/>
+    <ellipse cx="32" cy="43" rx="9" ry="4" fill="#FF6E40"/>
+    <!-- 蜥蜴头 -->
+    <ellipse cx="22" cy="41" rx="5" ry="3.5" fill="#FF6E40"/>
+    <ellipse cx="20" cy="40" rx="2.5" ry="2" fill="#FF8A65"/>
+    <!-- 眼睛 -->
+    <circle cx="19" cy="39.5" r="1.5" fill="#FFD54F"/>
+    <ellipse cx="19" cy="39.5" rx="0.5" ry="1.2" fill="#222"/>
+    <!-- 鳞片纹理 -->
+    <path d="M26,42 Q28,40 30,42" fill="none" stroke="#BF360C" stroke-width="0.5" opacity="0.5"/>
+    <path d="M30,42 Q32,40 34,42" fill="none" stroke="#BF360C" stroke-width="0.5" opacity="0.5"/>
+    <path d="M34,42 Q36,40 38,42" fill="none" stroke="#BF360C" stroke-width="0.5" opacity="0.5"/>
+    <!-- 前脚 -->
+    <path d="M26,47 L24,48 L25,49 L27,48Z" fill="#E65100"/>
+    <!-- 尾巴 -->
+    <path d="M42,44 Q46,42 48,44 Q50,46 48,48" fill="none" stroke="#FF6E40" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- 背刺 -->
+    <path d="M28,40 L29,37 L30,40" fill="#BF360C" opacity="0.6"/>
+    <path d="M32,39.5 L33,36.5 L34,39.5" fill="#BF360C" opacity="0.6"/>
+    <path d="M36,40 L37,37 L38,40" fill="#BF360C" opacity="0.6"/>`,
+  // === LEGENDARY HEAD/FACE ACCESSORIES ===
+  phoenix_crown: `<!-- 凤凰冠 -->
+    <path d="M46,16 Q48,4 53,2 Q58,4 60,16" fill="#FF6F00"/>
+    <path d="M48,14 Q50,6 53,4 Q56,6 58,14" fill="#FFAB00"/>
+    <path d="M50,12 Q52,7 53,5 Q54,7 56,12" fill="#FFD740"/>
+    <!-- 凤凰羽翎 -->
+    <path d="M53,2 Q50,-4 46,0" fill="none" stroke="#FF3D00" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M53,2 Q56,-4 60,0" fill="none" stroke="#FF3D00" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M53,2 Q53,-5 53,-2" fill="none" stroke="#FFAB00" stroke-width="1.2" stroke-linecap="round"/>
+    <!-- 宝石 -->
+    <circle cx="53" cy="8" r="2" fill="#E040FB"/>
+    <circle cx="53" cy="8" r="1" fill="#F8BBD0" opacity="0.6"/>
+    <circle cx="50" cy="11" r="1" fill="#FF3D00" opacity="0.7"/>
+    <circle cx="56" cy="11" r="1" fill="#FF3D00" opacity="0.7"/>`,
+  dragon_amulet: `<!-- 龙魂坠 -->
+    <path d="M48,26 Q51,30 53,27 Q55,30 58,26" fill="none" stroke="#B71C1C" stroke-width="2"/>
+    <!-- 龙眼宝石 -->
+    <ellipse cx="53" cy="33" rx="4.5" ry="5" fill="#B71C1C"/>
+    <ellipse cx="53" cy="33" rx="3.5" ry="4" fill="#D32F2F"/>
+    <ellipse cx="53" cy="33" rx="1.2" ry="3" fill="#FF8F00"/>
+    <ellipse cx="53" cy="33" rx="0.5" ry="2.5" fill="#FFF176"/>
+    <!-- 龙牙装饰 -->
+    <path d="M49,29 L50,32 L51,29" fill="#ECEFF1" opacity="0.8"/>
+    <path d="M55,29 L56,32 L57,29" fill="#ECEFF1" opacity="0.8"/>
+    <!-- 火焰光芒 -->
+    <circle cx="53" cy="33" r="6" fill="none" stroke="#FF6F00" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="53" cy="33" r="7.5" fill="none" stroke="#FF3D00" stroke-width="0.3" opacity="0.2"/>`,
+  // === ALL-TERRAIN / COMPOSITE ACCESSORIES ===
+  allterrain_helmet: `<!-- 全地形头盔 -->
+    <path d="M46,18 Q46,7 53,5 Q60,7 60,18" fill="#546E7A"/>
+    <path d="M46,18 Q46,7 53,5 Q60,7 60,18" fill="none" stroke="#78909C" stroke-width="0.8"/>
+    <rect x="46" y="16" width="14" height="2.5" rx="1" fill="#37474F"/>
+    <line x1="53" y1="5" x2="53" y2="16" stroke="#4FC3F7" stroke-width="1.2" opacity="0.6"/>
+    <line x1="48" y1="10" x2="58" y2="10" stroke="#4FC3F7" stroke-width="0.8" opacity="0.4"/>
+    <circle cx="53" cy="10" r="2" fill="#4FC3F7" opacity="0.3"/>`,
+  medal_chain: `<!-- 冠军奖牌 -->
+    <path d="M48,26 Q51,30 53,27 Q55,30 58,26" fill="none" stroke="#FFD700" stroke-width="1.8"/>
+    <circle cx="53" cy="32" r="4" fill="#FFD700"/>
+    <circle cx="53" cy="32" r="3" fill="#FFC107"/>
+    <polygon points="53,29.5 54,31 55.5,31.2 54.5,32.5 54.8,34 53,33 51.2,34 51.5,32.5 50.5,31.2 52,31" fill="#FF8F00" opacity="0.8"/>`,
+  weather_cloak: `<!-- 全天候斗篷 -->
+    <path d="M15,20 Q5,25 8,38 Q14,44 20,38 Q18,28 16,22Z" fill="#455A64" opacity="0.8"/>
+    <path d="M15,20 Q5,25 8,38" fill="none" stroke="#607D8B" stroke-width="0.8"/>
+    <!-- 三色纹理代表全地形 -->
+    <line x1="12" y1="26" x2="10" y2="32" stroke="#4CAF50" stroke-width="1" opacity="0.5"/>
+    <line x1="13" y1="28" x2="10" y2="34" stroke="#2196F3" stroke-width="1" opacity="0.5"/>
+    <line x1="14" y1="30" x2="11" y2="36" stroke="#FF5722" stroke-width="1" opacity="0.5"/>`,
+  rainbow_scarf: `<!-- 彩虹围巾 -->
+    <path d="M46,26 Q50,30 56,28 Q58,26 60,27" fill="none" stroke="#FF0000" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46,27.2 Q50,31 56,29 Q58,27 60,28" fill="none" stroke="#FF8800" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46,28.4 Q50,32 56,30 Q58,28 60,29" fill="none" stroke="#FFFF00" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46,29.6 Q50,33 56,31 Q58,29 60,30" fill="none" stroke="#00CC44" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46,30.8 Q50,34 56,32 Q58,30 60,31" fill="none" stroke="#0088FF" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46,32 Q50,35 56,33 Q58,31 60,32" fill="none" stroke="#AA00FF" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46,30 Q44,35 46,40" fill="none" stroke="url(#rainbowGrad)" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>`,
+  chameleon_mount: `<!-- 变色龙坐骑 -->
+    <ellipse cx="32" cy="44" rx="10" ry="5" fill="#66BB6A"/>
+    <ellipse cx="32" cy="43" rx="9" ry="4.5" fill="#81C784"/>
+    <!-- 变色龙头 -->
+    <ellipse cx="22" cy="40" rx="5.5" ry="4" fill="#81C784"/>
+    <ellipse cx="20" cy="39" rx="2" ry="2.5" fill="#A5D6A7"/>
+    <!-- 大眼 - 可以分开转 -->
+    <circle cx="19" cy="38" r="2.5" fill="#E8F5E9" stroke="#388E3C" stroke-width="0.5"/>
+    <circle cx="19.3" cy="37.8" r="1" fill="#222"/>
+    <!-- 卷尾 -->
+    <path d="M42,43 Q46,40 47,43 Q48,46 46,48 Q44,49 43,47" fill="none" stroke="#66BB6A" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- 身体纹理 - 多色表示变色 -->
+    <circle cx="28" cy="42" r="1.5" fill="#4FC3F7" opacity="0.3"/>
+    <circle cx="32" cy="41" r="1.5" fill="#FFD54F" opacity="0.3"/>
+    <circle cx="36" cy="42" r="1.5" fill="#FF8A65" opacity="0.3"/>
+    <!-- 前脚 -->
+    <path d="M26,47 L24,48 L25.5,49 L27,48Z" fill="#66BB6A"/>
+    <path d="M38,47 L36,48 L37.5,49 L39,48Z" fill="#66BB6A"/>
+    <!-- 背脊 -->
+    <path d="M26,39 L27,37 L28,39 M30,38.5 L31,36.5 L32,38.5 M34,39 L35,37 L36,39" fill="none" stroke="#388E3C" stroke-width="0.8"/>`,
   // === LEGENDARY ACCESSORIES ===
   angel_wings: `<!-- 天使翅膀 - 左翼 -->
     <path d="M18,16 Q10,8 4,12 Q0,16 2,20 Q6,18 10,16 Q8,10 14,8 Q10,14 12,18 Q14,16 18,16Z" fill="white" opacity="0.9"/>
@@ -1078,15 +2233,17 @@ const ALL_TURTLES = [
   { id: 'rocket', name: 'Rocket', speed: 92, color: '#F97316', shell: '#C44B08', body: '#E8752E', pattern: 'diamond', accent: '#FFB070', cost: 1000 },
   { id: 'ghost', name: 'Ghost', speed: 70, color: '#94A3B8', shell: '#5A6878', body: '#8899AA', pattern: 'cross', accent: '#B8C8D8', cost: 300 },
   { id: 'golden', name: 'Golden', speed: 99, color: '#FACC15', shell: '#B8960F', body: '#D4B830', pattern: 'crown', accent: '#FFE566', cost: 2000 },
-  { id: 'rainbow', name: 'Rainbow', speed: 100, color: '#FF6EFF', shell: '#8B00FF', body: '#FF69B4', pattern: 'rainbow', accent: '#FFFFFF', cost: 8888 },
+  { id: 'rainbow', name: 'Rainbow', speed: 100, color: '#FF6EFF', shell: '#8B00FF', body: '#FF69B4', pattern: 'rainbow', accent: '#FFFFFF', cost: 38888 },
 ];
 
 let raceTurtles = ALL_TURTLES.slice(0, 4); // default to first 4
 let raceStartTime = 0;
+let raceTurtleState = []; // exposed for render() to read turtle states
+let raceObstacles = []; // obstacles on track [{pos, emoji, text, anim, hit, lane}]
 const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#4A5568'];
 
 let state = {
-  coins: 9999, wins: 0, totalWins: 0, round: 1, maxRounds: 5,
+  coins: 9999, wins: 0, totalWins: 0, round: 1, maxRounds: 1, totalLaps: 2,
   selected: -1, racing: false, progress: [0, 0, 0, 0], finished: [],
   betAmount: 100, usedItems: [], pickPhase: false, trackPickPhase: false,
   unlockedTurtles: ['speedy', 'flash', 'bolt', 'slowjoe'], highScore: 0,
@@ -1489,28 +2646,43 @@ function renderShop() {
     area.appendChild(card);
   });
 
-  // Section title: Cosmetics
-  const cosTitle = document.createElement('div');
-  cosTitle.className = 'shop-section-title';
-  cosTitle.textContent = '✨ 装饰品';
-  area.appendChild(cosTitle);
+  // Cosmetics grouped by slot
+  const SHOP_SLOTS = [
+    { key: 'head',  title: '🎩 头饰 — ⚡速度' },
+    { key: 'face',  title: '😎 面饰 — 🔥冲刺' },
+    { key: 'back',  title: '🦸 背饰 — 🎯技巧' },
+    { key: 'mount', title: '🐰 坐骑 — 💪耐力' },
+  ];
+  SHOP_SLOTS.forEach(slot => {
+    const items = COSMETIC_ITEMS.filter(c => c.slot === slot.key);
+    if (!items.length) return;
+    const slotTitle = document.createElement('div');
+    slotTitle.className = 'shop-section-title';
+    slotTitle.textContent = slot.title;
+    area.appendChild(slotTitle);
 
-  COSMETIC_ITEMS.forEach(c => {
-    const owned = (state.ownedCosmetics || []).includes(c.id);
-    const card = document.createElement('div');
-    const isLegendary = c.extraStats != null;
-    card.className = 'shop-card' + (owned ? '' : ' locked') + (isLegendary ? ' legendary-card' : '');
-    card.innerHTML = `
-      <div style="line-height:1">${renderItemIcon(c.emoji, isLegendary ? 48 : 36)}</div>
-      <div style="font-size:16px;font-weight:700;color:${isLegendary ? '#FFD700' : '#fff'}">${c.name}${isLegendary ? ' ⭐' : ''}</div>
-      <div style="font-size:12px;color:var(--gold);font-weight:600">${c.desc}</div>
-      ${owned
-        ? '<div style="color:var(--accent);font-weight:700">✓ 已拥有</div>'
-        : `<button class="shop-buy-btn" style="background:${isLegendary ? 'linear-gradient(135deg,#FFD700,#FF8C00)' : 'var(--gold)'};color:#0A1628"
-            onclick="buyCosmetic('${c.id}')" ${state.coins < c.cost ? 'disabled' : ''}>
-            🪙 ${c.cost.toLocaleString()} 购买</button>`}
-    `;
-    area.appendChild(card);
+    items.forEach(c => {
+      const owned = (state.ownedCosmetics || []).includes(c.id);
+      const card = document.createElement('div');
+      const isLegendary = c.extraStats != null;
+      card.className = 'shop-card' + (owned ? '' : ' locked') + (isLegendary ? ' legendary-card' : '');
+      const terrainName = c.terrain === 'all' ? '🌍 全地形通用' : c.terrain ? '📍 ' + (TRACK_THEMES.find(t => t.id === c.terrain)?.name || '') : '';
+      const zAff = TERRAIN_ZONE_AFFINITY[c.terrain];
+      const zLabel = zAff === 'run' ? '（综合赛道跑步段生效）' : zAff === 'swim' ? '（综合赛道游泳段生效）' : zAff === 'climb' ? '（综合赛道蛙跳段生效）' : '';
+      card.innerHTML = `
+        <div style="line-height:1">${renderItemIcon(c.emoji, isLegendary ? 48 : 36)}</div>
+        <div style="font-size:16px;font-weight:700;color:${isLegendary ? '#FFD700' : '#fff'};${isLegendary ? 'text-shadow:0 1px 4px rgba(0,0,0,0.6)' : ''}">${c.name}${isLegendary ? ' ⭐' : ''}</div>
+        <div style="font-size:12px;color:${isLegendary ? '#FFF8DC' : 'var(--gold)'};font-weight:600;${isLegendary ? 'text-shadow:0 1px 3px rgba(0,0,0,0.6);background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;display:inline-block' : ''}">${c.desc}</div>
+        ${c.terrain ? `<div style="font-size:11px;color:var(--accent);opacity:0.8">${terrainName}</div>` : ''}
+        ${zLabel ? `<div style="font-size:10px;color:var(--text-muted)">${zLabel}</div>` : ''}
+        ${owned
+          ? '<div style="color:var(--accent);font-weight:700">✓ 已拥有</div>'
+          : `<button class="shop-buy-btn" style="background:${isLegendary ? 'linear-gradient(135deg,#FFD700,#FF8C00)' : 'var(--gold)'};color:#0A1628"
+              onclick="buyCosmetic('${c.id}')" ${state.coins < c.cost ? 'disabled' : ''}>
+              🪙 ${c.cost.toLocaleString()} 购买</button>`}
+      `;
+      area.appendChild(card);
+    });
   });
 
   // Section title: Shoes
@@ -1628,7 +2800,44 @@ function renderLeaderboard() {
   ).join('')}</div>`;
 }
 
-const BET_OPTIONS = [50, 100, 200, 500];
+const BET_OPTIONS = [100, 500, 1000, 5000];
+
+function updateTrackObstacles(trackEl, startX, endX) {
+  if (!state.racing || !raceObstacles.length) return;
+  const maxProg = Math.max(...state.progress);
+  // Find which lane is the leader
+  const leaderIdx = state.progress.indexOf(maxProg);
+  const lanes = trackEl.querySelectorAll('.track-lane');
+
+  raceObstacles.forEach(obs => {
+    if (obs.hit) return;
+    const distAhead = obs.pos - maxProg;
+    // Show obstacle when leader is within 15 progress units ahead
+    const shouldShow = distAhead > 0 && distAhead < 15;
+
+    if (shouldShow && !obs.el) {
+      // Create obstacle element in the leader's lane
+      const lane = lanes[leaderIdx];
+      if (!lane) return;
+      const el = document.createElement('div');
+      el.className = 'track-obstacle';
+      el.textContent = obs.emoji;
+      // Position based on obstacle's lap progress
+      const lapPos = obs.pos % 100;
+      el.style.left = (startX + (lapPos / 100) * (endX - startX)) + 'px';
+      lane.appendChild(el);
+      obs.el = el;
+      // Trigger animation on next frame
+      requestAnimationFrame(() => el.classList.add('visible'));
+    } else if (!shouldShow && obs.el && !obs.hit) {
+      // Remove if leader passed without hitting (shouldn't happen normally for leader, but cleanup)
+      if (distAhead <= 0) {
+        obs.el.remove();
+        obs.el = null;
+      }
+    }
+  });
+}
 
 function renderBetBtns() {
   const container = document.getElementById('betBtns');
@@ -1637,18 +2846,21 @@ function renderBetBtns() {
   BET_OPTIONS.forEach(amt => {
     const btn = document.createElement('button');
     btn.className = 'bet-btn' + (state.betAmount === amt ? ' active' : '');
-    btn.textContent = '🪙' + amt;
+    btn.textContent = '🪙' + amt.toLocaleString();
     btn.disabled = state.racing || state.coins < amt;
-    btn.onclick = () => { state.betAmount = amt; render(); };
+    btn.onclick = () => { state.betAmount = amt; playSound('select'); render(); };
     container.appendChild(btn);
   });
 }
 
 // === Consumable items (per-race buffs) ===
 const BUFF_ITEMS = [
-  { id: 'boost', emoji: '⚡', name: '加速', cost: 150, desc: '+20% 速度' },
-  { id: 'slow', emoji: '🌀', name: '减速', cost: 200, desc: '对手 -20%' },
-  { id: 'lucky', emoji: '🍀', name: '幸运', cost: 100, desc: '增大运气' },
+  { id: 'banana', emoji: '🍌', name: '香蕉皮', cost: 100, desc: '让第1名踩到香蕉皮摔倒', target: 'leader' },
+  { id: 'lightning', emoji: '⚡', name: '闪电', cost: 200, desc: '随机电晕一个对手并扣体力', target: 'random_opponent' },
+  { id: 'rocket', emoji: '🚀', name: '火箭', cost: 150, desc: '自己获得超级加速（消耗体力）', target: 'self' },
+  { id: 'shield', emoji: '🛡️', name: '护盾', cost: 120, desc: '免疫下一次负面事件', target: 'self' },
+  { id: 'heal', emoji: '💊', name: '能量饮料', cost: 180, desc: '立即恢复30%体力', target: 'self' },
+  { id: 'earthquake', emoji: '🌍', name: '地震', cost: 250, desc: '除自己外所有对手减速', target: 'all_opponents' },
 ];
 
 // Kuromi mini SVG icon for shop/UI display
@@ -1686,29 +2898,197 @@ function renderItemIcon(emoji, size) {
   return `<span style="font-size:${size || 28}px">${emoji}</span>`;
 }
 
+// === Quality tier definitions ===
+const QUALITY_TIERS = [
+  { id: 'common', name: '普通', icon: '⚪', color: '#9CA3AF', border: '#6B7280', glow: 'none' },
+  { id: 'fine', name: '优秀', icon: '🟢', color: '#22C55E', border: '#16A34A', glow: '0 0 8px rgba(34,197,94,0.4)' },
+  { id: 'rare', name: '稀有', icon: '🔵', color: '#3B82F6', border: '#2563EB', glow: '0 0 8px rgba(59,130,246,0.4)' },
+  { id: 'epic', name: '史诗', icon: '🟣', color: '#A855F7', border: '#9333EA', glow: '0 0 10px rgba(168,85,247,0.5)' },
+  { id: 'legendary', name: '传说', icon: '🟠', color: '#F97316', border: '#EA580C', glow: '0 0 12px rgba(249,115,22,0.5)' },
+  { id: 'mythic', name: '神话', icon: '🔴', color: '#EF4444', border: '#DC2626', glow: '0 0 14px rgba(239,68,68,0.6)' },
+];
+
+function getQualityTier(item) {
+  if (!item) return QUALITY_TIERS[0];
+  if (item.quality) return QUALITY_TIERS.find(t => t.id === item.quality) || QUALITY_TIERS[0];
+  // Auto-determine from bonus value and extraStats
+  if (item.extraStats) return QUALITY_TIERS.find(t => t.id === 'legendary');
+  if (item.bonus <= 0.08) return QUALITY_TIERS[0]; // common
+  if (item.bonus <= 0.12) return QUALITY_TIERS[1]; // fine
+  if (item.bonus <= 0.15) return QUALITY_TIERS[2]; // rare
+  if (item.bonus <= 0.18) return QUALITY_TIERS[3]; // epic
+  return QUALITY_TIERS[4]; // legendary
+}
+
 // === Cosmetic accessories (buy in shop, free to equip/unequip, each gives a stat bonus) ===
 const COSMETIC_ITEMS = [
-  { id: 'tophat', emoji: '🎩', name: '礼帽', cost: 200, effect: 'tophat', stat: 'stamina', bonus: 0.08, desc: '体力 +8%' },
-  { id: 'crown_acc', emoji: '👑', name: '皇冠', cost: 500, effect: 'crown', stat: 'speed', bonus: 0.10, desc: '速度 +10%' },
-  { id: 'bow', emoji: '🎀', name: '蝴蝶结', cost: 150, effect: 'bow', stat: 'luck', bonus: 0.15, desc: '运气 +15%' },
-  { id: 'flower', emoji: '🌸', name: '花朵', cost: 120, effect: 'flower', stat: 'recovery', bonus: 0.12, desc: '恢复 +12%' },
-  { id: 'sunglasses', emoji: '😎', name: '墨镜', cost: 180, effect: 'sunglasses', stat: 'focus', bonus: 0.10, desc: '专注 +10%' },
-  { id: 'bandana', emoji: '🔴', name: '头巾', cost: 160, effect: 'bandana', stat: 'burst', bonus: 0.20, desc: '爆发 +20%' },
-  { id: 'wizard', emoji: '🧙', name: '巫师帽', cost: 350, effect: 'wizard', stat: 'chaos', bonus: 0.25, desc: '混乱 +25%' },
-  { id: 'cape', emoji: '🦸', name: '披风', cost: 280, effect: 'cape', stat: 'sprint', bonus: 0.15, desc: '冲刺 +15%' },
-  { id: 'antenna', emoji: '👽', name: '触角', cost: 250, effect: 'antenna', stat: 'dodge', bonus: 0.18, desc: '闪避 +18%' },
-  { id: 'scarf', emoji: '🧣', name: '围巾', cost: 130, effect: 'scarf', stat: 'warmup', bonus: 0.12, desc: '热身 +12%' },
-  // Kuromi 酷洛米系列
-  { id: 'kuromi_hood', emoji: 'kuromi_icon', name: '酷洛米头巾', cost: 400, effect: 'kuromi_hood', stat: 'speed', bonus: 0.12, desc: '速度 +12%' },
-  { id: 'kuromi_ears', emoji: 'kuromi_icon', name: '恶魔耳朵', cost: 250, effect: 'kuromi_ears', stat: 'dodge', bonus: 0.20, desc: '闪避 +20%' },
-  { id: 'kuromi_tail', emoji: 'kuromi_icon', name: '恶魔尾巴', cost: 300, effect: 'kuromi_tail', stat: 'chaos', bonus: 0.30, desc: '混乱 +30%' },
-  { id: 'kuromi_necklace', emoji: 'kuromi_icon', name: '骷髅项链', cost: 220, effect: 'kuromi_necklace', stat: 'burst', bonus: 0.25, desc: '爆发 +25%' },
-  { id: 'kuromi_wings', emoji: 'kuromi_icon', name: '蝙蝠翅膀', cost: 500, effect: 'kuromi_wings', stat: 'sprint', bonus: 0.20, desc: '冲刺 +20%' },
-  { id: 'kuromi_bow', emoji: 'kuromi_icon', name: '骷髅蝴蝶结', cost: 180, effect: 'kuromi_bow', stat: 'luck', bonus: 0.18, desc: '运气 +18%' },
-  // === 传说级道具 ===
-  { id: 'angel_wings', emoji: '👼', name: '天使之翼', cost: 6666, effect: 'angel_wings', stat: 'speed', bonus: 0.15, desc: '速度+15% 体力+12% 冲刺+15%', extraStats: { stamina: 0.12, sprint: 0.15 } },
-  { id: 'bunny_mount', emoji: '🐰', name: '小兔子坐骑', cost: 8888, effect: 'bunny_mount', stat: 'speed', bonus: 0.18, desc: '速度+18% 爆发+20% 闪避+15%', extraStats: { burst: 0.20, dodge: 0.15 } },
+  // 🎩 头饰 → ⚡速度 (speed, warmup)
+  { id: 'tophat', emoji: '🎩', name: '礼帽', cost: 200, effect: 'tophat', stat: 'speed', bonus: 0.08, desc: '⚡速度 +8%', slot: 'head', quality: 'common' },
+  { id: 'crown_acc', emoji: '👑', name: '皇冠', cost: 500, effect: 'crown', stat: 'speed', bonus: 0.10, desc: '⚡速度 +10%', slot: 'head', quality: 'fine' },
+  { id: 'bow', emoji: '🎀', name: '蝴蝶结', cost: 150, effect: 'bow', stat: 'warmup', bonus: 0.15, desc: '⚡速度 +15%', slot: 'head', quality: 'rare' },
+  { id: 'flower', emoji: '🌸', name: '花朵', cost: 120, effect: 'flower', stat: 'warmup', bonus: 0.12, desc: '⚡速度 +12%', slot: 'head', quality: 'fine' },
+  { id: 'bandana', emoji: '🔴', name: '头巾', cost: 160, effect: 'bandana', stat: 'speed', bonus: 0.12, desc: '⚡速度 +12%', slot: 'head', quality: 'fine' },
+  { id: 'wizard', emoji: '🧙', name: '巫师帽', cost: 350, effect: 'wizard', stat: 'speed', bonus: 0.15, desc: '⚡速度 +15%', slot: 'head', quality: 'rare' },
+  { id: 'antenna', emoji: '👽', name: '触角', cost: 250, effect: 'antenna', stat: 'warmup', bonus: 0.18, desc: '⚡速度 +18%', slot: 'head', quality: 'epic' },
+  { id: 'kuromi_hood', emoji: 'kuromi_icon', name: '酷洛米头巾', cost: 400, effect: 'kuromi_hood', stat: 'speed', bonus: 0.12, desc: '⚡速度 +12%', slot: 'head', quality: 'fine' },
+  { id: 'kuromi_ears', emoji: 'kuromi_icon', name: '恶魔耳朵', cost: 250, effect: 'kuromi_ears', stat: 'speed', bonus: 0.10, desc: '⚡速度 +10%', slot: 'head', quality: 'fine' },
+  { id: 'kuromi_bow', emoji: 'kuromi_icon', name: '骷髅蝴蝶结', cost: 180, effect: 'kuromi_bow', stat: 'warmup', bonus: 0.12, desc: '⚡速度 +12%', slot: 'head', quality: 'fine' },
+  // 🎩 头饰 - 场地专属
+  { id: 'straw_hat', emoji: '🌾', name: '草帽', cost: 200, effect: 'straw_hat', stat: 'speed', bonus: 0.08, desc: '⚡速度+8% 草地+15%', slot: 'head', terrain: 'grass', terrainBonus: 0.15, quality: 'common' },
+  { id: 'shell_crown', emoji: '🐚', name: '贝壳冠', cost: 220, effect: 'shell_crown', stat: 'speed', bonus: 0.08, desc: '⚡速度+8% 沙滩+15%', slot: 'head', terrain: 'beach', terrainBonus: 0.15, quality: 'common' },
+  { id: 'snow_hat', emoji: '🧶', name: '毛线帽', cost: 200, effect: 'snow_hat', stat: 'warmup', bonus: 0.10, desc: '⚡速度+10% 雪地+15%', slot: 'head', terrain: 'snow', terrainBonus: 0.15, quality: 'fine' },
+  { id: 'fire_helmet', emoji: '⛑️', name: '防火盔', cost: 250, effect: 'fire_helmet', stat: 'speed', bonus: 0.08, desc: '⚡速度+8% 火山+15%', slot: 'head', terrain: 'volcano', terrainBonus: 0.15, quality: 'common' },
+  { id: 'glow_circlet', emoji: '🔮', name: '荧光环', cost: 230, effect: 'glow_circlet', stat: 'warmup', bonus: 0.10, desc: '⚡速度+10% 夜光+15%', slot: 'head', terrain: 'night', terrainBonus: 0.15, quality: 'fine' },
+  { id: 'swim_goggles', emoji: '🥽', name: '泳镜', cost: 260, effect: 'swim_goggles', stat: 'speed', bonus: 0.10, desc: '⚡速度+10% 铁人+15%', slot: 'head', terrain: 'triathlon', terrainBonus: 0.15, quality: 'fine' },
+  // 😎 面饰 → 🔥冲刺 (sprint, chaos, luck)
+  { id: 'sunglasses', emoji: '😎', name: '墨镜', cost: 180, effect: 'sunglasses', stat: 'luck', bonus: 0.10, desc: '🔥冲刺 +10%', slot: 'face', quality: 'fine' },
+  { id: 'scarf', emoji: '🧣', name: '围巾', cost: 130, effect: 'scarf', stat: 'sprint', bonus: 0.12, desc: '🔥冲刺 +12%', slot: 'face', quality: 'fine' },
+  { id: 'kuromi_necklace', emoji: 'kuromi_icon', name: '骷髅项链', cost: 220, effect: 'kuromi_necklace', stat: 'chaos', bonus: 0.25, desc: '🔥冲刺 +25%', slot: 'face', quality: 'legendary' },
+  // 😎 面饰 - 场地专属
+  { id: 'flower_lei', emoji: '🌻', name: '花环', cost: 180, effect: 'flower_lei', stat: 'luck', bonus: 0.08, desc: '🔥冲刺+8% 草地+12%', slot: 'face', terrain: 'grass', terrainBonus: 0.12, quality: 'common' },
+  { id: 'coral_pendant', emoji: '🐠', name: '珊瑚坠', cost: 200, effect: 'coral_pendant', stat: 'sprint', bonus: 0.08, desc: '🔥冲刺+8% 沙滩+12%', slot: 'face', terrain: 'beach', terrainBonus: 0.12, quality: 'common' },
+  { id: 'ice_amulet', emoji: '❄️', name: '冰晶符', cost: 210, effect: 'ice_amulet', stat: 'sprint', bonus: 0.08, desc: '🔥冲刺+8% 雪地+12%', slot: 'face', terrain: 'snow', terrainBonus: 0.12, quality: 'common' },
+  { id: 'flame_charm', emoji: '🔥', name: '火焰符', cost: 220, effect: 'flame_charm', stat: 'chaos', bonus: 0.10, desc: '🔥冲刺+10% 火山+12%', slot: 'face', terrain: 'volcano', terrainBonus: 0.12, quality: 'fine' },
+  { id: 'night_pendant', emoji: '🌙', name: '星月坠', cost: 200, effect: 'night_pendant', stat: 'luck', bonus: 0.10, desc: '🔥冲刺+10% 夜光+12%', slot: 'face', terrain: 'night', terrainBonus: 0.12, quality: 'fine' },
+  // 🦸 背饰 → 🎯技巧 (focus, dodge, burst)
+  { id: 'cape', emoji: '🦸', name: '披风', cost: 280, effect: 'cape', stat: 'dodge', bonus: 0.15, desc: '🎯技巧 +15%', slot: 'back', quality: 'rare' },
+  { id: 'kuromi_wings', emoji: 'kuromi_icon', name: '蝙蝠翅膀', cost: 500, effect: 'kuromi_wings', stat: 'burst', bonus: 0.20, desc: '🎯技巧 +20%', slot: 'back', quality: 'legendary' },
+  { id: 'kuromi_tail', emoji: 'kuromi_icon', name: '恶魔尾巴', cost: 300, effect: 'kuromi_tail', stat: 'focus', bonus: 0.20, desc: '🎯技巧 +20%', slot: 'back', quality: 'legendary' },
+  // 🦸 背饰 - 场地专属
+  { id: 'leaf_cloak', emoji: '🍃', name: '叶之斗篷', cost: 250, effect: 'leaf_cloak', stat: 'dodge', bonus: 0.06, desc: '🎯技巧+6% 草地+15%', slot: 'back', terrain: 'grass', terrainBonus: 0.15, quality: 'common' },
+  { id: 'surfboard', emoji: '🏄', name: '冲浪板', cost: 280, effect: 'surfboard', stat: 'burst', bonus: 0.06, desc: '🎯技巧+6% 沙滩+15%', slot: 'back', terrain: 'beach', terrainBonus: 0.15, quality: 'common' },
+  { id: 'ice_wings', emoji: '🧊', name: '冰霜之翼', cost: 300, effect: 'ice_wings', stat: 'focus', bonus: 0.08, desc: '🎯技巧+8% 雪地+15%', slot: 'back', terrain: 'snow', terrainBonus: 0.15, quality: 'common' },
+  { id: 'firefly_wings', emoji: '🦋', name: '萤火翅膀', cost: 280, effect: 'firefly_wings', stat: 'dodge', bonus: 0.06, desc: '🎯技巧+6% 夜光+15%', slot: 'back', terrain: 'night', terrainBonus: 0.15, quality: 'common' },
+  { id: 'dragon_wings', emoji: '🐉', name: '龙翼', cost: 350, effect: 'dragon_wings', stat: 'burst', bonus: 0.10, desc: '🎯技巧+10% 火山+15%', slot: 'back', terrain: 'volcano', terrainBonus: 0.15, quality: 'fine' },
+  // 🎩 头饰 - 传说级 (主属性speed + 额外跨类)
+  { id: 'phoenix_crown', emoji: '🔥', name: '凤凰冠', cost: 18888, effect: 'phoenix_crown', stat: 'speed', bonus: 0.15, desc: '⚡速度+15% 🎯技巧+18% 💪耐力+12%', slot: 'head', extraStats: { burst: 0.18, recovery: 0.12 }, quality: 'legendary' },
+  // 🎩 头饰 - 全地形
+  { id: 'allterrain_helmet', emoji: '⛑️', name: '全地形头盔', cost: 400, effect: 'allterrain_helmet', stat: 'speed', bonus: 0.06, desc: '⚡速度+6% 全场地+10%', slot: 'head', terrain: 'all', terrainBonus: 0.10, quality: 'common' },
+  // 😎 面饰 - 传说级 (主属性sprint + 额外跨类)
+  { id: 'dragon_amulet', emoji: '🐲', name: '龙魂坠', cost: 16888, effect: 'dragon_amulet', stat: 'sprint', bonus: 0.20, desc: '🔥冲刺+20% +27%', slot: 'face', extraStats: { chaos: 0.15, luck: 0.12 }, quality: 'legendary' },
+  // 😎 面饰 - 全地形
+  { id: 'medal_chain', emoji: '🏅', name: '冠军奖牌', cost: 500, effect: 'medal_chain', stat: 'sprint', bonus: 0.08, desc: '🔥冲刺+8% 全场地+10%', slot: 'face', terrain: 'all', terrainBonus: 0.10, quality: 'common' },
+  { id: 'rainbow_scarf', emoji: '🌈', name: '彩虹围巾', cost: 450, effect: 'rainbow_scarf', stat: 'luck', bonus: 0.08, desc: '🔥冲刺+8% 全场地+10%', slot: 'face', terrain: 'all', terrainBonus: 0.10, quality: 'common' },
+  // 🦸 背饰 - 全地形
+  { id: 'weather_cloak', emoji: '🧥', name: '全天候斗篷', cost: 500, effect: 'weather_cloak', stat: 'dodge', bonus: 0.08, desc: '🎯技巧+8% 全场地+12%', slot: 'back', terrain: 'all', terrainBonus: 0.12, quality: 'common' },
+  // 🦸 背饰 - 传说级 (主属性dodge + 额外跨类)
+  { id: 'angel_wings', emoji: '👼', name: '天使之翼', cost: 22888, effect: 'angel_wings', stat: 'dodge', bonus: 0.15, desc: '🎯技巧+15% 💪耐力+12% 🔥冲刺+15%', slot: 'back', extraStats: { stamina: 0.12, sprint: 0.15 }, quality: 'legendary' },
+  // 🐰 坐骑 → 💪耐力 (stamina, recovery)
+  { id: 'bunny_mount', emoji: '🐰', name: '小兔子坐骑', cost: 28888, effect: 'bunny_mount', stat: 'stamina', bonus: 0.18, desc: '💪耐力+18% ⚡速度+20% 🎯技巧+15%', slot: 'mount', extraStats: { speed: 0.20, dodge: 0.15 }, quality: 'legendary' },
+  // 🐰 坐骑 - 场地专属
+  { id: 'penguin_mount', emoji: '🐧', name: '企鹅坐骑', cost: 2000, effect: 'penguin_mount', stat: 'stamina', bonus: 0.10, desc: '💪耐力+10% 雪地+20%', slot: 'mount', terrain: 'snow', terrainBonus: 0.20, quality: 'fine' },
+  { id: 'lizard_mount', emoji: '🦎', name: '蜥蜴坐骑', cost: 2000, effect: 'lizard_mount', stat: 'recovery', bonus: 0.10, desc: '💪耐力+10% 火山+20%', slot: 'mount', terrain: 'volcano', terrainBonus: 0.20, quality: 'fine' },
+  // 🐰 坐骑 - 全地形
+  { id: 'chameleon_mount', emoji: '🦎', name: '变色龙坐骑', cost: 3500, effect: 'chameleon_mount', stat: 'stamina', bonus: 0.12, desc: '💪耐力+12% 全场地+15%', slot: 'mount', terrain: 'all', terrainBonus: 0.15, quality: 'fine' },
+
+  // ===== 套装物品 - 传说级 =====
+  // ❄️ 冰霜领主套装 (frost_lord) - 4件: head, face, back, mount
+  { id: 'frost_lord_crown', emoji: '❄️', name: '冰霜王冠', cost: 15000, effect: 'frost_lord_crown', stat: 'speed', bonus: 0.15, desc: '⚡速度+15% 雪地+18%', slot: 'head', quality: 'legendary', setId: 'frost_lord', terrain: 'snow', terrainBonus: 0.18 },
+  { id: 'frost_lord_mask', emoji: '🥶', name: '冰霜面具', cost: 12000, effect: 'frost_lord_mask', stat: 'sprint', bonus: 0.15, desc: '🔥冲刺+15% 雪地+18%', slot: 'face', quality: 'legendary', setId: 'frost_lord', terrain: 'snow', terrainBonus: 0.18 },
+  { id: 'frost_lord_cloak', emoji: '🧊', name: '冰霜斗篷', cost: 14000, effect: 'frost_lord_cloak', stat: 'dodge', bonus: 0.15, desc: '🎯技巧+15% 雪地+18%', slot: 'back', quality: 'legendary', setId: 'frost_lord', terrain: 'snow', terrainBonus: 0.18 },
+  { id: 'frost_lord_steed', emoji: '🐺', name: '寒冰狼骑', cost: 18000, effect: 'frost_lord_steed', stat: 'stamina', bonus: 0.15, desc: '💪耐力+15% 雪地+18%', slot: 'mount', quality: 'legendary', setId: 'frost_lord', terrain: 'snow', terrainBonus: 0.18 },
+  // 🔥 烈焰之王套装 (flame_king) - 4件: head, face, back, mount
+  { id: 'flame_king_helm', emoji: '🌋', name: '烈焰战盔', cost: 15000, effect: 'flame_king_helm', stat: 'speed', bonus: 0.15, desc: '⚡速度+15% 火山+18%', slot: 'head', quality: 'legendary', setId: 'flame_king', terrain: 'volcano', terrainBonus: 0.18 },
+  { id: 'flame_king_pendant', emoji: '💎', name: '烈焰宝坠', cost: 12000, effect: 'flame_king_pendant', stat: 'chaos', bonus: 0.15, desc: '🔥冲刺+15% 火山+18%', slot: 'face', quality: 'legendary', setId: 'flame_king', terrain: 'volcano', terrainBonus: 0.18 },
+  { id: 'flame_king_wings', emoji: '🔥', name: '烈焰之翼', cost: 14000, effect: 'flame_king_wings', stat: 'burst', bonus: 0.15, desc: '🎯技巧+15% 火山+18%', slot: 'back', quality: 'legendary', setId: 'flame_king', terrain: 'volcano', terrainBonus: 0.18 },
+  { id: 'flame_king_beast', emoji: '🦁', name: '炎狮坐骑', cost: 18000, effect: 'flame_king_beast', stat: 'recovery', bonus: 0.15, desc: '💪耐力+15% 火山+18%', slot: 'mount', quality: 'legendary', setId: 'flame_king', terrain: 'volcano', terrainBonus: 0.18 },
+  // 🌙 暗夜刺客套装 (night_assassin) - 4件: head, face, back, mount
+  { id: 'night_assassin_hood', emoji: '🌑', name: '暗影兜帽', cost: 15000, effect: 'night_assassin_hood', stat: 'warmup', bonus: 0.15, desc: '⚡速度+15% 夜光+18%', slot: 'head', quality: 'legendary', setId: 'night_assassin', terrain: 'night', terrainBonus: 0.18 },
+  { id: 'night_assassin_mask', emoji: '🎭', name: '暗夜面纱', cost: 12000, effect: 'night_assassin_mask', stat: 'luck', bonus: 0.15, desc: '🔥冲刺+15% 夜光+18%', slot: 'face', quality: 'legendary', setId: 'night_assassin', terrain: 'night', terrainBonus: 0.18 },
+  { id: 'night_assassin_cloak', emoji: '🦇', name: '暗影披风', cost: 14000, effect: 'night_assassin_cloak', stat: 'focus', bonus: 0.15, desc: '🎯技巧+15% 夜光+18%', slot: 'back', quality: 'legendary', setId: 'night_assassin', terrain: 'night', terrainBonus: 0.18 },
+  { id: 'night_assassin_panther', emoji: '🐈‍⬛', name: '暗夜豹骑', cost: 18000, effect: 'night_assassin_panther', stat: 'stamina', bonus: 0.15, desc: '💪耐力+15% 夜光+18%', slot: 'mount', quality: 'legendary', setId: 'night_assassin', terrain: 'night', terrainBonus: 0.18 },
+
+  // ===== 套装物品 - 神话级 =====
+  // 🐲 龙皇套装 (dragon_emperor) - 4件: head, face, back, mount
+  { id: 'dragon_emperor_crown', emoji: '👑', name: '龙皇冠冕', cost: 38888, effect: 'dragon_emperor_crown', stat: 'speed', bonus: 0.18, desc: '⚡速度+18% 全场地+15%', slot: 'head', quality: 'mythic', setId: 'dragon_emperor', terrain: 'all', terrainBonus: 0.15, extraStats: { warmup: 0.10 } },
+  { id: 'dragon_emperor_orb', emoji: '🔮', name: '龙皇宝珠', cost: 35888, effect: 'dragon_emperor_orb', stat: 'sprint', bonus: 0.18, desc: '🔥冲刺+18% 全场地+15%', slot: 'face', quality: 'mythic', setId: 'dragon_emperor', terrain: 'all', terrainBonus: 0.15, extraStats: { chaos: 0.10 } },
+  { id: 'dragon_emperor_wings', emoji: '🐲', name: '龙皇之翼', cost: 36888, effect: 'dragon_emperor_wings', stat: 'dodge', bonus: 0.18, desc: '🎯技巧+18% 全场地+15%', slot: 'back', quality: 'mythic', setId: 'dragon_emperor', terrain: 'all', terrainBonus: 0.15, extraStats: { burst: 0.10 } },
+  { id: 'dragon_emperor_mount', emoji: '🐉', name: '神龙坐骑', cost: 42888, effect: 'dragon_emperor_mount', stat: 'stamina', bonus: 0.18, desc: '💪耐力+18% 全场地+15%', slot: 'mount', quality: 'mythic', setId: 'dragon_emperor', terrain: 'all', terrainBonus: 0.15, extraStats: { recovery: 0.10 } },
+  // 🌈 彩虹套装 (rainbow_set) - 4件: head, face, back, mount
+  { id: 'rainbow_crown', emoji: '🌈', name: '彩虹冠', cost: 36888, effect: 'rainbow_crown', stat: 'warmup', bonus: 0.18, desc: '⚡速度+18% 全场地+15%', slot: 'head', quality: 'mythic', setId: 'rainbow_set', terrain: 'all', terrainBonus: 0.15, extraStats: { speed: 0.10 } },
+  { id: 'rainbow_pendant', emoji: '💫', name: '星彩坠', cost: 33888, effect: 'rainbow_pendant', stat: 'luck', bonus: 0.18, desc: '🔥冲刺+18% 全场地+15%', slot: 'face', quality: 'mythic', setId: 'rainbow_set', terrain: 'all', terrainBonus: 0.15, extraStats: { sprint: 0.10 } },
+  { id: 'rainbow_wings', emoji: '🦄', name: '虹光之翼', cost: 34888, effect: 'rainbow_wings', stat: 'focus', bonus: 0.18, desc: '🎯技巧+18% 全场地+15%', slot: 'back', quality: 'mythic', setId: 'rainbow_set', terrain: 'all', terrainBonus: 0.15, extraStats: { dodge: 0.10 } },
+  { id: 'rainbow_unicorn', emoji: '🦄', name: '独角兽坐骑', cost: 40888, effect: 'rainbow_unicorn', stat: 'recovery', bonus: 0.18, desc: '💪耐力+18% 全场地+15%', slot: 'mount', quality: 'mythic', setId: 'rainbow_set', terrain: 'all', terrainBonus: 0.15, extraStats: { stamina: 0.10 } },
 ];
+
+// === SET BONUSES (套装效果) ===
+const SET_BONUSES = {
+  frost_lord: {
+    name: '❄️ 冰霜领主', pieces: 4,
+    '2pc': { stats: { speed: 0.08 }, desc: '⚡速度+8%' },
+    '3pc': { stats: { speed: 0.05, sprint: 0.08 }, terrain: 'snow', terrainBonus: 0.10, desc: '⚡速度+5% 🔥冲刺+8% 雪地+10%' },
+    '4pc': { stats: { speed: 0.05, dodge: 0.05, stamina: 0.05 }, terrain: 'snow', terrainBonus: 0.15, special: 'frost_aura', desc: '全属性+5% 雪地+15% 冰霜光环' },
+  },
+  flame_king: {
+    name: '🔥 烈焰之王', pieces: 4,
+    '2pc': { stats: { sprint: 0.08 }, desc: '🔥冲刺+8%' },
+    '3pc': { stats: { sprint: 0.05, burst: 0.08 }, terrain: 'volcano', terrainBonus: 0.10, desc: '🔥冲刺+5% 🎯爆发+8% 火山+10%' },
+    '4pc': { stats: { speed: 0.05, sprint: 0.05, burst: 0.05 }, terrain: 'volcano', terrainBonus: 0.15, special: 'flame_aura', desc: '全属性+5% 火山+15% 烈焰光环' },
+  },
+  night_assassin: {
+    name: '🌙 暗夜刺客', pieces: 4,
+    '2pc': { stats: { dodge: 0.08 }, desc: '🎯闪避+8%' },
+    '3pc': { stats: { dodge: 0.05, luck: 0.08 }, terrain: 'night', terrainBonus: 0.10, desc: '🎯闪避+5% 🍀幸运+8% 夜光+10%' },
+    '4pc': { stats: { dodge: 0.05, luck: 0.05, focus: 0.05 }, terrain: 'night', terrainBonus: 0.15, special: 'shadow_aura', desc: '全属性+5% 夜光+15% 暗影光环' },
+  },
+  dragon_emperor: {
+    name: '🐲 龙皇', pieces: 4,
+    '2pc': { stats: { speed: 0.10, sprint: 0.10 }, desc: '⚡速度+10% 🔥冲刺+10%' },
+    '3pc': { stats: { dodge: 0.10, stamina: 0.10 }, terrain: 'all', terrainBonus: 0.08, desc: '🎯技巧+10% 💪耐力+10% 全场地+8%' },
+    '4pc': { stats: { speed: 0.08, sprint: 0.08, dodge: 0.08, stamina: 0.08 }, terrain: 'all', terrainBonus: 0.12, special: 'dragon_aura', desc: '全属性+8% 全场地+12% 龙皇霸气' },
+  },
+  rainbow_set: {
+    name: '🌈 彩虹', pieces: 4,
+    '2pc': { stats: { luck: 0.12, warmup: 0.10 }, desc: '🍀幸运+12% ⚡热身+10%' },
+    '3pc': { stats: { focus: 0.10, recovery: 0.10 }, terrain: 'all', terrainBonus: 0.08, desc: '🎯专注+10% 💪恢复+10% 全场地+8%' },
+    '4pc': { stats: { speed: 0.06, sprint: 0.06, dodge: 0.06, stamina: 0.06, luck: 0.06 }, terrain: 'all', terrainBonus: 0.12, special: 'rainbow_aura', desc: '全属性+6% 全场地+12% 彩虹光环' },
+  },
+};
+
+// Get info about which set pieces the player has equipped
+function getEquippedSetInfo() {
+  const setCount = {};
+  (state.equippedCosmetics || []).forEach(id => {
+    const item = COSMETIC_ITEMS.find(c => c.id === id);
+    if (item && item.setId && (state.ownedCosmetics || []).includes(id)) {
+      setCount[item.setId] = (setCount[item.setId] || 0) + 1;
+    }
+  });
+  return setCount;
+}
+
+// Calculate all active set bonuses based on equipped set pieces
+function getSetBonuses() {
+  const setInfo = getEquippedSetInfo();
+  const bonuses = {};
+  const specials = [];
+  Object.entries(setInfo).forEach(([setId, count]) => {
+    const setDef = SET_BONUSES[setId];
+    if (!setDef) return;
+    // Apply 2pc, 3pc, 4pc bonuses cumulatively
+    ['2pc', '3pc', '4pc'].forEach(tier => {
+      const tierNum = parseInt(tier);
+      if (count >= tierNum && setDef[tier]) {
+        const tb = setDef[tier];
+        if (tb.stats) {
+          Object.entries(tb.stats).forEach(([stat, val]) => {
+            bonuses[stat] = (bonuses[stat] || 0) + val;
+          });
+        }
+        if (tb.terrain && tb.terrainBonus && currentTrack) {
+          const ratio = (tb.terrain === 'all' || currentTrack.id === tb.terrain) ? 1.0 : 0;
+          if (ratio > 0) {
+            bonuses.speed = (bonuses.speed || 0) + tb.terrainBonus * ratio;
+          }
+        }
+        if (tb.special) {
+          specials.push(tb.special);
+        }
+      }
+    });
+  });
+  return { bonuses, specials };
+}
 
 // === SHOE ITEMS (terrain-specific footwear) ===
 const SHOE_ITEMS = [
@@ -1743,6 +3123,42 @@ function getShoeAccessory() {
   return shoe ? shoe.effect : null;
 }
 
+// Terrain affinity: which zone types each terrain relates to
+// Used to calculate partial bonuses on composite tracks
+const TERRAIN_ZONE_AFFINITY = {
+  grass: 'run',       // 草地 → 跑步赛段
+  beach: 'swim',      // 沙滩 → 游泳赛段
+  snow: 'climb',      // 雪地 → 蛙跳赛段 (ice/grip)
+  volcano: 'climb',   // 火山 → 蛙跳赛段 (rock)
+  night: null,         // 夜光 → 无对应赛段
+  triathlon: null,     // 铁人三项 → 专属匹配
+  rainbow: null,       // 彩虹 → 专属匹配
+};
+
+// Calculate terrain match ratio for an item on current track
+// Returns 1.0 for exact match, 0.3~0.5 for partial (zone affinity), 0 for no match
+function getTerrainMatchRatio(item) {
+  if (!item.terrain || !item.terrainBonus || !currentTrack) return 0;
+  // Exact match
+  if (currentTrack.id === item.terrain) return 1.0;
+  // "all" terrain items always match
+  if (item.terrain === 'all') return 1.0;
+  // Composite track partial matching
+  if (currentTrack.zones && currentTrack.zones.length > 0) {
+    const affinity = TERRAIN_ZONE_AFFINITY[item.terrain];
+    if (!affinity) return 0;
+    // Calculate what % of track uses this zone type
+    const totalWidth = 100;
+    let matchWidth = 0;
+    currentTrack.zones.forEach(z => {
+      if (z.zone === affinity) matchWidth += (z.end - z.start);
+    });
+    const ratio = matchWidth / totalWidth;
+    if (ratio > 0) return Math.max(0.3, ratio); // At least 30% effectiveness
+  }
+  return 0;
+}
+
 // Calculate total stat bonuses from equipped cosmetics
 function getCosmeticBonuses() {
   const bonuses = {};
@@ -1750,6 +3166,13 @@ function getCosmeticBonuses() {
     const item = COSMETIC_ITEMS.find(c => c.id === id);
     if (item && (state.ownedCosmetics || []).includes(id)) {
       bonuses[item.stat] = (bonuses[item.stat] || 0) + item.bonus;
+      // Terrain-specific items: full or partial bonus
+      if (item.terrain && item.terrainBonus) {
+        const ratio = getTerrainMatchRatio(item);
+        if (ratio > 0) {
+          bonuses.speed = (bonuses.speed || 0) + item.terrainBonus * ratio;
+        }
+      }
       // Legendary items have extra stats
       if (item.extraStats) {
         Object.entries(item.extraStats).forEach(([stat, val]) => {
@@ -1757,6 +3180,11 @@ function getCosmeticBonuses() {
         });
       }
     }
+  });
+  // Apply set bonuses
+  const setBonusResult = getSetBonuses();
+  Object.entries(setBonusResult.bonuses).forEach(([stat, val]) => {
+    bonuses[stat] = (bonuses[stat] || 0) + val;
   });
   return bonuses;
 }
@@ -1772,23 +3200,41 @@ function getMyAccessories() {
 function renderItemBtns() {
   const container = document.getElementById('itemBtns');
   if (!container) return;
+
+  // If buttons already exist, just update disabled/used state (don't recreate)
+  const existing = container.querySelectorAll('[data-item-id]');
+  if (existing.length === BUFF_ITEMS.length) {
+    existing.forEach(btn => {
+      const id = btn.dataset.itemId;
+      const used = state.usedItems.includes(id);
+      const item = BUFF_ITEMS.find(i => i.id === id);
+      btn.className = 'item-btn' + (used ? ' used' : '');
+      btn.disabled = !state.racing || !raceTurtleState.length || used || state.coins < (item?.cost || 0);
+    });
+    // Update cosmetic button
+    const cosBtn = container.querySelector('[data-cos-btn]');
+    if (cosBtn) cosBtn.disabled = state.racing;
+    return;
+  }
+
+  // First time: create buttons
   container.innerHTML = '';
 
-  // Buff items
   BUFF_ITEMS.forEach(item => {
     const btn = document.createElement('button');
     const used = state.usedItems.includes(item.id);
     btn.className = 'item-btn' + (used ? ' used' : '');
-    btn.textContent = `${item.emoji} ${item.name} 🪙${item.cost}`;
-    btn.disabled = state.racing || used || state.coins < item.cost || state.pickPhase;
-    btn.title = item.desc;
-    btn.onclick = () => buyBuffItem(item.id);
+    btn.dataset.itemId = item.id;
+    btn.innerHTML = `${item.emoji} ${item.name} 🪙${item.cost}<span class="item-tooltip">${item.desc}</span>`;
+    btn.disabled = !state.racing || !raceTurtleState.length || used || state.coins < item.cost;
+    btn.onclick = (e) => { e.stopPropagation(); useRaceItem(item.id); };
     container.appendChild(btn);
   });
 
   // Cosmetic shop button
   const cosBtn = document.createElement('button');
   cosBtn.className = 'item-btn';
+  cosBtn.dataset.cosBtn = '1';
   cosBtn.style.borderColor = 'var(--accent)';
   cosBtn.style.color = 'var(--accent)';
   cosBtn.textContent = '✨ 装扮';
@@ -1797,12 +3243,141 @@ function renderItemBtns() {
   container.appendChild(cosBtn);
 }
 
-function buyBuffItem(itemId) {
+function applyTurtleAnim(turtleIdx, animClass, duration) {
+  // Store animation in turtleState so render() can apply it every frame
+  if (raceTurtleState[turtleIdx]) {
+    raceTurtleState[turtleIdx]._anim = animClass;
+    setTimeout(() => {
+      if (raceTurtleState[turtleIdx]) raceTurtleState[turtleIdx]._anim = null;
+    }, duration);
+  }
+}
+
+function showItemFlash(color, emoji) {
+  // Full screen flash
+  const flash = document.createElement('div');
+  flash.className = 'evt-flash';
+  flash.style.setProperty('--flash-color', color);
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 500);
+  // Big emoji burst in center
+  const burst = document.createElement('div');
+  burst.style.cssText = `position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);font-size:80px;z-index:200;pointer-events:none;animation:itemBurst 0.8s ease-out forwards`;
+  burst.textContent = emoji;
+  document.body.appendChild(burst);
+  setTimeout(() => burst.remove(), 900);
+}
+
+function useRaceItem(itemId) {
   const item = BUFF_ITEMS.find(i => i.id === itemId);
-  if (!item || state.coins < item.cost || state.usedItems.includes(itemId)) return;
+  if (!item || state.coins < item.cost || state.usedItems.includes(itemId) || !state.racing) return;
+  if (!raceTurtleState.length || state.selected < 0) return;
+
   state.coins -= item.cost;
   state.usedItems.push(itemId);
   playSound('coin');
+  // Force button rebuild to show "used" state
+  const itemContainer = document.getElementById('itemBtns');
+  if (itemContainer) itemContainer.innerHTML = '';
+  renderItemBtns();
+
+  const playerIdx = state.selected;
+  const playerName = raceTurtles[playerIdx]?.name || '你的乌龟';
+  const opponents = [0,1,2,3].filter(i => i !== playerIdx);
+
+  switch (item.target) {
+    case 'leader': {
+      let leaderIdx = -1; let maxP = -1;
+      state.progress.forEach((p, idx) => { if (idx !== playerIdx && p > maxP) { maxP = p; leaderIdx = idx; } });
+      if (leaderIdx >= 0) {
+        const ts = raceTurtleState[leaderIdx];
+        ts.slowTimer = 60; ts.momentum = 0.15;
+        showItemFlash('rgba(255,200,0,0.2)', '🍌');
+        applyTurtleAnim(leaderIdx, 'evt-banana', 1900);
+        spawnEventEffects(leaderIdx, false, '🍌 踩到香蕉皮!');
+        playSound('tick');
+        const div = document.createElement('div');
+        div.className = 'race-event';
+        div.textContent = `🍌 ${raceTurtles[leaderIdx]?.name || '第一名'} 踩到了 ${playerName} 扔的香蕉皮！`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
+      }
+      break;
+    }
+    case 'random_opponent': {
+      const target = opponents[Math.floor(Math.random() * opponents.length)];
+      const ts = raceTurtleState[target];
+      ts.slowTimer = 50; ts.momentum = 0.25; ts.stamina = Math.max(0.3, ts.stamina - 0.08);
+      showItemFlash('rgba(100,200,255,0.25)', '⚡');
+      applyTurtleAnim(target, 'evt-lightning', 900);
+      spawnEventEffects(target, false, '⚡ 被电晕了!');
+      playSound('tick');
+      const div = document.createElement('div');
+      div.className = 'race-event';
+      div.textContent = `⚡ ${playerName} 召唤闪电击中了 ${raceTurtles[target]?.name || '对手'}！`;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 2500);
+      break;
+    }
+    case 'self': {
+      if (itemId === 'rocket') {
+        const ts = raceTurtleState[playerIdx];
+        ts.burstTimer = 80; ts.momentum = 2.0;
+        showItemFlash('rgba(255,100,0,0.2)', '🚀');
+        applyTurtleAnim(playerIdx, 'evt-rocket', 800);
+        spawnEventEffects(playerIdx, true, '🚀 火箭加速!');
+        playSound('go');
+        const div = document.createElement('div');
+        div.className = 'race-event';
+        div.textContent = `🚀 ${playerName} 点燃火箭推进器！起飞！`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
+      } else if (itemId === 'shield') {
+        const ts = raceTurtleState[playerIdx];
+        ts._shielded = true;
+        showItemFlash('rgba(78,234,172,0.2)', '🛡️');
+        applyTurtleAnim(playerIdx, 'evt-shield', 1200);
+        spawnEventEffects(playerIdx, true, '🛡️ 护盾激活!');
+        playSound('go');
+        const div = document.createElement('div');
+        div.className = 'race-event';
+        div.textContent = `🛡️ ${playerName} 开启护盾！免疫下一次减速！`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
+      } else if (itemId === 'heal') {
+        const ts = raceTurtleState[playerIdx];
+        ts.stamina = Math.min(1.0, ts.stamina + 0.21); // +30% of 0.7 range
+        showItemFlash('rgba(78,234,172,0.25)', '💊');
+        applyTurtleAnim(playerIdx, 'evt-heal', 900);
+        spawnEventEffects(playerIdx, true, '💊 体力恢复!');
+        playSound('go');
+        const div = document.createElement('div');
+        div.className = 'race-event';
+        div.textContent = `💊 ${playerName} 喝了能量饮料！体力大幅恢复！`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
+      }
+      break;
+    }
+    case 'all_opponents': {
+      opponents.forEach(idx => {
+        const ts = raceTurtleState[idx];
+        ts.slowTimer = 35; ts.momentum = 0.4;
+      });
+      showItemFlash('rgba(255,60,60,0.25)', '🌍');
+      opponents.forEach(idx => {
+        applyTurtleAnim(idx, 'evt-quake', 1200);
+        spawnEventEffects(idx, false, '🌍 地震!');
+      });
+      playSound('tick');
+      const div = document.createElement('div');
+      div.className = 'race-event';
+      div.textContent = `🌍 ${playerName} 触发地震！其他乌龟全部被震倒！`;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 2500);
+      break;
+    }
+  }
   render();
 }
 
@@ -1817,72 +3392,161 @@ function showCosmeticModal() {
   } else {
     overlay.classList.add('show');
   }
-  renderCosmeticModal(overlay);
+  renderCosmeticModal(overlay, true);
 }
 
-function renderCosmeticModal(overlay) {
+function renderCosmeticModal(overlay, fullRebuild) {
   const owned = state.ownedCosmetics || [];
   const equipped = state.equippedCosmetics || [];
   const myTurtle = raceTurtles[state.selected] || ALL_TURTLES.find(t => state.unlockedTurtles.includes(t.id)) || ALL_TURTLES[0];
   const previewAcc = getMyAccessories();
   const bonuses = getCosmeticBonuses();
-  const bonusText = Object.entries(bonuses).map(([k,v]) => {
-    const names = {speed:'速度',stamina:'体力',luck:'运气',recovery:'恢复',focus:'专注',burst:'爆发',chaos:'混乱',sprint:'冲刺',dodge:'闪避',warmup:'热身'};
-    return `${names[k]||k} +${Math.round(v*100)}%`;
-  }).join(' · ') || '无加成';
+  // Group stats into 4 categories for display
+  const catMap = {speed:'⚡速度',warmup:'⚡速度',stamina:'💪耐力',recovery:'💪耐力',focus:'🎯技巧',dodge:'🎯技巧',burst:'🎯技巧',sprint:'🔥冲刺',chaos:'🔥冲刺',luck:'🔥冲刺'};
+  const grouped = {};
+  Object.entries(bonuses).forEach(([k,v]) => {
+    const cat = catMap[k] || k;
+    grouped[cat] = (grouped[cat] || 0) + v;
+  });
+  const bonusText = Object.entries(grouped).map(([k,v]) => `${k} +${Math.round(v*100)}%`).join(' · ') || '无加成';
 
+  // Calculate base and boosted speed
+  const baseSpeed = myTurtle.speed;
+  const speedBonus = bonuses.speed || 0;
+  const warmupBonus = bonuses.warmup || 0;
+  const shoeBonus2 = getShoeBonus();
+  const totalSpeedMult = 1 + speedBonus + warmupBonus + shoeBonus2;
+  const boostedSpeed = Math.round(baseSpeed * totalSpeedMult);
+
+  // --- Partial update: only refresh preview + item states ---
+  if (!fullRebuild && overlay.querySelector('#cmPreview')) {
+    // Update preview SVG
+    overlay.querySelector('#cmPreview').innerHTML = turtleSVG(myTurtle.shell, myTurtle.body, myTurtle.pattern, myTurtle.accent, previewAcc);
+    // Update bonus text
+    overlay.querySelector('#cmBonusText').textContent = '⚡ ' + bonusText;
+    // Update speed display
+    const speedEl = overlay.querySelector('#cmSpeedInfo');
+    if (speedEl) {
+      speedEl.innerHTML = boostedSpeed > baseSpeed
+        ? `⚡ 基础速度 ${baseSpeed} → <span style="color:#4EEAAC;font-weight:800">${boostedSpeed}</span> <span style="color:#4EEAAC">(+${boostedSpeed - baseSpeed})</span>`
+        : `⚡ 基础速度 ${baseSpeed}`;
+    }
+    // Update shoe info
+    const shoeInfo = overlay.querySelector('#cmShoeInfo');
+    if (shoeInfo) {
+      const shoe = getEquippedShoe();
+      const shoeMatch = shoe && currentTrack && currentTrack.id === shoe.terrain;
+      shoeInfo.style.color = shoe ? (shoeMatch ? '#4EEAAC' : 'var(--text-muted)') : 'var(--text-muted)';
+      shoeInfo.textContent = shoe
+        ? `👟 ${shoe.name} ${shoeMatch ? '✨ 场地匹配! +' + (shoe.terrainBonus*100) + '%' : '+' + (shoe.baseBonus*100) + '% 速度'}`
+        : '👟 未装备鞋子';
+    }
+    // Update cosmetic item states
+    overlay.querySelectorAll('.cosmetic-item[data-cid]').forEach(el => {
+      const id = el.dataset.cid;
+      const isEquipped = equipped.includes(id);
+      el.className = 'cosmetic-item' + (isEquipped ? ' equipped' : '');
+      const statusEl = el.querySelector('.cosmetic-status');
+      if (statusEl) {
+        statusEl.textContent = isEquipped ? '✓ 已装备' : '点击装备';
+        statusEl.style.color = isEquipped ? '' : 'var(--text-muted)';
+      }
+    });
+    // Update shoe item states
+    overlay.querySelectorAll('.cosmetic-item[data-sid]').forEach(el => {
+      const id = el.dataset.sid;
+      const isEquipped = id === 'none' ? !state.equippedShoe : state.equippedShoe === id;
+      el.className = 'cosmetic-item' + (isEquipped ? ' equipped' : '');
+      const statusEl = el.querySelector('.cosmetic-status');
+      if (statusEl) {
+        statusEl.textContent = isEquipped ? (id === 'none' ? '✓ 当前' : '✓ 穿着') : (id === 'none' ? '点击脱下' : '点击穿上');
+        statusEl.style.color = isEquipped ? '' : 'var(--text-muted)';
+      }
+    });
+    return;
+  }
+
+  // --- Full rebuild ---
   const ownedItems = COSMETIC_ITEMS.filter(c => owned.includes(c.id));
 
   overlay.innerHTML = `
-    <div class="modal" style="max-width:520px;padding:28px 32px">
-      <h2 style="color:var(--accent);margin-bottom:12px">✨ 装备管理</h2>
-      <div style="display:flex;justify-content:center;margin-bottom:8px">
-        <div style="width:120px;height:90px">${turtleSVG(myTurtle.shell, myTurtle.body, myTurtle.pattern, myTurtle.accent, previewAcc)}</div>
+    <div class="modal" style="max-width:720px;width:90vw;max-height:90vh;overflow-y:auto;padding:28px 32px">
+      <button class="modal-close" onclick="closeCosmeticModal()">✕</button>
+      <h2 style="color:var(--accent);margin-bottom:16px">✨ 装备管理</h2>
+      <div style="display:flex;justify-content:center;margin-bottom:10px;background:rgba(0,0,0,0.3);border-radius:16px;padding:16px 24px">
+        <div id="cmPreview" style="width:200px;height:150px">${turtleSVG(myTurtle.shell, myTurtle.body, myTurtle.pattern, myTurtle.accent, previewAcc)}</div>
       </div>
-      <div style="font-size:12px;color:var(--gold);margin-bottom:6px;text-align:center">⚡ ${bonusText}</div>
-      ${(() => {
+      <div id="cmSpeedInfo" style="font-size:14px;color:var(--text-secondary);margin-bottom:4px;text-align:center">${
+        boostedSpeed > baseSpeed
+          ? `⚡ 基础速度 ${baseSpeed} → <span style="color:#4EEAAC;font-weight:800">${boostedSpeed}</span> <span style="color:#4EEAAC">(+${boostedSpeed - baseSpeed})</span>`
+          : `⚡ 基础速度 ${baseSpeed}`
+      }</div>
+      <div id="cmBonusText" style="font-size:13px;color:var(--gold);margin-bottom:6px;text-align:center;font-weight:600">⚡ ${bonusText}</div>
+      <div id="cmShoeInfo" style="font-size:12px;margin-bottom:12px;text-align:center;color:${(() => { const s = getEquippedShoe(); return s ? (currentTrack && currentTrack.id === s.terrain ? '#4EEAAC' : 'var(--text-muted)') : 'var(--text-muted)'; })()}">${(() => {
         const shoe = getEquippedShoe();
         const shoeMatch = shoe && currentTrack && currentTrack.id === shoe.terrain;
         return shoe
-          ? `<div style="font-size:12px;margin-bottom:10px;text-align:center;color:${shoeMatch ? '#4EEAAC' : 'var(--text-muted)'}">
-              👟 ${shoe.name} ${shoeMatch ? '✨ 场地匹配! +' + (shoe.terrainBonus*100) + '%' : '+' + (shoe.baseBonus*100) + '% 速度'}</div>`
-          : '<div style="font-size:12px;margin-bottom:10px;color:var(--text-muted);text-align:center">👟 未装备鞋子</div>';
-      })()}
+          ? `👟 ${shoe.name} ${shoeMatch ? '✨ 场地匹配! +' + (shoe.terrainBonus*100) + '%' : '+' + (shoe.baseBonus*100) + '% 速度'}`
+          : '👟 未装备鞋子';
+      })()}</div>
       ${ownedItems.length === 0 && !(state.ownedShoes||[]).length ? '<div style="color:var(--text-muted);padding:24px;font-size:15px">还没有装备，去商店购买吧！</div>' : `
-      <div class="cosmetic-grid">
-        ${ownedItems.map(c => {
-          const isEquipped = equipped.includes(c.id);
-          return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}" onclick="toggleCosmetic('${c.id}')">
-            <span class="cosmetic-emoji">${renderItemIcon(c.emoji, 22)}</span>
-            <span class="cosmetic-name">${c.name}</span>
-            <span style="font-size:10px;color:var(--gold)">${c.desc}</span>
-            ${isEquipped ? '<span class="cosmetic-status">✓ 已装备</span>' :
-              '<span class="cosmetic-status" style="color:var(--text-muted)">点击装备</span>'}
+      ${(() => {
+        const SLOT_META = [
+          { key: 'head',  icon: '🎩', label: '头饰', attr: '⚡速度' },
+          { key: 'face',  icon: '😎', label: '面饰', attr: '🔥冲刺' },
+          { key: 'back',  icon: '🦸', label: '背饰', attr: '🎯技巧' },
+          { key: 'mount', icon: '🐰', label: '坐骑', attr: '💪耐力' },
+        ];
+        return SLOT_META.map(slot => {
+          const items = ownedItems.filter(c => c.slot === slot.key);
+          if (!items.length) return '';
+          return `<div class="slot-section">
+            <div class="slot-header">${slot.icon} ${slot.label} <span style="font-size:11px;color:var(--gold);font-weight:400;margin-left:4px">— ${slot.attr}</span></div>
+            <div class="cosmetic-grid">
+              ${items.map(c => {
+                const isEquipped = equipped.includes(c.id);
+                const isLegendary = c.extraStats != null;
+                const tRatio = c.terrain ? getTerrainMatchRatio(c) : 0;
+                const tFullMatch = tRatio >= 1.0;
+                const tPartial = tRatio > 0 && tRatio < 1.0;
+                const tName = c.terrain === 'all' ? '🌍 全地形' : c.terrain ? (TRACK_THEMES.find(t => t.id === c.terrain)?.name.split(' ')[0] || '') : '';
+                const zoneAff = TERRAIN_ZONE_AFFINITY[c.terrain];
+                const zoneLabel = zoneAff === 'run' ? '跑步段' : zoneAff === 'swim' ? '游泳段' : zoneAff === 'climb' ? '蛙跳段' : '';
+                return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}${isLegendary ? ' legendary' : ''}${tRatio > 0 ? ' terrain-match' : ''}${tPartial ? ' terrain-partial' : ''}" data-cid="${c.id}" onclick="toggleCosmetic('${c.id}')">
+                  <span class="cosmetic-emoji">${renderItemIcon(c.emoji, 22)}</span>
+                  <span class="cosmetic-name">${c.name}</span>
+                  <span style="font-size:10px;color:var(--gold)">${c.desc}</span>
+                  ${c.terrain ? `<span style="font-size:9px;color:${tRatio > 0 ? 'var(--accent)' : 'var(--text-muted)'}">${tName} ${tFullMatch ? '✨匹配!' : tPartial ? '⚡' + zoneLabel + ' ' + Math.round(tRatio*100) + '%' : ''}</span>` : ''}
+                  <span class="cosmetic-status" ${!isEquipped ? 'style="color:var(--text-muted)"' : ''}>${isEquipped ? '✓ 已装备' : '点击装备'}</span>
+                </div>`;
+              }).join('')}
+            </div>
           </div>`;
-        }).join('')}
-      </div>`}
+        }).join('');
+      })()}
       ${(state.ownedShoes||[]).length ? `
-      <div style="font-size:14px;font-weight:700;color:var(--text-secondary);margin:12px 0 6px;text-align:left">👟 鞋子（只能穿一双）</div>
-      <div class="cosmetic-grid">
-        ${SHOE_ITEMS.filter(s => (state.ownedShoes||[]).includes(s.id)).map(s => {
-          const isEquipped = state.equippedShoe === s.id;
-          const terrainMatch = currentTrack && currentTrack.id === s.terrain;
-          const terrainEmoji = TRACK_THEMES.find(t => t.id === s.terrain)?.name.split(' ')[0] || '';
-          return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}" onclick="switchShoe('${s.id}')">
-            <span class="cosmetic-emoji">${s.emoji}</span>
-            <span class="cosmetic-name">${s.name}</span>
-            <span style="font-size:10px;color:${terrainMatch ? 'var(--accent)' : 'var(--text-muted)'}">${terrainEmoji} ${terrainMatch ? '✨匹配!' : s.desc}</span>
-            ${isEquipped ? '<span class="cosmetic-status">✓ 穿着</span>' :
-              '<span class="cosmetic-status" style="color:var(--text-muted)">点击穿上</span>'}
-          </div>`;
-        }).join('')}
-        <div class="cosmetic-item ${!state.equippedShoe ? 'equipped' : ''}" onclick="switchShoe(null)">
-          <span class="cosmetic-emoji">🦶</span>
-          <span class="cosmetic-name">光脚</span>
-          <span style="font-size:10px;color:var(--text-muted)">不穿鞋</span>
-          ${!state.equippedShoe ? '<span class="cosmetic-status">✓ 当前</span>' : '<span class="cosmetic-status" style="color:var(--text-muted)">点击脱下</span>'}
+      <div class="slot-section">
+        <div class="slot-header">👟 鞋子<span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:6px">（只能穿一双）</span></div>
+        <div class="cosmetic-grid">
+          ${SHOE_ITEMS.filter(s => (state.ownedShoes||[]).includes(s.id)).map(s => {
+            const isEquipped = state.equippedShoe === s.id;
+            const terrainMatch = currentTrack && currentTrack.id === s.terrain;
+            const terrainEmoji = TRACK_THEMES.find(t => t.id === s.terrain)?.name.split(' ')[0] || '';
+            return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}" data-sid="${s.id}" onclick="switchShoe('${s.id}')">
+              <span class="cosmetic-emoji">${s.emoji}</span>
+              <span class="cosmetic-name">${s.name}</span>
+              <span style="font-size:10px;color:${terrainMatch ? 'var(--accent)' : 'var(--text-muted)'}">${terrainEmoji} ${terrainMatch ? '✨匹配!' : s.desc}</span>
+              <span class="cosmetic-status" ${!isEquipped ? 'style="color:var(--text-muted)"' : ''}>${isEquipped ? '✓ 穿着' : '点击穿上'}</span>
+            </div>`;
+          }).join('')}
+          <div class="cosmetic-item ${!state.equippedShoe ? 'equipped' : ''}" data-sid="none" onclick="switchShoe(null)">
+            <span class="cosmetic-emoji">🦶</span>
+            <span class="cosmetic-name">光脚</span>
+            <span style="font-size:10px;color:var(--text-muted)">不穿鞋</span>
+            <span class="cosmetic-status" ${state.equippedShoe ? 'style="color:var(--text-muted)"' : ''}>${!state.equippedShoe ? '✓ 当前' : '点击脱下'}</span>
+          </div>
         </div>
-      </div>` : ''}
+      </div>` : ''}`}
       <div style="margin-top:14px;display:flex;gap:10px;justify-content:center">
         <button onclick="closeCosmeticModal()" style="flex:1">完成</button>
         <button onclick="closeCosmeticModal();showScene('scene-shop')" style="flex:1;background:linear-gradient(to bottom,var(--gold),#E89830)">🛒 去商店</button>
@@ -1901,7 +3565,8 @@ function toggleCosmetic(itemId) {
   }
   playSound('select');
   saveGame();
-  renderCosmeticModal(document.getElementById('cosmeticModal'));
+  const cmEl = document.getElementById('cosmeticModal');
+  if (cmEl) renderCosmeticModal(cmEl, false);
   render();
 }
 
@@ -1909,13 +3574,178 @@ function switchShoe(shoeId) {
   state.equippedShoe = shoeId;
   playSound('select');
   saveGame();
-  renderCosmeticModal(document.getElementById('cosmeticModal'));
+  const cmEl2 = document.getElementById('cosmeticModal');
+  if (cmEl2) renderCosmeticModal(cmEl2, false);
   render();
 }
 
 function closeCosmeticModal() {
   const m = document.getElementById('cosmeticModal');
   if (m) m.classList.remove('show');
+}
+
+function showRulesModal() {
+  let overlay = document.getElementById('rulesModal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'rulesModal';
+    overlay.className = 'modal-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.classList.add('show');
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:680px;width:90vw;max-height:90vh;overflow-y:auto;padding:28px 32px;text-align:left">
+      <button class="modal-close" onclick="document.getElementById('rulesModal').classList.remove('show')">✕</button>
+      <h2 style="color:var(--accent);text-align:center;margin-bottom:18px">📖 比赛规则</h2>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin:12px 0 6px">🏁 基本规则</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        • 每场比赛跑 2 圈，4 只乌龟同场竞技<br>
+        • 选择一只乌龟下注，第一个跑完 2 圈的获胜<br>
+        • 胜利奖金 = 下注额 × 4 × 连胜倍率<br>
+        • 连胜 2/3/5 场分别获得 1.5x / 2x / 3x 倍率
+      </div>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin:14px 0 6px">⚡ 四大属性</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px;color:#4EEAAC;font-weight:800;font-size:15px;white-space:nowrap">⚡ 速度</td>
+            <td style="padding:8px">
+              <b>跑得多快</b> — 基础移动速度 + 起跑反应<br>
+              <span style="font-size:11px;color:var(--text-muted)">包含：基础速度、热身加成</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px;color:#4EEAAC;font-weight:800;font-size:15px;white-space:nowrap">💪 耐力</td>
+            <td style="padding:8px">
+              <b>跑得多久</b> — 领先不掉速 + 落后能追回<br>
+              <span style="font-size:11px;color:var(--text-muted)">包含：体力、恢复力</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px;color:#4EEAAC;font-weight:800;font-size:15px;white-space:nowrap">🎯 技巧</td>
+            <td style="padding:8px">
+              <b>跑得多稳</b> — 稳定发挥 + 闪避障碍 + 随机爆发<br>
+              <span style="font-size:11px;color:var(--text-muted)">包含：专注、闪避、爆发</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px;color:#4EEAAC;font-weight:800;font-size:15px;white-space:nowrap">🔥 冲刺</td>
+            <td style="padding:8px">
+              <b>终点翻盘</b> — 最后一圈爆发 + 干扰对手 + 运气加成<br>
+              <span style="font-size:11px;color:var(--text-muted)">包含：冲刺、混乱、运气</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin:14px 0 6px">🎭 每圈三阶段</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        每圈赛道分为三个阶段，不同属性在不同阶段发力：<br><br>
+        <b style="color:#4EEAAC">🟢 起跑 (0~30%)</b> — ⚡速度 决定起步优势，节奏稳定<br>
+        <b style="color:#FFB347">🟡 中段 (30~70%)</b> — 💪耐力 是关键！领先者消耗体力，落后者恢复体力。随机事件集中在这里<br>
+        <b style="color:#FF6B6B">🔴 冲刺 (70~100%)</b> — 🔥冲刺 + 🎯技巧 爆发！速度剧烈波动，爆发和闪避频繁触发
+      </div>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin:14px 0 6px">🐢 乌龟状态一览</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">
+        比赛中乌龟的体型和特效会随状态变化：
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px">
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;white-space:nowrap">🔥 <b style="color:#FF6B6B">爆发</b></td>
+            <td style="padding:5px 8px">体型变大、发光加速线</td>
+            <td style="padding:5px 8px;color:var(--text-muted)">随机触发突然提速</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;white-space:nowrap">😵 <b style="color:#FFB347">减速</b></td>
+            <td style="padding:5px 8px">体型缩小、变暗摇晃</td>
+            <td style="padding:5px 8px;color:var(--text-muted)">被事件/节奏紊乱影响</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;white-space:nowrap">😰 <b style="color:#FF8C00">疲惫</b></td>
+            <td style="padding:5px 8px">略缩、上下喘气 + 💦</td>
+            <td style="padding:5px 8px;color:var(--text-muted)">体力低于警戒线</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;white-space:nowrap">💪 <b style="color:#4EEAAC">恢复</b></td>
+            <td style="padding:5px 8px">体型变大、快步走</td>
+            <td style="padding:5px 8px;color:var(--text-muted)">体力充沛、蓄势待发</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;white-space:nowrap">🔥 <b style="color:#FF4444">冲刺</b></td>
+            <td style="padding:5px 8px">最大体型、火焰尾迹、多条速度线</td>
+            <td style="padding:5px 8px;color:var(--text-muted)">最后20%全力冲刺</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px;white-space:nowrap">👑 <b style="color:#FFD700">领先</b></td>
+            <td style="padding:5px 8px">略大于正常</td>
+            <td style="padding:5px 8px;color:var(--text-muted)">当前第1名</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin:14px 0 6px">🔄 反转机制</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        <b style="color:#FF6B6B">📊 体力条</b> — 每只乌龟下方有体力条 + 状态图标：<br>
+        <span style="margin-left:16px"><span style="color:#4EEAAC">🟢绿</span> 充沛 → <span style="color:#FFD700">🟡黄</span> 正常 → <span style="color:#FF8C00">🟠橙</span> 疲劳 → <span style="color:#FF4444">🔴红</span> 力竭</span><br>
+        <span style="margin-left:16px"><span style="color:#FF6B6B">▼</span> 正在消耗 / <span style="color:#4EEAAC">▲</span> 正在恢复 / 🔥爆发中 / 😵被减速 / 😰快没了</span><br>
+        <b style="color:#FFB347">⚡ 消耗规则</b> — 所有人都消耗体力，但速度越快消耗越多：<br>
+        <span style="margin-left:16px">第1名消耗最大 > 第2名 > 第3名 > 第4名最省力</span><br>
+        <span style="margin-left:16px">爆发状态额外消耗 / 冲刺阶段全员加倍消耗</span><br>
+        <b style="color:#4EEAAC">💪 恢复规则</b> — 被减速时少量恢复（被迫休息）；落后越多恢复越快；每圈结束回复一波<br>
+        <b style="color:#A78BFA">🍌 赛道障碍</b> — 第1名前方没人探路，容易踩到香蕉皮/石头/水坑摔倒！后面的乌龟走得更安全<br>
+        <b style="color:#FF6B6B">😱 垫底爆发</b> — 最后一名在最后一圈有概率触发绝地反击<br>
+        <b style="color:#FFD700">🔄 圈间重置</b> — 每圈结束时所有乌龟恢复部分体力，重新洗牌！
+      </div>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin:14px 0 6px">🗺️ 赛道系统</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        • 6 种普通赛道 + 铁人三项 + 彩虹赛道<br>
+        • 综合赛道分多个赛段（跑步/游泳/蛙跳），不同赛段速度不同<br>
+        • 场地专属装备在对应赛道有额外加成<br>
+        • 综合赛道中，场地装备在对应赛段获得部分加成
+      </div>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin:14px 0 6px">👟 装备策略</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        <b>每个部位对应一种核心属性：</b><br>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin:4px 0 8px">
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;font-weight:700">🎩 头饰</td>
+            <td style="padding:5px 8px;color:var(--accent)">→ ⚡ 速度</td>
+            <td style="padding:5px 8px;color:var(--text-muted);font-size:11px">跑得更快</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;font-weight:700">😎 面饰</td>
+            <td style="padding:5px 8px;color:var(--accent)">→ 🔥 冲刺</td>
+            <td style="padding:5px 8px;color:var(--text-muted);font-size:11px">终点翻盘</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;font-weight:700">🦸 背饰</td>
+            <td style="padding:5px 8px;color:var(--accent)">→ 🎯 技巧</td>
+            <td style="padding:5px 8px;color:var(--text-muted);font-size:11px">稳定发挥</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 8px;font-weight:700">🐰 坐骑</td>
+            <td style="padding:5px 8px;color:var(--accent)">→ 💪 耐力</td>
+            <td style="padding:5px 8px;color:var(--text-muted);font-size:11px">持久不掉速</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px;font-weight:700">👟 鞋子</td>
+            <td style="padding:5px 8px;color:var(--accent)">→ 📍 场地</td>
+            <td style="padding:5px 8px;color:var(--text-muted);font-size:11px">匹配赛道+30%</td>
+          </tr>
+        </table>
+        • 🌍 全地形装备在任何赛道都给加成，适合综合赛道<br>
+        • ⭐ 传说级装备突破部位限制，提供多属性加成
+      </div>
+
+      <div style="margin-top:18px;text-align:center">
+        <button onclick="document.getElementById('rulesModal').classList.remove('show')" style="padding:12px 48px">知道了</button>
+      </div>
+    </div>
+  `;
 }
 
 function startCountdown(callback) {
@@ -1975,6 +3805,19 @@ function prayCaiShen() {
 
 function confirmBackToHome() {
   if (state.racing) return; // can't leave mid-race
+  // Track pick → go back to turtle pick
+  if (state.trackPickPhase) {
+    state.trackPickPhase = false;
+    state.pickPhase = true;
+    document.getElementById('raceTitle').textContent = '🐢 选择你的参赛乌龟！';
+    render();
+    return;
+  }
+  // Turtle pick → go back to start
+  if (state.pickPhase) {
+    showScene('scene-start');
+    return;
+  }
   if (state.round > 1 || state.wins > 0) {
     if (!confirm('确定返回主页吗？当前比赛进度将丢失。')) return;
   }
@@ -1985,8 +3828,12 @@ function startNewGame() {
   state.round = 1; state.wins = 0; state.selected = -1;
   state.progress = [0, 0, 0, 0]; state.finished = [];
   state.betAmount = 100; state.usedItems = [];
-  state.pickPhase = true; // player needs to pick their turtle first
-  raceTurtles = []; // clear until player picks
+  const ic = document.getElementById('itemBtns');
+  if (ic) ic.innerHTML = ''; // force rebuild item buttons
+  state.pickPhase = true;
+  state._lap2Announced = false;
+  state._lap3Announced = false;
+  raceTurtles = [];
   showScene('scene-race');
   document.getElementById('raceTitle').textContent = '🐢 选择你的参赛乌龟！';
   render();
@@ -1998,7 +3845,21 @@ function render() {
   const roundEl = document.getElementById('round');
   if (coinsEl) coinsEl.textContent = state.coins.toLocaleString();
   if (winsEl) winsEl.textContent = state.wins;
-  if (roundEl) roundEl.textContent = state.round;
+  // Update lap display
+  const lapEl = document.getElementById('lapDisplay');
+  const lapBadgeEl = lapEl?.parentElement;
+  if (lapEl && state.racing) {
+    const maxProg = Math.max(...state.progress);
+    const currentLap = Math.min(state.totalLaps, Math.floor(maxProg / 100) + 1);
+    lapEl.textContent = currentLap;
+    if (lapBadgeEl) {
+      lapBadgeEl.style.color = currentLap === state.totalLaps ? '#FF6B6B' : '#8BB8E8';
+      lapBadgeEl.style.borderColor = currentLap === state.totalLaps ? '#FF6B6B' : '#1A3A5C';
+    }
+  } else if (lapEl) {
+    lapEl.textContent = '1';
+    if (lapBadgeEl) { lapBadgeEl.style.color = '#8BB8E8'; lapBadgeEl.style.borderColor = '#1A3A5C'; }
+  }
 
   // Track lanes
   const trackEl = document.getElementById('trackLanes');
@@ -2014,13 +3875,93 @@ function render() {
       trackEl.parentElement.appendChild(picker);
     }
     const unlocked = ALL_TURTLES.filter(t => state.unlockedTurtles.includes(t.id));
-    picker.innerHTML = '<div class="turtle-picker-grid">' + unlocked.map(t =>
-      `<div class="picker-card" onclick="confirmTurtlePick('${t.id}')">
-        <div style="width:70px;height:55px">${turtleSVG(t.shell, t.body, t.pattern, t.accent, getMyAccessories())}</div>
+    const maxSpeed = Math.max(...unlocked.map(t => t.speed));
+    const bonuses = getCosmeticBonuses();
+    const catMap = {speed:'⚡速度',warmup:'⚡速度',stamina:'💪耐力',recovery:'💪耐力',focus:'🎯技巧',dodge:'🎯技巧',burst:'🎯技巧',sprint:'🔥冲刺',chaos:'🔥冲刺',luck:'🔥冲刺'};
+    const grouped = {};
+    Object.entries(bonuses).forEach(([k,v]) => { const c = catMap[k]||k; grouped[c] = (grouped[c]||0)+v; });
+    const bonusText = Object.entries(grouped).map(([k,v]) => `${k}+${Math.round(v*100)}%`).join(' ');
+
+    const equipped = state.equippedCosmetics || [];
+    const owned = state.ownedCosmetics || [];
+
+    // Build inline equipment panel
+    const ownedItems = COSMETIC_ITEMS.filter(c => (owned).includes(c.id));
+    const SLOT_META = [
+      { key: 'head',  icon: '🎩', label: '头饰', attr: '⚡速度' },
+      { key: 'face',  icon: '😎', label: '面饰', attr: '🔥冲刺' },
+      { key: 'back',  icon: '🦸', label: '背饰', attr: '🎯技巧' },
+      { key: 'mount', icon: '🐰', label: '坐骑', attr: '💪耐力' },
+    ];
+    const inlineEquipHtml = (() => {
+      const slotHtml = SLOT_META.map(slot => {
+        const items = ownedItems.filter(c => c.slot === slot.key);
+        if (!items.length) return '';
+        return `<div style="margin-bottom:6px">
+          <div style="font-size:11px;color:var(--text-muted);padding:2px 4px;display:flex;align-items:center;gap:4px">${slot.icon} ${slot.label} <span style="font-size:9px;color:var(--gold)">${slot.attr}</span></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding:2px 4px">
+            ${items.map(c => {
+              const isEquipped = equipped.includes(c.id);
+              const isLegendary = c.extraStats != null;
+              const tRatio = c.terrain ? getTerrainMatchRatio(c) : 0;
+              return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}${isLegendary ? ' legendary' : ''}${tRatio > 0 ? ' terrain-match' : ''}" data-cid="${c.id}" onclick="event.stopPropagation();toggleCosmetic('${c.id}')" style="padding:6px 5px;min-width:70px">
+                <span class="cosmetic-emoji" style="font-size:18px">${renderItemIcon(c.emoji, 18)}</span>
+                <span class="cosmetic-name" style="font-size:10px">${c.name}</span>
+                <span style="font-size:9px;color:var(--gold)">${c.desc}</span>
+                <span class="cosmetic-status" style="font-size:9px;${!isEquipped ? 'color:var(--text-muted)' : ''}">${isEquipped ? '✓ 已装备' : '点击装备'}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('');
+
+      const shoeHtml = (state.ownedShoes||[]).length ? `<div style="margin-bottom:6px">
+        <div style="font-size:11px;color:var(--text-muted);padding:2px 4px;display:flex;align-items:center;gap:4px">👟 鞋子 <span style="font-size:9px;color:var(--text-muted)">只能穿一双</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding:2px 4px">
+          ${SHOE_ITEMS.filter(s => (state.ownedShoes||[]).includes(s.id)).map(s => {
+            const isEquipped = state.equippedShoe === s.id;
+            return `<div class="cosmetic-item ${isEquipped ? 'equipped' : ''}" data-sid="${s.id}" onclick="event.stopPropagation();switchShoe('${s.id}')" style="padding:6px 5px;min-width:70px">
+              <span class="cosmetic-emoji" style="font-size:18px">${s.emoji}</span>
+              <span class="cosmetic-name" style="font-size:10px">${s.name}</span>
+              <span style="font-size:9px;color:var(--text-muted)">${s.desc}</span>
+              <span class="cosmetic-status" style="font-size:9px;${!isEquipped ? 'color:var(--text-muted)' : ''}">${isEquipped ? '✓ 穿着' : '点击穿上'}</span>
+            </div>`;
+          }).join('')}
+          <div class="cosmetic-item ${!state.equippedShoe ? 'equipped' : ''}" data-sid="none" onclick="event.stopPropagation();switchShoe(null)" style="padding:6px 5px;min-width:70px">
+            <span class="cosmetic-emoji" style="font-size:18px">🦶</span>
+            <span class="cosmetic-name" style="font-size:10px">光脚</span>
+            <span style="font-size:9px;color:var(--text-muted)">不穿鞋</span>
+            <span class="cosmetic-status" style="font-size:9px;${state.equippedShoe ? 'color:var(--text-muted)' : ''}">${!state.equippedShoe ? '✓ 当前' : '点击脱下'}</span>
+          </div>
+        </div>
+      </div>` : '';
+
+      if (!slotHtml && !shoeHtml) return '';
+      return `<div style="padding:10px 16px;margin:0 20px 10px;background:rgba(0,0,0,0.25);border-radius:12px;border:1px solid var(--border);max-height:35vh;overflow-y:auto">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;position:sticky;top:0;background:rgba(10,20,40,0.95);padding:4px 0;z-index:1">
+          <div style="font-size:14px;font-weight:700;color:var(--accent)">✨ 装备选择</div>
+          <div style="font-size:11px;color:var(--text-secondary)">${bonusText || '无加成'}</div>
+        </div>
+        ${slotHtml}${shoeHtml}
+      </div>`;
+    })();
+
+    picker.innerHTML =
+      // Turtle grid
+      '<div class="turtle-picker-grid"><div class="picker-title">🐢 选择你的参赛乌龟</div>' + unlocked.map(t => {
+      const speedPct = Math.round((t.speed / maxSpeed) * 100);
+      const speedColor = speedPct > 90 ? '#4EEAAC' : speedPct > 70 ? '#FFD700' : '#FF8C00';
+      const isTop = t.speed === maxSpeed;
+      return `<div class="picker-card" onclick="confirmTurtlePick('${t.id}')" style="${isTop ? 'border-color:var(--gold)' : ''}">
+        ${isTop ? '<div class="picker-tag" style="position:absolute;top:6px;right:6px;background:rgba(255,215,0,0.2);color:var(--gold)">👑 最快</div>' : ''}
+        <div style="width:75px;height:58px">${turtleSVG(t.shell, t.body, t.pattern, t.accent, getMyAccessories())}</div>
         <div class="picker-name" style="color:${t.color}">${t.name}</div>
-        <div class="picker-speed">Speed ⚡ ${t.speed}</div>
-      </div>`
-    ).join('') + '</div>';
+        <div class="picker-speed">⚡ ${t.speed}</div>
+        <div class="picker-stat-bar"><div class="picker-stat-fill" style="width:${speedPct}%;background:${speedColor}"></div></div>
+      </div>`;
+    }).join('') + '</div>' +
+      // Inline equipment panel
+      inlineEquipHtml;
     // Hide bottom bar controls during pick phase
     const pickBtnsEl = document.getElementById('pickBtns');
     if (pickBtnsEl) pickBtnsEl.innerHTML = '';
@@ -2040,19 +3981,22 @@ function render() {
       trackEl.parentElement.appendChild(picker);
     }
     const shoe = getEquippedShoe();
-    picker.innerHTML = '<div class="turtle-picker-grid">' +
+    picker.innerHTML = '<div class="turtle-picker-grid"><div class="picker-title">🗺️ 选择赛道</div>' +
       // Random option
       `<div class="picker-card" onclick="confirmTrackPick(-1)" style="border-color:var(--gold)">
-        <div style="font-size:40px">🎲</div>
+        <div style="font-size:44px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))">🎲</div>
         <div class="picker-name" style="color:var(--gold)">随机赛道</div>
         <div class="picker-speed">随缘出发！</div>
+        <div class="picker-tag" style="background:rgba(255,215,0,0.15);color:var(--gold)">推荐</div>
       </div>` +
       TRACK_THEMES.map((t, i) => {
         const shoeMatch = shoe && shoe.terrain === t.id;
-        return `<div class="picker-card" onclick="confirmTrackPick(${i})">
-          <div style="font-size:40px">${t.name.split(' ')[0]}</div>
+        const trackType = t.isRainbow ? '🌈 七彩赛段' : t.isTriathlon ? '🏃🏊🧗 三段赛制' : '常规赛道';
+        return `<div class="picker-card" onclick="confirmTrackPick(${i})" style="${shoeMatch ? 'border-color:#4EEAAC' : ''}">
+          <div style="font-size:44px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))">${t.name.split(' ')[0]}</div>
           <div class="picker-name" style="color:#fff">${t.name}</div>
-          <div class="picker-speed">${t.isTriathlon ? '🏃🏊🧗 三段赛制' : '常规赛道'}${shoeMatch ? '<br><span style="color:#4EEAAC">✨ 鞋子匹配!</span>' : ''}</div>
+          <div class="picker-speed">${trackType}</div>
+          ${shoeMatch ? '<div class="picker-tag">✨ 鞋子匹配!</div>' : ''}
         </div>`;
       }).join('') +
     '</div>';
@@ -2071,6 +4015,115 @@ function render() {
   const startBtnEl2 = document.getElementById('startBtn');
   if (startBtnEl2) startBtnEl2.style.display = '';
 
+  // During racing: update existing elements instead of rebuilding (preserves animations)
+  if (state.racing && trackEl.querySelectorAll('.track-lane').length === raceTurtles.length) {
+    const trackWidth = trackEl.offsetWidth || 800;
+    const startX = 90;
+    const endX = trackWidth - 70;
+    const maxProgT = state.totalLaps * 100;
+
+    raceTurtles.forEach((t, i) => {
+      const lane = trackEl.querySelectorAll('.track-lane')[i];
+      if (!lane) return;
+      const runner = lane.querySelector('.turtle-runner');
+      if (!runner) return;
+
+      // Update position
+      const lapPr = state.progress[i] >= maxProgT ? 100 : (state.progress[i] % 100);
+      runner.style.left = (startX + (lapPr / 100) * (endX - startX)) + 'px';
+
+      // Build correct class
+      let cls = 'turtle-runner racing';
+      if (state.progress[i] >= maxProgT) cls = 'turtle-runner finished';
+      if (state.progress[i] > 0 && state.progress[i] < maxProgT && currentTrack?.isTriathlon) {
+        const z = getZone(state.progress[i] % 100);
+        if (z === 'swim') cls += ' in-water';
+        else if (z === 'climb') cls += ' in-climb';
+      }
+      // State class
+      if (state.progress[i] < maxProgT && raceTurtleState[i]) {
+        const ts = raceTurtleState[i];
+        const tp = state.progress[i] / maxProgT;
+        const mxP = Math.max(...state.progress);
+        if (tp > 0.80) cls += ' state-sprint';
+        else if (ts.burstTimer > 0 && ts.momentum > 1.3) cls += ' state-burst';
+        else if (ts.slowTimer > 0) cls += ' state-slow';
+        else if (ts.stamina < 0.65) cls += ' state-tired';
+        else if (ts.stamina > 1.25) cls += ' state-recover';
+        else if (state.progress[i] === mxP && state.progress[i] > 20) cls += ' state-leader';
+      }
+      // Event animation
+      if (raceTurtleState[i] && raceTurtleState[i]._anim) {
+        cls += ' ' + raceTurtleState[i]._anim;
+      }
+      // Only update className if changed (prevents animation restart)
+      if (runner.className !== cls) runner.className = cls;
+
+      // Rank badge
+      const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#666'];
+      let existingBadge = lane.querySelector('.lane-rank-badge');
+      const finRank = state.finished.indexOf(i);
+      if (finRank >= 0) {
+        if (!existingBadge) {
+          existingBadge = document.createElement('div');
+          existingBadge.className = 'lane-rank-badge';
+          lane.appendChild(existingBadge);
+        }
+        existingBadge.style.background = rankColors[finRank];
+        existingBadge.style.color = finRank >= 3 ? '#fff' : '#0A1628';
+        existingBadge.textContent = finRank + 1;
+      }
+
+      // Update info panel inside lane-label
+      if (raceTurtleState[i]) {
+        const rts = raceTurtleState[i];
+        // Speed
+        const speedSpan = lane.querySelector('.lane-speed');
+        if (speedSpan) {
+          const dSpeed = Math.round(rts.baseSpeed * rts.momentum * rts.stamina * 100);
+          const sColor = dSpeed > t.speed * 1.2 ? '#4EEAAC' : dSpeed < t.speed * 0.7 ? '#FF6B6B' : 'rgba(255,255,255,0.6)';
+          speedSpan.textContent = '⚡' + dSpeed;
+          speedSpan.style.color = sColor;
+        }
+        // Stamina bar
+        const stamFill = lane.querySelector('.lane-stam-fill');
+        if (stamFill) {
+          const sn = Math.max(0, (rts.stamina - 0.3) / 0.7);
+          const sf = Math.min(100, Math.round(sn * 100));
+          const sc = sn > 0.7 ? '#4EEAAC' : sn > 0.4 ? '#FFD700' : sn > 0.15 ? '#FF8C00' : '#FF4444';
+          stamFill.style.width = sf + '%';
+          stamFill.style.background = sc;
+        }
+        // State text (first .lane-state)
+        const stLabels = lane.querySelectorAll('.lane-state');
+        if (stLabels[0]) {
+          const tp = state.progress[i] / maxProgT;
+          let sText = '🏃正常', sCol = '#8BB8E8';
+          if (tp > 0.80) { sText = '🔥冲刺'; sCol = '#FF6B6B'; }
+          else if (rts.burstTimer > 0 && rts.momentum > 1.3) { sText = '⚡爆发'; sCol = '#64C8FF'; }
+          else if (rts.slowTimer > 0) { sText = '😵减速'; sCol = '#FF8C00'; }
+          else if (rts.stamina < 0.65) { sText = '😰疲惫'; sCol = '#FF8C00'; }
+          stLabels[0].textContent = sText;
+          stLabels[0].style.color = sCol;
+        }
+        // Lap label
+        const lapLabel = lane.querySelector('[data-lap-label]');
+        if (lapLabel) {
+          const tLap = Math.min(state.totalLaps, Math.floor(state.progress[i] / 100) + 1);
+          const isFinal = tLap === state.totalLaps;
+          lapLabel.textContent = isFinal ? `🏁 第${tLap}圈` : `🔄 第${tLap}圈`;
+          lapLabel.style.color = isFinal ? '#FF6B6B' : 'var(--text-muted)';
+        }
+      }
+    });
+
+    // Update obstacle visibility on track
+    updateTrackObstacles(trackEl, startX, endX);
+
+    renderBetBtns(); renderItemBtns();
+    return;
+  }
+
   // Remove old lanes but keep start-line and finish-line
   trackEl.querySelectorAll('.track-lane').forEach(l => l.remove());
 
@@ -2080,21 +4133,79 @@ function render() {
     if (state.finished.length && state.finished[0] === i) lane.classList.add('winner');
     // No lane click — player already picked their turtle in pick phase
 
-    // Lane label (left side)
+    // Integrated info panel (left side)
     const label = document.createElement('div');
     label.className = 'lane-label';
-    label.innerHTML = `<span class="lane-name" style="color:${t.color}">${t.name}</span>
-      <span class="lane-speed">⚡${t.speed}</span>`;
+    // Always create all elements so fast-path can find them
+    let displaySpeed = t.speed;
+    let speedColor = 'rgba(255,255,255,0.6)';
+    let stamFillPct = 100, stamCol = '#4EEAAC';
+    let sText = '', sCol = '#8BB8E8';
+    if (state.racing && raceTurtleState[i]) {
+      const rts = raceTurtleState[i];
+      displaySpeed = Math.round(rts.baseSpeed * rts.momentum * rts.stamina * 100);
+      speedColor = displaySpeed > t.speed * 1.2 ? '#4EEAAC' : displaySpeed < t.speed * 0.7 ? '#FF6B6B' : 'rgba(255,255,255,0.6)';
+      const sn = Math.max(0, (rts.stamina - 0.3) / 0.7);
+      stamFillPct = Math.min(100, Math.round(sn * 100));
+      stamCol = sn > 0.7 ? '#4EEAAC' : sn > 0.4 ? '#FFD700' : sn > 0.15 ? '#FF8C00' : '#FF4444';
+      const tp = state.progress[i] / (state.totalLaps * 100);
+      if (tp > 0.80) { sText = '🔥冲刺'; sCol = '#FF6B6B'; }
+      else if (rts.burstTimer > 0 && rts.momentum > 1.3) { sText = '⚡爆发'; sCol = '#64C8FF'; }
+      else if (rts.slowTimer > 0) { sText = '😵减速'; sCol = '#FF8C00'; }
+      else if (rts.stamina < 0.65) { sText = '😰疲惫'; sCol = '#FF8C00'; }
+      else { sText = '🏃正常'; sCol = '#8BB8E8'; }
+    }
+    const tLap = Math.min(state.totalLaps, Math.floor(state.progress[i] / 100) + 1);
+    label.innerHTML = `
+      <span class="lane-name" style="color:${t.color}">${t.name}</span>
+      <span class="lane-speed" style="color:${speedColor}">⚡${displaySpeed}</span>
+      <div class="lane-stam-wrap"><div class="lane-stam-fill" style="width:${stamFillPct}%;background:${stamCol}"></div></div>
+      <div class="lane-state" style="color:${sCol}">${sText || '—'}</div>
+      ${state.totalLaps > 1 ? `<div class="lane-state" data-lap-label="1" style="color:var(--text-muted)">🔄 第${tLap}圈</div>` : ''}`;
     lane.appendChild(label);
 
     // Turtle runner — positioned by progress
     const trackWidth = trackEl.offsetWidth || 800;
     const startX = 90; // after start line
     const endX = trackWidth - 70; // before finish line
-    const turtleX = startX + (state.progress[i] / 100) * (endX - startX);
+    const maxProg = state.totalLaps * 100;
+    const lapProgress = state.progress[i] >= maxProg ? 100 : (state.progress[i] % 100);
+    const turtleX = startX + (lapProgress / 100) * (endX - startX);
 
     const runner = document.createElement('div');
-    runner.className = 'turtle-runner' + (state.racing && state.progress[i] < 100 ? ' racing' : '') + (state.progress[i] >= 100 ? ' finished' : '');
+    const maxProgTotal = state.totalLaps * 100;
+    let runnerClass = 'turtle-runner' + (state.racing && state.progress[i] < maxProgTotal ? ' racing' : '') + (state.progress[i] >= maxProgTotal ? ' finished' : '');
+    // Add zone animation class directly so it persists across render()
+    if (state.racing && state.progress[i] > 0 && state.progress[i] < maxProgTotal && currentTrack?.isTriathlon) {
+      const zone = getZone(state.progress[i] % 100);
+      if (zone === 'swim') runnerClass += ' in-water';
+      else if (zone === 'climb') runnerClass += ' in-climb';
+    }
+    // Add state-based visual classes from turtleState
+    if (state.racing && raceTurtleState[i] && state.progress[i] < maxProgTotal) {
+      const ts = raceTurtleState[i];
+      const totalProg = state.progress[i] / maxProgTotal;
+      const maxP = Math.max(...state.progress);
+      const isLeading = state.progress[i] === maxP && state.progress[i] > 20;
+      if (totalProg > 0.80) {
+        runnerClass += ' state-sprint';
+      } else if (ts.burstTimer > 0 && ts.momentum > 1.3) {
+        runnerClass += ' state-burst';
+      } else if (ts.slowTimer > 0) {
+        runnerClass += ' state-slow';
+      } else if (ts.stamina < 0.65) {
+        runnerClass += ' state-tired';
+      } else if (ts.stamina > 1.25) {
+        runnerClass += ' state-recover';
+      } else if (isLeading) {
+        runnerClass += ' state-leader';
+      }
+    }
+    // Apply active event animation from turtleState
+    if (state.racing && raceTurtleState[i] && raceTurtleState[i]._anim) {
+      runnerClass += ' ' + raceTurtleState[i]._anim;
+    }
+    runner.className = runnerClass;
     runner.id = 'turtle' + i;
     runner.style.left = turtleX + 'px';
     runner.style.top = 'calc(50% - 22px)';
@@ -2191,6 +4302,73 @@ function applyTrackTheme_apply() {
   const container = document.querySelector('.track-container');
   if (!container) return;
   container.style.setProperty('--track-bg', currentTrack.bg);
+
+  // Strip decoration per theme
+  const stripColors = {
+    grass: 'repeating-linear-gradient(90deg, #3a7a20 0px, #2d6a18 20px, #3a7a20 40px)',
+    beach: 'repeating-linear-gradient(90deg, #d4a030 0px, #c49020 15px, #d4a030 30px)',
+    snow: 'repeating-linear-gradient(90deg, #8ab4e8 0px, #a8cef0 15px, #8ab4e8 30px)',
+    night: 'repeating-linear-gradient(90deg, #4a2080 0px, #3a1868 15px, #4a2080 30px)',
+    volcano: 'repeating-linear-gradient(90deg, #8b2500 0px, #6b1a00 15px, #8b2500 30px)',
+    triathlon: 'repeating-linear-gradient(90deg, #2a6a2a 0px, #1a5a1a 20px, #2a6a2a 40px)',
+    rainbow: 'linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00cc44, #0088ff, #aa00ff)',
+  };
+  container.style.setProperty('--strip-bg', stripColors[currentTrack.id] || stripColors.grass);
+
+  // Remove old atmosphere
+  container.querySelectorAll('.track-atmos').forEach(e => e.remove());
+
+  // Create atmosphere layer
+  const tLanes = document.getElementById('trackLanes');
+  const atmos = document.createElement('div');
+  atmos.className = 'track-atmos atmos-' + currentTrack.id;
+
+  if (currentTrack.id === 'grass') {
+    const leaves = ['🍃', '🌿', '☘️', '🍀'];
+    for (let j = 0; j < 8; j++) {
+      const l = document.createElement('span');
+      l.className = 'leaf';
+      l.textContent = leaves[Math.floor(Math.random() * leaves.length)];
+      l.style.left = (Math.random() * 100) + '%';
+      l.style.animationDuration = (4 + Math.random() * 6) + 's';
+      l.style.animationDelay = (Math.random() * 5) + 's';
+      atmos.appendChild(l);
+    }
+  } else if (currentTrack.id === 'snow') {
+    for (let j = 0; j < 20; j++) {
+      const f = document.createElement('div');
+      f.className = 'flake';
+      f.style.left = (Math.random() * 100) + '%';
+      f.style.width = f.style.height = (2 + Math.random() * 4) + 'px';
+      f.style.animationDuration = (3 + Math.random() * 5) + 's';
+      f.style.animationDelay = (Math.random() * 4) + 's';
+      atmos.appendChild(f);
+    }
+  } else if (currentTrack.id === 'night') {
+    for (let j = 0; j < 25; j++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.top = (Math.random() * 100) + '%';
+      s.style.animationDuration = (1 + Math.random() * 3) + 's';
+      s.style.animationDelay = (Math.random() * 3) + 's';
+      atmos.appendChild(s);
+    }
+  } else if (currentTrack.id === 'volcano') {
+    for (let j = 0; j < 12; j++) {
+      const e = document.createElement('div');
+      e.className = 'ember';
+      e.style.left = (Math.random() * 100) + '%';
+      e.style.bottom = '0';
+      e.style.background = Math.random() > 0.5 ? '#FF6E40' : '#FFAB40';
+      e.style.setProperty('--drift', (Math.random() * 30 - 15) + 'px');
+      e.style.animationDuration = (2 + Math.random() * 3) + 's';
+      e.style.animationDelay = (Math.random() * 3) + 's';
+      atmos.appendChild(e);
+    }
+  }
+
+  if (tLanes) tLanes.appendChild(atmos);
   const header = container.querySelector('.track-header');
   if (header) {
     const shoe = getEquippedShoe();
@@ -2239,6 +4417,10 @@ function startRace() {
   state.finished = [];
   state._swimAnnounced = false;
   state._climbAnnounced = false;
+  state._lap2Announced = false;
+  state._lap3Announced = false;
+  // Reset rainbow zone flags
+  for (let ri = 0; ri < 6; ri++) state['_rb' + ri] = false;
   state.coins -= state.betAmount;
   playSound('coin');
   document.getElementById('raceTitle').textContent = '🏁 Racing... Go go go!';
@@ -2251,7 +4433,79 @@ const RACE_EVENTS = [
   { emoji: '🌊', text: '海浪来袭！{name} 被减速了!', effect: 'slow_random' },
   { emoji: '💨', text: '顺风！{name} 加速前进!', effect: 'boost_random' },
   { emoji: '🪨', text: '前方落石！{name} 紧急刹车!', effect: 'slow_leader' },
+  { emoji: '⚡', text: '闪电劈中了 {name}！一阵麻痹!', effect: 'lightning_strike' },
+  { emoji: '🍌', text: '{name} 踩到香蕉皮！滑倒了!', effect: 'banana_slip' },
+  { emoji: '🚀', text: '{name} 捡到火箭推进器！起飞!', effect: 'boost_random' },
+  { emoji: '🌬️', text: '狂风来袭！{name} 被吹回去了!', effect: 'wind_blow' },
+  { emoji: '☀️', text: '阳光照耀！{name} 充满能量!', effect: 'boost_random' },
+  { emoji: '🕳️', text: '{name} 掉进坑里了！', effect: 'slow_leader' },
+  { emoji: '🍄', text: '{name} 吃到能量蘑菇！变大了!', effect: 'boost_random' },
+  { emoji: '🌬️', text: '逆风！{name} 寸步难行!', effect: 'wind_blow' },
 ];
+
+// Spawn visual effects on the affected turtle
+function spawnEventEffects(targetIdx, isBoosted, eventText) {
+  const runner = document.getElementById('turtle' + targetIdx);
+  if (!runner) return;
+
+  // 1. Add shake/glow class to turtle
+  const effectClass = isBoosted ? 'evt-boost' : 'evt-slow';
+  runner.classList.add(effectClass);
+  setTimeout(() => runner.classList.remove(effectClass), 1500);
+
+  // 2. Lane event banner — show what happened on this turtle's lane
+  const lane = runner.parentElement;
+  if (lane && eventText) {
+    // Remove any existing banner on this lane
+    lane.querySelectorAll('.lane-event-banner').forEach(e => e.remove());
+    const banner = document.createElement('div');
+    banner.className = 'lane-event-banner ' + (isBoosted ? 'boost' : 'slow');
+    banner.textContent = eventText;
+    lane.appendChild(banner);
+    setTimeout(() => banner.remove(), 2600);
+  }
+
+  // 3. Shockwave ring
+  if (lane) {
+    const wave = document.createElement('div');
+    wave.className = 'evt-shockwave ' + (isBoosted ? 'boost' : 'slow');
+    wave.style.left = runner.style.left;
+    wave.style.top = '50%';
+    lane.appendChild(wave);
+    setTimeout(() => wave.remove(), 700);
+  }
+
+  // 3. Burst particles
+  if (lane) {
+    const rx = parseFloat(runner.style.left) || 0;
+    const cy = lane.offsetHeight / 2;
+    const colors = isBoosted
+      ? ['#4EEAAC', '#FFD700', '#fff', '#58D68D']
+      : ['#FF6B6B', '#FF8C00', '#FFD700', '#fff'];
+    for (let i = 0; i < 10; i++) {
+      const p = document.createElement('div');
+      p.className = 'evt-particle';
+      const angle = (Math.PI * 2 / 10) * i + Math.random() * 0.5;
+      const dist = 25 + Math.random() * 35;
+      p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      p.style.left = rx + 'px';
+      p.style.top = cy + 'px';
+      p.style.width = (3 + Math.random() * 5) + 'px';
+      p.style.height = p.style.width;
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      lane.appendChild(p);
+      setTimeout(() => p.remove(), 800);
+    }
+  }
+
+  // 4. Screen flash
+  const flash = document.createElement('div');
+  flash.className = 'evt-flash';
+  flash.style.setProperty('--flash-color', isBoosted ? 'rgba(78,234,172,0.15)' : 'rgba(255,60,60,0.15)');
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 500);
+}
 
 function triggerRaceEvent(speeds) {
   const evt = RACE_EVENTS[Math.floor(Math.random() * RACE_EVENTS.length)];
@@ -2295,6 +4549,20 @@ const TRACK_THEMES = [
       { name: '🐸 蛙跳', start: 66, end: 100, cssClass: 'zone-climb', zone: 'climb' },
     ],
   },
+  { id: 'rainbow', name: '🌈 彩虹赛道', bg: '#1a0a2e',
+    laneOdd: 'rgba(60,20,80,0.3)', laneEven: 'rgba(50,15,70,0.3)',
+    strip: '#6a2090', dust: 'rgba(255,200,255,0.4)',
+    isTriathlon: true, isRainbow: true,
+    zones: [
+      { name: '🔴 烈焰', start: 0, end: 14.3, cssClass: 'zone-rb-red', zone: 'run' },
+      { name: '🟠 熔岩', start: 14.3, end: 28.6, cssClass: 'zone-rb-orange', zone: 'run' },
+      { name: '🟡 雷电', start: 28.6, end: 42.9, cssClass: 'zone-rb-yellow', zone: 'climb' },
+      { name: '🟢 丛林', start: 42.9, end: 57.2, cssClass: 'zone-rb-green', zone: 'run' },
+      { name: '🔵 深海', start: 57.2, end: 71.5, cssClass: 'zone-rb-blue', zone: 'swim' },
+      { name: '🟣 幻境', start: 71.5, end: 85.8, cssClass: 'zone-rb-indigo', zone: 'climb' },
+      { name: '💜 极光', start: 85.8, end: 100, cssClass: 'zone-rb-violet', zone: 'run' },
+    ],
+  },
 ];
 
 // Triathlon zone speed modifiers per turtle (randomized per race)
@@ -2309,6 +4577,13 @@ function generateTriathlonAbilities() {
 }
 
 function getZone(progress) {
+  // For tracks with custom zone definitions, use the zone array
+  if (currentTrack?.zones) {
+    for (const z of currentTrack.zones) {
+      if (progress >= z.start && progress < z.end) return z.zone;
+    }
+    return currentTrack.zones[currentTrack.zones.length - 1].zone;
+  }
   if (progress < 33) return 'run';
   if (progress < 66) return 'swim';
   return 'climb';
@@ -2334,6 +4609,9 @@ const COMMENTARY = {
   bigGap: ['{name} 遥遥领先！其他选手还有机会吗？', '{name} 已经拉开差距了！'],
   closeFight: ['胶着战！前两名差距极小！', '太紧张了！并驾齐驱！', '难分高下！谁能笑到最后？'],
   comeback: ['{name} 正在疯狂追赶！', '逆袭ing！{name} 越来越近了！', '不要放弃！{name} 在加速！'],
+  leaderTrip: ['哎呀！{name} 脚下一滑！😱', '不！{name} 被绊倒了！后面追上来了！', '{name} 摔了！领先优势瞬间消失！'],
+  panic: ['最后一名 {name} 爆发了！绝地求生！😱', '{name} 不甘垫底，拼命冲刺！🔥'],
+  leaderTired: ['领先的 {name} 开始掉速了！体力不支！😰', '{name} 跑太快了，腿开始发软…'],
   sprint: ['最后冲刺阶段！', '终点就在眼前！所有乌龟全力加速！', '冲啊！最后100米！'],
   almostFinish: ['马上就到终点了！心跳加速！', '只差一点点！谁先到？！'],
   playerLead: ['你的 {name} 跑在最前面！加油！', '漂亮！{name} 状态火热！'],
@@ -2342,6 +4620,13 @@ const COMMENTARY = {
   // Triathlon zone transitions
   enterSwim: ['扑通！跳入水中！🌊 水里速度会变慢哦！', '进入水域！🏊 水的阻力好大！', '游泳赛段！乌龟们艰难前行…谁能游得快？'],
   enterClimb: ['蛙跳赛段！🐸 跳起来！', '开始蛙跳！弹跳力的较量！', '最后一关！蹦蹦跳跳冲终点！💪'],
+  // Rainbow zone transitions
+  rbOrange: ['🟠 进入熔岩地带！滚烫的地面！', '🟠 脚下是岩浆！小心别被烫到！'],
+  rbYellow: ['🟡 雷电区域！闪电交加！⚡', '🟡 电闪雷鸣！乌龟们毛都炸了！'],
+  rbGreen: ['🟢 丛林赛段！树木丛生！🌿', '🟢 冲进丛林！谁是丛林之王？'],
+  rbBlue: ['🔵 深海区域！水压巨大！🌊', '🔵 潜入深海！好黑好深！'],
+  rbIndigo: ['🟣 幻境空间！重力紊乱！✨', '🟣 进入幻境！上下左右都分不清了！'],
+  rbViolet: ['💜 极光冲刺！最后赛段！🌌', '💜 极光之路！终点就在前方！冲啊！'],
   swimStruggle: ['{name} 在水里挣扎！不太会游泳啊！😰', '{name} 的泳姿有点抱歉…🏊'],
   swimFast: ['{name} 像鱼一样快！🐟 游泳天赋！', '{name} 在水中如鱼得水！'],
   climbStruggle: ['{name} 爬得好慢！手短腿短的劣势！😫', '{name} 在岩壁上挂着不动了！'],
@@ -2363,8 +4648,8 @@ function showCommentary(category, turtleName) {
   if (!bar) {
     bar = document.createElement('div');
     bar.className = 'commentary-bar';
-    const trackLanes = document.getElementById('trackLanes');
-    if (trackLanes) trackLanes.appendChild(bar);
+    const container = document.querySelector('.track-container');
+    if (container) container.appendChild(bar);
   }
   bar.innerHTML = `<span class="commentary-avatar">🎙️</span><span class="commentary-text">${text}</span>`;
 }
@@ -2417,7 +4702,7 @@ function beginRaceAnimation() {
   startBgMusic();
   ambientSoundTimer = 0;
 
-  // Target ~20 seconds at 60fps = ~1200 frames, need avg 100/1200 ≈ 0.083 per frame
+  // Target ~35 seconds at 60fps = ~2100 frames, need avg 100/2100 ≈ 0.048 per frame
   const baseSpeeds = raceTurtles.map(t => t.speed / 100);
 
   // Get cosmetic bonuses for player's turtle
@@ -2435,6 +4720,7 @@ function beginRaceAnimation() {
   //   warmup   → start with higher momentum
 
   const turtleState = raceTurtles.map((t, i) => {
+    // Note: also exposed as raceTurtleState for render()
     const isPlayer = i === state.selected;
     const lucky = state.usedItems.includes('lucky') && isPlayer;
     return {
@@ -2446,18 +4732,36 @@ function beginRaceAnimation() {
       nextShiftAt: 15 + Math.random() * 20 * ((!isPlayer && cb.chaos) ? 0.6 : 1),
       luckyBoost: lucky ? 1.15 + (cb.luck || 0) : 1.0,
       isPlayer,
+      _tripped: false,
+      _sprintEntered: false,
+      _staminaWarned: false,
     };
   });
 
-  // Apply item boosts to base
-  if (state.usedItems.includes('boost')) {
-    turtleState[state.selected].baseSpeed *= 1.2;
+  raceTurtleState = turtleState; // expose for render()
+
+  // Generate obstacles for each lap
+  raceObstacles = [];
+  const OBSTACLE_TYPES = [
+    { emoji: '🍌', text: '🍌 踩到香蕉皮！', anim: 'evt-banana' },
+    { emoji: '🪨', text: '🪨 被石头绊倒！', anim: 'evt-slow' },
+    { emoji: '💧', text: '💧 踩进水坑！', anim: 'evt-slow' },
+    { emoji: '🕳️', text: '🕳️ 掉进小坑！', anim: 'evt-slow' },
+  ];
+  for (let lap = 0; lap < state.totalLaps; lap++) {
+    // 2-3 obstacles per lap, spread across the track
+    const count = 2 + Math.floor(Math.random() * 2);
+    for (let j = 0; j < count; j++) {
+      const pos = lap * 100 + 30 + Math.random() * 55; // between 30% and 85% of each lap
+      const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+      raceObstacles.push({
+        pos, emoji: type.emoji, text: type.text, anim: type.anim,
+        hit: false, el: null,
+      });
+    }
   }
-  if (state.usedItems.includes('slow')) {
-    const opponents = [0,1,2,3].filter(i => i !== state.selected);
-    const target = opponents[Math.floor(Math.random() * opponents.length)];
-    turtleState[target].baseSpeed *= 0.8;
-  }
+
+  // Items are now used during race via useRaceItem()
 
   let frameCount = 0;
   raceStartTime = performance.now();
@@ -2468,68 +4772,217 @@ function beginRaceAnimation() {
     frameCount++;
 
     for (let i = 0; i < 4; i++) {
-      if (state.progress[i] >= 100) continue;
+      const maxProgTotal = state.totalLaps * 100;
+      if (state.progress[i] >= maxProgTotal) continue;
 
       const ts = turtleState[i];
+      const lapProg = state.progress[i] % 100;
+      const maxProgress = Math.max(...state.progress);
+      const rank = [...state.progress].filter(p => p > state.progress[i]).length; // 0=1st,3=last
 
-      // === Dynamic momentum shifts — the core drama engine ===
-      // Every turtle hits shift points where their speed changes dramatically
+      // ========================================
+      // PHASE 1: 起跑 (0~30%) — ⚡速度 matters
+      // PHASE 2: 中段 (30~70%) — 💪耐力 + events
+      // PHASE 3: 冲刺 (70~100%) — 🔥冲刺 + 🎯技巧
+      // ========================================
+
+      // --- Momentum: smooth shifts instead of wild random ---
       if (state.progress[i] >= ts.nextShiftAt) {
-        // Big momentum swing: can speed up OR slow down significantly
-        const swing = 0.5 + Math.random() * 1.2; // range 0.5x to 1.7x
-        ts.momentum = swing;
-        const shiftInterval = (!ts.isPlayer && cb.chaos) ? (8 + Math.random() * 10) : (8 + Math.random() * 18);
-        ts.nextShiftAt = state.progress[i] + shiftInterval;
+        const swing = 0.6 + Math.random() * 1.0; // 0.6~1.6x
+        // Phase-based: more stable in P1, wilder in P2, dramatic in P3
+        ts.momentum = lapProg > 70 ? (0.5 + Math.random() * 1.3) : swing;
+        const interval = (!ts.isPlayer && cb.chaos) ? (8 + Math.random() * 8) : (10 + Math.random() * 15);
+        ts.nextShiftAt = state.progress[i] + interval;
       }
 
-      // === Random speed bursts — sudden surges forward ===
+      // --- Burst: 🎯技巧(burst) drives this ---
       if (ts.burstTimer > 0) {
         ts.burstTimer--;
-      } else if (Math.random() < 0.005) {
-        ts.burstTimer = 30 + Math.floor(Math.random() * 60);
-        ts.momentum = 1.4 + Math.random() * 0.5 + (ts.isPlayer ? (cb.burst || 0) : 0);
+      } else if (Math.random() < (lapProg > 70 ? 0.01 : 0.004)) { // more bursts in sprint phase
+        ts.burstTimer = 25 + Math.floor(Math.random() * 45);
+        ts.momentum = 1.5 + Math.random() * 0.4 + (ts.isPlayer ? (cb.burst || 0) : 0);
+        const burstMsgs = ['🔥 爆发加速!', '💨 突然提速!', '⚡ 全力冲刺!'];
+        spawnEventEffects(i, true, burstMsgs[Math.floor(Math.random() * burstMsgs.length)]);
       }
 
-      // === Random slowdowns — turtle gets tired or distracted ===
+      // --- Slowdown: 🎯技巧(dodge) resists, 🎯技巧(focus) reduces impact ---
       if (ts.slowTimer > 0) {
-        // dodge bonus: player's turtle resists slowdowns
         const dodged = ts.isPlayer && (cb.dodge || 0) > 0 && Math.random() < (cb.dodge || 0);
-        if (!dodged) { ts.slowTimer--; ts.momentum *= 0.6; }
-        else { ts.slowTimer = 0; } // shrug off the slowdown
+        if (!dodged) {
+          ts.slowTimer--;
+          const slowMult = ts.isPlayer ? 0.6 + (cb.focus || 0) * 0.3 : 0.6;
+          ts.momentum *= slowMult;
+        } else {
+          ts.slowTimer = 0;
+          spawnEventEffects(i, true, '🛡️ 闪避成功!');
+        }
       } else if (Math.random() < 0.003) {
-        ts.slowTimer = 20 + Math.floor(Math.random() * 40);
+        // Shield blocks slowdown
+        if (ts._shielded) {
+          ts._shielded = false;
+          spawnEventEffects(i, true, '🛡️ 护盾抵挡!');
+        } else {
+          ts.slowTimer = 15 + Math.floor(Math.random() * 30);
+          const slowMsgs = ['😵 脚步踉跄!', '💦 体力下降!', '🌀 节奏紊乱!'];
+          spawnEventEffects(i, false, slowMsgs[Math.floor(Math.random() * slowMsgs.length)]);
+        }
       }
 
-      // === Stamina system — leaders tire, trailers get second wind ===
-      const maxProgress = Math.max(...state.progress);
-      const isLeader = state.progress[i] === maxProgress && state.progress[i] > 30;
-      const isBehind = state.progress[i] < maxProgress - 15;
+      // --- 💪耐力: All turtles drain, overall downward trend ---
+      const gap = maxProgress - state.progress[i];
+      const staminaBonus = ts.isPlayer ? (cb.stamina || 0) : 0;
+      const recoveryBonus = ts.isPlayer ? (cb.recovery || 0) : 0;
 
-      if (isLeader && state.progress[i] > 50) {
-        const staminaDrain = ts.isPlayer ? 0.001 * (1 - (cb.stamina || 0)) : 0.001;
-        ts.stamina = Math.max(0.6, ts.stamina - staminaDrain);
-      }
-      if (isBehind && state.progress[i] > 40) {
-        const recoveryRate = ts.isPlayer ? 0.003 * (1 + (cb.recovery || 0)) : 0.003;
-        ts.stamina = Math.min(1.3, ts.stamina + recoveryRate);
-      }
+      // === DRAIN (always happening, everyone) ===
+      // Base: constant drain for all, ensures overall downward trend
+      const baseDrain = 0.00012;
+      // Effort: faster momentum costs more
+      const effortDrain = ts.momentum > 1.0 ? (ts.momentum - 1.0) * 0.00015 : 0;
+      // Burst: extra cost during burst
+      const burstDrain = ts.burstTimer > 0 ? 0.0004 : 0;
+      // Leader: slight extra drain for pushing the pace
+      const leaderDrain = rank === 0 ? 0.00008 : 0;
+      // Phase: mid-race drains normal, sprint drains more
+      const phaseDrainMult = lapProg > 70 ? 1.4 : lapProg > 30 ? 1.0 : 0.7;
 
-      // === Final sprint — everyone speeds up past 85% for exciting finish ===
+      // Total drain (耐力装备reduces by up to 30%)
+      const totalDrain = (baseDrain + effortDrain + burstDrain + leaderDrain) * phaseDrainMult * (1 - staminaBonus * 0.3);
+
+      // === RECOVERY (conditional, partial, never fully offsets drain) ===
+      let recovery = 0;
+      // Slowed = forced rest, small recovery
+      if (ts.slowTimer > 0) recovery += 0.0005;
+      // Trailing: partial recovery, but capped so it only slows the drain
+      if (rank >= 2 && gap > 10) {
+        const catchup = Math.min(1.5, 1 + gap * 0.02);
+        recovery += 0.00006 * (1 + recoveryBonus) * catchup;
+      }
+      // 2nd place: tiny recovery
+      if (rank === 1) recovery += 0.00003;
+
+      // Net change: drain always > recovery in normal running
+      ts.stamina -= totalDrain;
+      ts.stamina += recovery;
+
+      // Clamp: min 0.3, max 1.0 (no overflow)
+      ts.stamina = Math.max(0.3, Math.min(1.0, ts.stamina));
+
+      // --- 🔥冲刺: Final stretch boost (last 20% of total race) ---
+      const totalProg = state.progress[i] / maxProgTotal;
       const sprintMult = ts.isPlayer ? 1 + (cb.sprint || 0) : 1;
-      const sprintBoost = state.progress[i] > 85 ? (1.2 + (state.progress[i] - 85) * 0.02) * sprintMult : 1.0;
+      let sprintBoost = 1.0;
+      if (totalProg > 0.80) {
+        sprintBoost = (1.15 + (totalProg - 0.80) * 2.5) * sprintMult;
+        // Sprint entry banner (once)
+        if (!ts._sprintEntered) {
+          ts._sprintEntered = true;
+          spawnEventEffects(i, true, '🔥 全力冲刺!');
+        }
+      }
 
-      // === Calculate final speed with all factors ===
-      // focus bonus: player's turtle has less speed variation (more consistent)
-      const jitterRange = ts.isPlayer ? 0.3 * (1 - (cb.focus || 0)) : 0.3;
-      const jitter = 0.85 + Math.random() * jitterRange;
-      const zoneMult = getZoneMultiplier(i, state.progress[i]);
-      const effectiveSpeed = ts.baseSpeed * ts.momentum * ts.stamina * ts.luckyBoost * sprintBoost * jitter * zoneMult;
+      // --- 🍌 赛道意外: 领先者踩到预设障碍物 ---
+      let trailBoost = 1.0;
+      if (rank === 0) {
+        for (const obs of raceObstacles) {
+          if (obs.hit) continue;
+          // Leader hits obstacle when reaching its position
+          if (state.progress[i] >= obs.pos && state.progress[i] < obs.pos + 3) {
+            obs.hit = true;
+            // Mark obstacle element as hit
+            if (obs.el) {
+              obs.el.classList.remove('visible');
+              obs.el.classList.add('hit');
+              setTimeout(() => { if (obs.el) obs.el.remove(); }, 500);
+            }
+            if (ts._shielded) {
+              ts._shielded = false;
+              spawnEventEffects(i, true, '🛡️ 护盾抵挡!');
+            } else {
+              ts.slowTimer = 30;
+              ts.momentum = 0.35;
+              ts.stamina = Math.max(0.45, ts.stamina - 0.1);
+              const runner = document.getElementById('turtle' + i);
+              if (runner) {
+                runner.classList.add(obs.anim);
+                setTimeout(() => runner.classList.remove(obs.anim), obs.anim === 'evt-banana' ? 1900 : 1000);
+              }
+              spawnEventEffects(i, false, obs.text);
+              playSound('tick');
+              showCommentary('leaderTrip', raceTurtles[i]?.name);
+            }
+            break; // one obstacle per tick
+          }
+        }
+      }
+      // Trailing turtles: path already cleared, run smoother
+      if (rank >= 2 && gap > 8) {
+        trailBoost = 1.03 + Math.min(0.06, gap * 0.002); // 3~9% safe path bonus
+      }
 
-      // Scale to ~20 second race: base increment ~0.08 per frame
-      state.progress[i] += effectiveSpeed * 0.09;
+      // --- Last place desperation (final lap only) ---
+      let panicBoost = 1.0;
+      if (rank === 3 && Math.floor(state.progress[i] / 100) >= state.totalLaps - 1 && lapProg > 30 && Math.random() < 0.015) {
+        panicBoost = 1.6 + Math.random() * 0.4;
+        ts.momentum = Math.max(ts.momentum, 1.4);
+        spawnEventEffects(i, true, '😱 绝地反击!');
+      }
 
-      if (state.progress[i] >= 100) {
-        state.progress[i] = 100;
+      // Stamina critical warning on lane
+      if (ts.stamina < 0.38 && !ts._staminaWarned) {
+        ts._staminaWarned = true;
+        spawnEventEffects(i, false, '😰 体力告急!');
+      }
+      if (ts.stamina > 0.5) ts._staminaWarned = false;
+
+      // --- Calculate final speed ---
+      const jitterRange = ts.isPlayer ? 0.25 * (1 - (cb.focus || 0)) : 0.25;
+      const jitter = 0.88 + Math.random() * jitterRange;
+      const zoneMult = getZoneMultiplier(i, lapProg);
+      // Stamina affects speed in phases, reduced impact during sprint
+      // Full(1.0)=1.0x, Mid(0.65)=0.85x, Low(0.45)=0.7x, Critical(0.3)=0.55x
+      const stamRatio = (ts.stamina - 0.3) / 0.7; // 0~1
+      let stamSpeedMult = 0.55 + stamRatio * 0.45; // 0.55~1.0
+      // During sprint phase: reduce stamina penalty (adrenaline!)
+      if (totalProg > 0.80) {
+        stamSpeedMult = 0.75 + stamRatio * 0.25; // 0.75~1.0 (much smaller range)
+      }
+      const effectiveSpeed = ts.baseSpeed * ts.momentum * stamSpeedMult * ts.luckyBoost * sprintBoost * trailBoost * panicBoost * jitter * zoneMult;
+
+      // Scale to ~35 second per lap
+      const prevLap = Math.floor(state.progress[i] / 100);
+      state.progress[i] += effectiveSpeed * 0.05;
+      const newLap = Math.floor(state.progress[i] / 100);
+
+      // Lap crossing sound + announcement + momentum shuffle
+      if (newLap > prevLap && state.progress[i] < maxProgTotal) {
+        playSound('finishLine');
+
+        // Lap transition shuffle: reset momentum + stamina partial restore
+        // This creates natural comeback opportunities each lap
+        ts.momentum = 0.7 + Math.random() * 0.6; // fresh start 0.7~1.3
+        ts.stamina = Math.min(0.9, ts.stamina + 0.1); // partial recovery, never back to full
+        ts.burstTimer = 0;
+        ts.slowTimer = 0;
+
+        // Show big lap transition overlay (only once per lap crossing for the leader)
+        const leaderIdx2 = state.progress.indexOf(Math.max(...state.progress));
+        if (i === leaderIdx2) {
+          const trackContainer = document.querySelector('.track-container');
+          if (trackContainer && !trackContainer.querySelector('.lap-announce')) {
+            const lapNum = newLap + 1;
+            const ann = document.createElement('div');
+            ann.className = 'lap-announce';
+            const isFinal = lapNum === state.totalLaps;
+            ann.style.setProperty('--lap-glow', isFinal ? '#FF6B6B' : '#4EEAAC');
+            ann.innerHTML = `<div class="lap-announce-text">${isFinal ? '🏁 最后一圈！' : '🔄 第 ' + lapNum + ' 圈'}</div>`;
+            trackContainer.appendChild(ann);
+            setTimeout(() => ann.remove(), 1600);
+          }
+        }
+      }
+
+      if (state.progress[i] >= maxProgTotal) {
+        state.progress[i] = maxProgTotal;
         if (!state.finished.includes(i)) {
           state.finished.push(i);
           playSound('finishLine');
@@ -2539,7 +4992,8 @@ function beginRaceAnimation() {
 
     // Random race events — more frequent window, wider range
     const avgProgress = state.progress.reduce((a, b) => a + b, 0) / 4;
-    if (avgProgress > 15 && avgProgress < 85 && avgProgress - lastEventProgress > 12 && Math.random() < 0.008) {
+    const avgNorm = avgProgress / state.totalLaps; // normalize to 0~100 for thresholds
+    if (avgNorm > 10 && avgNorm < 90 && avgProgress - lastEventProgress > 25 && Math.random() < 0.008) {
       // Affect turtleState momentum instead of the old speeds array
       const evt = RACE_EVENTS[Math.floor(Math.random() * RACE_EVENTS.length)];
       let targetIdx;
@@ -2551,17 +5005,52 @@ function beginRaceAnimation() {
       }
       if (targetIdx !== undefined) {
         const ts = turtleState[targetIdx];
-        if (evt.effect.startsWith('boost')) {
+        const isBoosted = evt.effect.startsWith('boost');
+        const tName = raceTurtles[targetIdx]?.name || '乌龟';
+        const evtFullText = evt.emoji + ' ' + evt.text.replace('{name}', tName);
+        const evtLaneText = evt.emoji + ' ' + evt.text.replace('{name}', '').replace('！', '').trim() + '!';
+
+        if (evt.effect === 'lightning_strike') {
+          // Lightning: flash white + shake
+          ts.slowTimer = 45; ts.momentum = 0.3;
+          applyTurtleAnim(targetIdx, 'evt-lightning', 900);
+          spawnEventEffects(targetIdx, false, '⚡ 被雷劈了!');
+        } else if (evt.effect === 'wind_blow') {
+          // Wind: push turtle backwards + slow
+          ts.slowTimer = 40; ts.momentum = 0.3;
+          state.progress[targetIdx] = Math.max(1, state.progress[targetIdx] - 5); // blow back 5%
+          // Wind animation on turtle
+          const runner = document.getElementById('turtle' + targetIdx);
+          if (runner) {
+            runner.classList.add('evt-wind');
+            setTimeout(() => runner.classList.remove('evt-wind'), 1600);
+          }
+          spawnEventEffects(targetIdx, false, '🌬️ 被吹回去了!');
+        } else if (evt.effect === 'banana_slip') {
+          // Banana: flip animation + slow
+          ts.slowTimer = 70; ts.momentum = 0.15;
+          // Flip animation on turtle
+          const runner = document.getElementById('turtle' + targetIdx);
+          if (runner) {
+            runner.classList.add('evt-banana');
+            setTimeout(() => runner.classList.remove('evt-banana'), 1900);
+          }
+          spawnEventEffects(targetIdx, false, '🍌 滑倒翻了!');
+        } else if (isBoosted) {
           ts.burstTimer = 60; ts.momentum = 1.6;
+          spawnEventEffects(targetIdx, true, evtLaneText);
         } else {
           ts.slowTimer = 50; ts.momentum = 0.4;
+          spawnEventEffects(targetIdx, false, evtLaneText);
         }
+
+        // Top banner
         const div = document.createElement('div');
         div.className = 'race-event';
-        div.textContent = evt.emoji + ' ' + evt.text.replace('{name}', raceTurtles[targetIdx]?.name || '乌龟');
+        div.textContent = evtFullText;
         document.body.appendChild(div);
-        playSound(evt.effect.startsWith('boost') ? 'go' : 'tick');
         setTimeout(() => div.remove(), 2500);
+        playSound(isBoosted ? 'go' : 'tick');
         lastEventProgress = avgProgress;
       }
     }
@@ -2572,8 +5061,9 @@ function beginRaceAnimation() {
     ambientSoundTimer++;
     if (ambientSoundTimer % 12 === 0) { // ~5 times per second at 60fps
       const playerProg2 = state.progress[state.selected] || 0;
-      if (playerProg2 > 0 && playerProg2 < 100) {
-        const playerZone = currentTrack?.isTriathlon ? getZone(playerProg2) : 'run';
+      const mp2 = state.totalLaps * 100;
+      if (playerProg2 > 0 && playerProg2 < mp2) {
+        const playerZone = currentTrack?.isTriathlon ? getZone(playerProg2 % 100) : 'run';
         if (playerZone === 'swim') {
           playSound('swimming');
         } else {
@@ -2585,6 +5075,8 @@ function beginRaceAnimation() {
     // === COMMENTARY & BUBBLES ===
     commentaryTimer++;
     const avgProg = state.progress.reduce((a,b) => a+b, 0) / 4;
+    const mpNorm = state.totalLaps * 100;
+    const avgNorm2 = avgProg / state.totalLaps; // normalized 0~100
     // Find leader
     let leadIdx = 0; let leadProg = 0;
     state.progress.forEach((p,i) => { if (p > leadProg) { leadProg = p; leadIdx = i; } });
@@ -2596,21 +5088,33 @@ function beginRaceAnimation() {
     if (commentaryTimer === 60) {
       showCommentary('takeLeadFirst', raceTurtles[leadIdx]?.name);
     }
+    // Lap transition commentary
+    if (state.totalLaps > 1) {
+      const leaderLap = Math.floor(leadProg / 100);
+      if (leaderLap === 1 && !state._lap2Announced) {
+        state._lap2Announced = true;
+        showCommentary('start'); // reuse start for new lap energy
+      }
+      if (leaderLap === 2 && !state._lap3Announced) {
+        state._lap3Announced = true;
+        showCommentary('sprint');
+      }
+    }
     // Lead changes
     if (commentaryTimer > 60 && commentaryTimer % 30 === 0) {
       const sorted = [...state.progress].map((p,i)=>({p,i})).sort((a,b)=>b.p-a.p);
       const gap = sorted[0].p - sorted[1].p;
-      if (gap < 3 && avgProg > 30) {
+      if (gap < 8 && avgNorm2 > 20) {
         showCommentary('closeFight');
-      } else if (gap > 15) {
+      } else if (gap > 30) {
         showCommentary('bigGap', raceTurtles[sorted[0].i]?.name);
       }
     }
     // Player-specific commentary
-    if (commentaryTimer % 80 === 0 && avgProg > 20 && avgProg < 80) {
+    if (commentaryTimer % 80 === 0 && avgNorm2 > 15 && avgNorm2 < 85) {
       if (leadIdx === state.selected) {
         showCommentary('playerLead', raceTurtles[state.selected]?.name);
-      } else if (leadProg - playerProg > 10) {
+      } else if (leadProg - playerProg > 25) {
         showCommentary('playerBehind', raceTurtles[state.selected]?.name);
       }
     }
@@ -2623,35 +5127,73 @@ function beginRaceAnimation() {
           break;
         }
       }
+      // Last place panic
+      if (sorted[3] && sorted[3].p > 60 && sorted[2].p - sorted[3].p > 8) {
+        showCommentary('panic', raceTurtles[sorted[3].i]?.name);
+      }
+    }
+    // Leader tired
+    if (commentaryTimer % 90 === 0 && avgProg > 45 && avgProg < 80) {
+      if (leadProg > avgProg + 10) {
+        showCommentary('leaderTired', raceTurtles[leadIdx]?.name);
+      }
+    }
+    // Missile warning commentary — warn when someone might fire
+    if (commentaryTimer % 100 === 0 && avgNorm2 > 30 && avgNorm2 < 80) {
+      const sorted2 = [...state.progress].map((p,idx)=>({p,idx})).sort((a,b)=>b.p-a.p);
+      if (sorted2[3] && sorted2[0].p - sorted2[3].p > 15) {
+        showCommentary('panic', raceTurtles[sorted2[3].idx]?.name);
+      }
     }
     // Sprint phase
-    if (avgProg > 82 && commentaryTimer % 100 === 0) {
+    if (avgNorm2 > 82 && commentaryTimer % 100 === 0) {
       showCommentary('sprint');
     }
-    if (avgProg > 92 && commentaryTimer % 60 === 0) {
+    if (avgNorm2 > 92 && commentaryTimer % 60 === 0) {
       showCommentary('almostFinish');
     }
     // Triathlon zone transitions
     if (currentTrack?.isTriathlon) {
-      const leaderProg = Math.max(...state.progress);
-      // Trigger zone transition commentary once
-      if (!state._swimAnnounced && leaderProg >= 33) {
-        state._swimAnnounced = true;
-        showCommentary('enterSwim');
-      }
-      if (!state._climbAnnounced && leaderProg >= 66) {
-        state._climbAnnounced = true;
-        showCommentary('enterClimb');
+      const leaderProgMod = Math.max(...state.progress) % 100;
+      if (currentTrack.isRainbow) {
+        // Rainbow track: announce zone transitions (re-triggers each lap)
+        const rbKeys = ['rbOrange','rbYellow','rbGreen','rbBlue','rbIndigo','rbViolet'];
+        const rbThresholds = [14.3, 28.6, 42.9, 57.2, 71.5, 85.8];
+        rbThresholds.forEach((thr, idx) => {
+          const flag = '_rb' + idx;
+          if (leaderProgMod >= thr && leaderProgMod < thr + 3 && !state[flag]) {
+            state[flag] = true;
+            showCommentary(rbKeys[idx]);
+          }
+          // Reset flags when leader wraps to new lap
+          if (leaderProgMod < 10) state[flag] = false;
+        });
+      } else {
+        // Standard triathlon: re-trigger each lap
+        if (leaderProgMod >= 33 && leaderProgMod < 36 && !state._swimAnnounced) {
+          state._swimAnnounced = true;
+          showCommentary('enterSwim');
+        }
+        if (leaderProgMod >= 66 && leaderProgMod < 69 && !state._climbAnnounced) {
+          state._climbAnnounced = true;
+          showCommentary('enterClimb');
+        }
+        // Reset for next lap
+        if (leaderProgMod < 10) {
+          state._swimAnnounced = false;
+          state._climbAnnounced = false;
+        }
       }
       // Zone-specific performance commentary
       if (commentaryTimer % 90 === 0 && triathlonAbilities.length > 0) {
         for (let ti = 0; ti < raceTurtles.length; ti++) {
-          const zone = getZone(state.progress[ti]);
+          const zone = getZone(state.progress[ti] % 100);
           const ability = triathlonAbilities[ti]?.[zone] || 1;
-          if (ability < 0.85 && state.progress[ti] > 5 && state.progress[ti] < 95) {
+          const mp = state.totalLaps * 100;
+          if (ability < 0.85 && state.progress[ti] > 5 && state.progress[ti] < mp - 5) {
             showCommentary(zone === 'swim' ? 'swimStruggle' : zone === 'climb' ? 'climbStruggle' : 'playerBehind', raceTurtles[ti]?.name);
             break;
-          } else if (ability > 1.15 && state.progress[ti] > 5 && state.progress[ti] < 95) {
+          } else if (ability > 1.15 && state.progress[ti] > 5 && state.progress[ti] < mp - 5) {
             showCommentary(zone === 'swim' ? 'swimFast' : zone === 'climb' ? 'climbFast' : 'playerLead', raceTurtles[ti]?.name);
             break;
           }
@@ -2671,20 +5213,17 @@ function beginRaceAnimation() {
     // Spawn zone-specific particles + update turtle zone class
     if (Math.random() < 0.4) {
       raceTurtles.forEach((_, i) => {
-        if (state.progress[i] > 0 && state.progress[i] < 100) {
+        const mp = state.totalLaps * 100;
+        if (state.progress[i] > 0 && state.progress[i] < mp) {
           const runner = document.getElementById('turtle' + i);
           if (!runner || !runner.parentElement) return;
-          const zone = getZone(state.progress[i]);
+          const zone = getZone(state.progress[i] % 100);
           const isTri = currentTrack?.isTriathlon;
           const laneEl = runner.parentElement;
           const rx = parseFloat(runner.style.left) || 0;
           const cy = laneEl.offsetHeight / 2;
 
-          // Update turtle zone animation class
-          runner.classList.remove('in-water', 'in-climb');
-          if (isTri && zone === 'swim') runner.classList.add('in-water');
-          if (isTri && zone === 'climb') runner.classList.add('in-climb');
-
+          // Zone classes are now set in render() — just spawn particles here
           if (isTri && zone === 'swim') {
             // Water splash: multiple droplets
             for (let d = 0; d < 3; d++) {
@@ -2757,6 +5296,9 @@ function beginRaceAnimation() {
 
 function finishRace() {
   state.racing = false;
+  // Clean up obstacle elements
+  raceObstacles.forEach(obs => { if (obs.el) { obs.el.remove(); obs.el = null; } });
+  raceObstacles = [];
   stopBgMusic();
   const winner = state.finished[0];
   const won = winner === state.selected;
@@ -2811,50 +5353,99 @@ function finishRace() {
 }
 
 function showGameOver() {
-  if (state.coins > state.highScore) {
-    state.highScore = state.coins;
-  }
+  const isNewHigh = state.coins > state.highScore;
+  if (isNewHigh) state.highScore = state.coins;
   state.totalWins += state.wins;
   saveGame();
-  // Race records are now added per-win in finishRace()
 
-  document.getElementById('gameoverEmoji').textContent = state.wins >= 3 ? '🏆' : '🐢';
-  document.getElementById('gameoverTitle').textContent =
-    state.wins >= 3 ? '太厉害了!' : state.wins > 0 ? '不错的比赛!' : '再接再厉!';
-  document.getElementById('gameoverTitle').style.color =
-    state.wins >= 3 ? 'var(--gold)' : 'var(--accent)';
+  const won = state.wins > 0;
+  const raceTime = ((performance.now() - raceStartTime) / 1000).toFixed(1);
+  const playerRank = state.finished.indexOf(state.selected);
 
-  document.getElementById('gameoverStats').innerHTML = `
-    <div class="stat-card"><div class="stat-value">🪙 ${state.coins.toLocaleString()}</div><div class="stat-label">最终金币</div></div>
-    <div class="stat-card"><div class="stat-value">🏆 ${state.wins}</div><div class="stat-label">胜利场次</div></div>
-    <div class="stat-card"><div class="stat-value">${state.maxRounds}</div><div class="stat-label">总轮次</div></div>
-    <div class="stat-card"><div class="stat-value">${state.highScore.toLocaleString()}</div><div class="stat-label">历史最高</div></div>
+  // Banner
+  const bannerEl = document.getElementById('gameoverBanner');
+  bannerEl.textContent = won ? '🏆 VICTORY' : '💔 DEFEATED';
+  bannerEl.className = 'gameover-banner ' + (won ? 'win' : 'lose');
+
+  // Title
+  const titleEl = document.getElementById('gameoverTitle');
+  titleEl.textContent = won ? '🏆 恭喜获胜！' : '🐢 下次加油！';
+  titleEl.style.color = won ? 'var(--gold)' : 'var(--accent)';
+
+  // Subtitle
+  const subtitleEl = document.getElementById('gameoverSubtitle');
+  const myTurtle = raceTurtles[state.selected];
+  subtitleEl.innerHTML = won
+    ? `<span style="color:${myTurtle?.color||'#fff'}">${myTurtle?.name||'你的乌龟'}</span> 以 ${raceTime}s 完赛，赢得了比赛！`
+    : `<span style="color:${myTurtle?.color||'#fff'}">${myTurtle?.name||'你的乌龟'}</span> 获得第 ${playerRank+1} 名`;
+
+  // Podium — show top 3 with turtles on blocks (order: 2nd, 1st, 3rd)
+  const podiumOrder = [1, 0, 2]; // display order: silver, gold, bronze
+  const medals = ['🥇', '🥈', '🥉'];
+  const blockClass = ['p2', 'p1', 'p3'];
+  const podiumEl = document.getElementById('gameoverPodium');
+  podiumEl.innerHTML = `<h3>🏅 领奖台</h3>
+    <div class="podium">
+      ${podiumOrder.map((displayIdx, posIdx) => {
+        const finIdx = state.finished[displayIdx];
+        const t = raceTurtles[finIdx];
+        if (!t) return '';
+        const isMe = finIdx === state.selected;
+        return `<div class="podium-slot">
+          ${isMe ? '<div class="podium-you">⭐ 你</div>' : '<div style="height:14px"></div>'}
+          <div class="podium-medal">${medals[displayIdx]}</div>
+          <div class="podium-turtle">${turtleSVG(t.shell, t.body, t.pattern, t.accent)}</div>
+          <div class="podium-name" style="color:${t.color}">${t.name}</div>
+          <div class="podium-block ${blockClass[posIdx]}">${displayIdx + 1}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${state.finished[3] !== undefined ? (() => {
+      const t4 = raceTurtles[state.finished[3]];
+      const isMe4 = state.finished[3] === state.selected;
+      return `<div class="podium-4th">
+        <span style="font-size:14px;color:#666;font-weight:800">4th</span>
+        <span style="width:30px;height:24px;display:inline-block">${turtleSVG(t4.shell, t4.body, t4.pattern, t4.accent)}</span>
+        <span style="color:${t4?.color||'#666'};font-weight:600">${t4?.name||'???'}</span>
+        ${isMe4 ? '<span style="color:var(--accent);font-size:10px">(你)</span>' : ''}
+      </div>`;
+    })() : ''}
   `;
 
-  if (state.wins >= 3) showConfetti();
-  playSound(state.wins > 0 ? 'win' : 'lose');
+  // Stats — compact horizontal cards
+  const netChange = won ? Math.round(state.betAmount * 4 * getStreakMultiplier()) - state.betAmount : -state.betAmount;
+  document.getElementById('gameoverStats').innerHTML = `
+    <div class="stat-card${won ? ' highlight' : ''}">
+      <div class="stat-label">${won ? '💰 收益' : '💸 损失'}</div>
+      <div class="stat-value" style="color:${won ? '#4EEAAC' : '#FF6B6B'}">${netChange > 0 ? '+' : ''}${netChange.toLocaleString()}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">🪙 余额</div>
+      <div class="stat-value">${state.coins.toLocaleString()}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">⏱ 用时</div>
+      <div class="stat-value">${raceTime}s</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">🗺️ 赛道</div>
+      <div class="stat-value" style="font-size:16px">${currentTrack?.name || '赛道'}</div>
+    </div>
+    <div class="stat-card${isNewHigh ? ' highlight' : ''}">
+      <div class="stat-label">${isNewHigh ? '🎉 新纪录' : '📊 最高'}</div>
+      <div class="stat-value">${state.highScore.toLocaleString()}</div>
+    </div>
+  `;
+
+  if (won) showConfetti();
+  playSound(won ? 'win' : 'lose');
   showScene('scene-gameover');
 }
 
 function nextRound() {
   document.getElementById('modal').classList.remove('show');
   document.getElementById('confetti').innerHTML = '';
-
-  if (state.round >= state.maxRounds) {
-    showGameOver();
-    return;
-  }
-
-  state.round++;
-  state.selected = -1;
-  state.progress = [0, 0, 0, 0];
-  state.finished = [];
-  state.usedItems = [];
-  state.pickPhase = true;
-  raceTurtles = [];
-  document.getElementById('raceTitle').textContent = '🐢 选择你的参赛乌龟！';
-  render();
-  saveGame();
+  showGameOver();
 }
 
 function showConfetti() {
