@@ -1681,6 +1681,75 @@
     0%, 100% { box-shadow: 0 0 8px var(--aura-color); }
     50% { box-shadow: 0 0 16px var(--aura-color); }
   }
+
+  .rank-icon {
+    font-size: 72px;
+    animation: rankFloat 3s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(255,215,0,0.3));
+  }
+  @keyframes rankFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .rank-name {
+    font-size: 32px; font-weight: 900; margin-top: 8px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .rank-star { font-size: 22px; margin: 0 2px; }
+  .rank-star.filled { opacity: 1; }
+  .rank-star.empty { opacity: 0.25; }
+  .rank-progress-bar {
+    height: 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    overflow: hidden; margin: 8px 0;
+  }
+  .rank-progress-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  /* 晋级动画 */
+  .promote-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.85);
+    animation: promoteIn 0.5s ease-out;
+  }
+  @keyframes promoteIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  .promote-icon {
+    font-size: 100px;
+    animation: promoteBounce 1s ease-out;
+  }
+  @keyframes promoteBounce {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .promote-text {
+    font-size: 36px; font-weight: 900; margin-top: 16px;
+    animation: promoteSlide 0.6s ease-out 0.3s both;
+  }
+  @keyframes promoteSlide {
+    0% { transform: translateY(30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  /* 降级动画 */
+  .demote-text {
+    font-size: 28px; font-weight: 700; color: var(--text-secondary);
+    animation: demoteShake 0.5s ease-out;
+  }
+  @keyframes demoteShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
 </style>
 </head>
 <body>
@@ -1693,6 +1762,10 @@
     <p class="start-subtitle">乌 龟 赛 跑</p>
     <div class="start-menu">
       <button class="menu-btn primary" onclick="startNewGame()">🏁 开始比赛</button>
+      <button class="menu-btn" onclick="showScene('scene-ranked')" style="border-color:#FFD700">
+        ⚔️ 段位赛
+        <span id="rankBadgeMenu" style="font-size:13px;display:block;margin-top:2px;color:var(--gold)"></span>
+      </button>
       <button class="menu-btn" onclick="showScene('scene-shop')">🛒 乌龟商店</button>
       <div style="display:flex;gap:12px">
         <button class="menu-btn" style="flex:1" onclick="showScene('scene-leaderboard')">📊 排行榜</button>
@@ -1778,6 +1851,32 @@
       <button class="menu-btn primary" onclick="startNewGame()">🔄 再来一局</button>
       <button class="menu-btn" onclick="showScene('scene-start')">🏠 返回主页</button>
     </div>
+  </div>
+</div>
+
+<div id="scene-ranked" class="scene">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 25%,#1a1a3e 0%,#0E2240 30%,#0A1628 70%);gap:12px;padding:20px;position:relative;overflow:hidden">
+
+    <!-- 段位展示 -->
+    <div id="rankDisplay" style="text-align:center"></div>
+
+    <!-- 战绩 -->
+    <div id="rankRecord" style="display:flex;gap:16px;font-size:15px"></div>
+
+    <!-- 段位进度条 -->
+    <div id="rankProgress" style="width:280px;margin:8px 0"></div>
+
+    <!-- 入场费和奖励信息 -->
+    <div id="rankInfo" style="text-align:center;font-size:14px;color:var(--text-secondary)"></div>
+
+    <!-- 对手预览 -->
+    <div id="rankOpponentPreview" style="text-align:center;margin:8px 0;font-size:13px;color:var(--text-muted)"></div>
+
+    <!-- 按钮 -->
+    <button id="rankStartBtn" class="menu-btn" onclick="startRankedGame()" style="width:260px;background:linear-gradient(135deg,#1a1a3e,#2a1a4e);border-color:#FFD700;font-size:18px;padding:14px 32px">
+      ⚔️ 开始挑战
+    </button>
+    <button class="menu-btn" onclick="showScene('scene-start')" style="width:260px">🔙 返回主菜单</button>
   </div>
 </div>
 
@@ -3928,6 +4027,68 @@ function showScene(sceneId) {
   }
   if (sceneId === 'scene-leaderboard') renderLeaderboard();
   if (sceneId === 'scene-shop') renderShop();
+  if (sceneId === 'scene-ranked') renderRankedScene();
+}
+
+function renderRankedScene() {
+  const rank = RANKS[state.rank];
+  const tier = state.rank;
+
+  // 段位图标和名称
+  document.getElementById('rankDisplay').innerHTML = `
+    <div class="rank-icon">${rank.icon}</div>
+    <div class="rank-name" style="color:${rank.color}">${rank.name}</div>
+  `;
+
+  // 战绩星星
+  let starsHtml = '<div style="margin:8px 0">';
+  // 胜利星星（绿色）
+  for (let i = 0; i < 3; i++) {
+    starsHtml += `<span class="rank-star ${i < state.rankWins ? 'filled' : 'empty'}" style="color:#22C55E">★</span>`;
+  }
+  starsHtml += ' <span style="color:var(--text-muted);margin:0 8px">|</span> ';
+  // 失败星星（红色）
+  for (let i = 0; i < 3; i++) {
+    starsHtml += `<span class="rank-star ${i < state.rankLosses ? 'filled' : 'empty'}" style="color:#EF4444">✖</span>`;
+  }
+  starsHtml += '</div>';
+  document.getElementById('rankRecord').innerHTML = starsHtml;
+
+  // 进度条
+  const progressPct = (state.rankWins / 3) * 100;
+  document.getElementById('rankProgress').innerHTML = `
+    <div class="rank-progress-bar">
+      <div class="rank-progress-fill" style="width:${progressPct}%;background:linear-gradient(90deg,${rank.color},${rank.color}cc)"></div>
+    </div>
+  `;
+
+  // 费用和奖励
+  const canAfford = state.coins >= rank.fee;
+  document.getElementById('rankInfo').innerHTML = `
+    <div style="margin:4px 0">🎫 入场费: <span style="color:${canAfford ? 'var(--gold)' : 'var(--danger)'}">${rank.fee} 🪙</span></div>
+    <div style="margin:4px 0">🏆 胜利奖励: <span style="color:var(--accent)">${rank.reward} 🪙</span></div>
+    <div style="margin:4px 0">💰 当前余额: <span style="color:var(--gold)">${state.coins} 🪙</span></div>
+  `;
+
+  // 对手预览
+  const nextRankInfo = tier < 6 ? RANKS[tier] : RANKS[6];
+  let opponentDesc = '';
+  if (nextRankInfo.aiSlots === 0) {
+    opponentDesc = '对手无装备，轻松上分！';
+  } else {
+    const qt = getQualityTier({ quality: nextRankInfo.aiQuality });
+    opponentDesc = `对手装备: ${nextRankInfo.aiSlots}件 ${qt.icon}${qt.name}`;
+    if (nextRankInfo.aiSetId) opponentDesc += ' (含套装效果)';
+  }
+  document.getElementById('rankOpponentPreview').innerHTML = `⚠️ ${opponentDesc}`;
+
+  // 按钮状态
+  document.getElementById('rankStartBtn').disabled = !canAfford;
+  document.getElementById('rankStartBtn').style.opacity = canAfford ? 1 : 0.5;
+
+  // 主菜单段位标签
+  const menuBadge = document.getElementById('rankBadgeMenu');
+  if (menuBadge) menuBadge.textContent = `${rank.icon} ${rank.name}`;
 }
 
 const CAISHEN_BLESSINGS = [
