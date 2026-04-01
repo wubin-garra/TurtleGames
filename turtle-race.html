@@ -1180,6 +1180,34 @@
   }
   .shop-section-title:first-child { border-top: none; margin-top: 0; }
 
+  /* Quality badges and item cards */
+  .quality-badge {
+    display: inline-block; padding: 1px 6px; border-radius: 8px;
+    font-size: 11px; font-weight: 700; margin-left: 4px;
+    vertical-align: middle;
+  }
+  .item-card {
+    border: 2px solid var(--border); border-radius: 10px;
+    padding: 8px; margin: 4px 0; transition: all 0.2s;
+    position: relative;
+  }
+  .item-card[data-quality="common"] { border-color: #6B7280; }
+  .item-card[data-quality="fine"] { border-color: #22C55E; }
+  .item-card[data-quality="rare"] { border-color: #3B82F6; }
+  .item-card[data-quality="epic"] { border-color: #A855F7; box-shadow: 0 0 8px rgba(168,85,247,0.3); }
+  .item-card[data-quality="legendary"] { border-color: #F97316; box-shadow: 0 0 10px rgba(249,115,22,0.4); }
+  .item-card[data-quality="mythic"] { border-color: #EF4444; box-shadow: 0 0 12px rgba(239,68,68,0.5); animation: mythicPulse 2s ease-in-out infinite; }
+
+  @keyframes mythicPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(239,68,68,0.5); }
+    50% { box-shadow: 0 0 20px rgba(239,68,68,0.8); }
+  }
+
+  .set-tag {
+    display: inline-block; padding: 1px 5px; border-radius: 6px;
+    font-size: 10px; background: rgba(255,255,255,0.1); margin-left: 4px;
+  }
+
   /* Leaderboard Area */
   .leaderboard-area {
     flex: 1; padding: 24px 32px; background: var(--bg-race);
@@ -2680,9 +2708,15 @@ function renderShop() {
       const terrainName = c.terrain === 'all' ? '🌍 全地形通用' : c.terrain ? '📍 ' + (TRACK_THEMES.find(t => t.id === c.terrain)?.name || '') : '';
       const zAff = TERRAIN_ZONE_AFFINITY[c.terrain];
       const zLabel = zAff === 'run' ? '（综合赛道跑步段生效）' : zAff === 'swim' ? '（综合赛道游泳段生效）' : zAff === 'climb' ? '（综合赛道蛙跳段生效）' : '';
+      const cTier = getQualityTier({ quality: c.quality || 'common' });
+      const qualityBadge = `<span class="quality-badge" style="background:${cTier.color}20;color:${cTier.color};border:1px solid ${cTier.color}">${cTier.icon} ${cTier.name}</span>`;
+      const setTag = c.setId && SET_BONUSES[c.setId]
+        ? `<span class="set-tag">${SET_BONUSES[c.setId].name}</span>`
+        : '';
+      card.setAttribute('data-quality', c.quality || 'common');
       card.innerHTML = `
         <div style="line-height:1">${renderItemIcon(c.emoji, isLegendary ? 48 : 36)}</div>
-        <div style="font-size:16px;font-weight:700;color:${isLegendary ? '#FFD700' : '#fff'};${isLegendary ? 'text-shadow:0 1px 4px rgba(0,0,0,0.6)' : ''}">${c.name}${isLegendary ? ' ⭐' : ''}</div>
+        <div style="font-size:16px;font-weight:700;color:${isLegendary ? '#FFD700' : '#fff'};${isLegendary ? 'text-shadow:0 1px 4px rgba(0,0,0,0.6)' : ''}">${c.name}${isLegendary ? ' ⭐' : ''}${qualityBadge}${setTag}</div>
         <div style="font-size:12px;color:${isLegendary ? '#FFF8DC' : 'var(--gold)'};font-weight:600;${isLegendary ? 'text-shadow:0 1px 3px rgba(0,0,0,0.6);background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;display:inline-block' : ''}">${c.desc}</div>
         ${c.terrain ? `<div style="font-size:11px;color:var(--accent);opacity:0.8">${terrainName}</div>` : ''}
         ${zLabel ? `<div style="font-size:10px;color:var(--text-muted)">${zLabel}</div>` : ''}
@@ -2724,6 +2758,51 @@ function renderShop() {
     `;
     area.appendChild(card);
   });
+
+  // Section: Set Collection
+  const setSection = document.createElement('div');
+  setSection.style.cssText = 'grid-column:1/-1;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)';
+  let setHtml = '<div style="font-size:16px;font-weight:700;margin-bottom:10px;color:var(--gold)">🎯 套装收藏</div>';
+
+  Object.entries(SET_BONUSES).forEach(([setId, setDef]) => {
+    const setItems = COSMETIC_ITEMS.filter(c => c.setId === setId);
+    const ownedCount = setItems.filter(c => (state.ownedCosmetics || []).includes(c.id)).length;
+    const equippedCount = setItems.filter(c => (state.equippedCosmetics || []).includes(c.id)).length;
+    // Derive quality from the set items (all items in a set share the same quality)
+    const setQuality = (setItems[0] && setItems[0].quality) || 'legendary';
+    const tier = getQualityTier({ quality: setQuality });
+
+    setHtml += `<div class="item-card" data-quality="${setQuality}" style="margin-bottom:8px">`;
+    setHtml += `<div style="font-weight:700;font-size:14px">${setDef.name} <span class="quality-badge" style="background:${tier.color}20;color:${tier.color};border:1px solid ${tier.color}">${tier.icon} ${tier.name}</span></div>`;
+    setHtml += `<div style="font-size:12px;color:var(--text-muted);margin:4px 0">收集进度: ${ownedCount}/${setItems.length} | 已装备: ${equippedCount}件</div>`;
+
+    // Show set pieces
+    setHtml += '<div style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap">';
+    setItems.forEach(item => {
+      const owned = (state.ownedCosmetics || []).includes(item.id);
+      const equipped = (state.equippedCosmetics || []).includes(item.id);
+      const opacity = owned ? 1 : 0.35;
+      const border = equipped ? `2px solid ${tier.color}` : '2px solid transparent';
+      setHtml += `<div style="opacity:${opacity};border:${border};border-radius:8px;padding:4px 8px;font-size:13px;background:rgba(255,255,255,0.05)">${item.emoji} ${item.name}</div>`;
+    });
+    setHtml += '</div>';
+
+    // Show set bonuses (2pc, 3pc, 4pc)
+    ['2pc', '3pc', '4pc'].forEach(key => {
+      const bonus = setDef[key];
+      if (!bonus) return;
+      const n = parseInt(key);
+      const active = equippedCount >= n;
+      setHtml += `<div style="font-size:11px;color:${active ? tier.color : 'var(--text-muted)'};margin:2px 0;${active ? 'font-weight:600' : ''}">`;
+      setHtml += `${active ? '✅' : '⬜'} ${n}件: ${bonus.desc}`;
+      setHtml += '</div>';
+    });
+
+    setHtml += '</div>';
+  });
+
+  setSection.innerHTML = setHtml;
+  area.appendChild(setSection);
 }
 
 function buyShoe(shoeId) {
