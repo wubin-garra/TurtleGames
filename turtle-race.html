@@ -1642,6 +1642,17 @@
     .shop-area { padding: 16px; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
     .shop-card { padding: 16px; }
   }
+
+  @keyframes setEffectPop {
+    0% { opacity:1; transform:translateX(-50%) translateY(0) scale(0.5); }
+    50% { opacity:1; transform:translateX(-50%) translateY(-15px) scale(1.2); }
+    100% { opacity:0; transform:translateX(-50%) translateY(-30px) scale(0.8); }
+  }
+
+  @keyframes auraGlow {
+    0%, 100% { box-shadow: 0 0 8px var(--aura-color); }
+    50% { box-shadow: 0 0 16px var(--aura-color); }
+  }
 </style>
 </head>
 <body>
@@ -3186,6 +3197,7 @@ function getCosmeticBonuses() {
   Object.entries(setBonusResult.bonuses).forEach(([stat, val]) => {
     bonuses[stat] = (bonuses[stat] || 0) + val;
   });
+  bonuses._activeEffects = setBonusResult.specials || [];
   return bonuses;
 }
 
@@ -4735,6 +4747,11 @@ function beginRaceAnimation() {
       _tripped: false,
       _sprintEntered: false,
       _staminaWarned: false,
+      activeSetEffects: i === state.selected ? (cb._activeEffects || []) : (t._aiSetEffects || []),
+      freezeCooldown: 0,
+      stealthCharge: 0,
+      dragonFireReady: true,
+      rainbowLastZone: -1,
     };
   });
 
@@ -4898,17 +4915,28 @@ function beginRaceAnimation() {
               ts._shielded = false;
               spawnEventEffects(i, true, '🛡️ 护盾抵挡!');
             } else {
-              ts.slowTimer = 30;
-              ts.momentum = 0.35;
-              ts.stamina = Math.max(0.45, ts.stamina - 0.1);
-              const runner = document.getElementById('turtle' + i);
-              if (runner) {
-                runner.classList.add(obs.anim);
-                setTimeout(() => runner.classList.remove(obs.anim), obs.anim === 'evt-banana' ? 1900 : 1000);
+              // 🌙 隐身特效：被障碍物命中时50%闪避
+              let stealthDodged = false;
+              if (ts.activeSetEffects && ts.activeSetEffects.includes('stealth')) {
+                if (Math.random() < 0.5) {
+                  stealthDodged = true;
+                  showSetEffect(i, '💨');
+                  spawnEventEffects(i, true, '💨 隐身闪避!');
+                }
               }
-              spawnEventEffects(i, false, obs.text);
-              playSound('tick');
-              showCommentary('leaderTrip', raceTurtles[i]?.name);
+              if (!stealthDodged) {
+                ts.slowTimer = 30;
+                ts.momentum = 0.35;
+                ts.stamina = Math.max(0.45, ts.stamina - 0.1);
+                const runner = document.getElementById('turtle' + i);
+                if (runner) {
+                  runner.classList.add(obs.anim);
+                  setTimeout(() => runner.classList.remove(obs.anim), obs.anim === 'evt-banana' ? 1900 : 1000);
+                }
+                spawnEventEffects(i, false, obs.text);
+                playSound('tick');
+                showCommentary('leaderTrip', raceTurtles[i]?.name);
+              }
             }
             break; // one obstacle per tick
           }
@@ -4946,7 +4974,62 @@ function beginRaceAnimation() {
       if (totalProg > 0.80) {
         stamSpeedMult = 0.75 + stamRatio * 0.25; // 0.75~1.0 (much smaller range)
       }
-      const effectiveSpeed = ts.baseSpeed * ts.momentum * stamSpeedMult * ts.luckyBoost * sprintBoost * trailBoost * panicBoost * jitter * zoneMult;
+      let effectiveSpeed = ts.baseSpeed * ts.momentum * stamSpeedMult * ts.luckyBoost * sprintBoost * trailBoost * panicBoost * jitter * zoneMult;
+
+      // === 套装特效处理 ===
+      if (ts.activeSetEffects && ts.activeSetEffects.length > 0) {
+        // ❄️ 冰冻特效：每圈冻结1名对手0.5秒
+        if (ts.activeSetEffects.includes('freeze') && ts.freezeCooldown <= 0) {
+          if (state.progress[i] > 0 && Math.floor(state.progress[i] / 100) > Math.floor((state.progress[i] - effectiveSpeed * 0.05) / 100)) {
+            // 刚跨过整圈
+            const opponents = [0,1,2,3].filter(j => j !== i && !state.finished.includes(j));
+            if (opponents.length > 0) {
+              const target = opponents[Math.floor(Math.random() * opponents.length)];
+              turtleState[target].slowTimer = Math.max(turtleState[target].slowTimer, 30);
+              ts.freezeCooldown = 60;
+              showSetEffect(target, '❄️');
+            }
+          }
+        }
+        if (ts.freezeCooldown > 0) ts.freezeCooldown--;
+
+        // 🔥 烈焰特效：冲刺阶段额外+15%
+        if (ts.activeSetEffects.includes('blaze')) {
+          const lapProgress = state.progress[i] % 100;
+          if (lapProgress > 80) {
+            effectiveSpeed *= 1.15;
+          }
+        }
+
+        // 🐉 龙焰特效：被减速时反弹给最近对手
+        if (ts.activeSetEffects.includes('dragonfire') && ts.dragonFireReady && ts.slowTimer > 0) {
+          const opponents = [0,1,2,3].filter(j => j !== i && !state.finished.includes(j));
+          if (opponents.length > 0) {
+            let closest = opponents[0];
+            let minDist = Math.abs(state.progress[opponents[0]] - state.progress[i]);
+            opponents.forEach(j => {
+              const d = Math.abs(state.progress[j] - state.progress[i]);
+              if (d < minDist) { minDist = d; closest = j; }
+            });
+            turtleState[closest].slowTimer = Math.max(turtleState[closest].slowTimer, ts.slowTimer);
+            ts.slowTimer = 0;
+            ts.dragonFireReady = false;
+            setTimeout(() => { ts.dragonFireReady = true; }, 3000);
+            showSetEffect(closest, '🐉');
+          }
+        }
+
+        // 🌈 彩虹特效：换区域时+20%加速1秒
+        if (ts.activeSetEffects.includes('rainbow_burst')) {
+          const currentZone = Math.floor((state.progress[i] % 100) / 100 * 7);
+          if (ts.rainbowLastZone !== -1 && currentZone !== ts.rainbowLastZone) {
+            ts.momentum *= 1.20;
+            setTimeout(() => { if (ts.momentum > 1.0) ts.momentum /= 1.20; }, 1000);
+            showSetEffect(i, '🌈');
+          }
+          ts.rainbowLastZone = currentZone;
+        }
+      }
 
       // Scale to ~35 second per lap
       const prevLap = Math.floor(state.progress[i] / 100);
@@ -5463,6 +5546,21 @@ function showConfetti() {
     el.style.animationDelay = Math.random() * 1.5 + 's';
     container.appendChild(el);
   }
+}
+
+function showSetEffect(turtleIndex, emoji) {
+  const turtleEl = document.querySelectorAll('.turtle-sprite')[turtleIndex];
+  if (!turtleEl) return;
+  const effectEl = document.createElement('div');
+  effectEl.textContent = emoji;
+  effectEl.style.cssText = `
+    position:absolute; top:-25px; left:50%; transform:translateX(-50%);
+    font-size:20px; animation:setEffectPop 0.8s ease-out forwards;
+    pointer-events:none; z-index:100;
+  `;
+  turtleEl.style.position = 'relative';
+  turtleEl.appendChild(effectEl);
+  setTimeout(() => effectEl.remove(), 800);
 }
 
 loadGame();
