@@ -4020,6 +4020,7 @@ function showScene(sceneId) {
   document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
   document.getElementById(sceneId).classList.add('active');
   if (sceneId === 'scene-start') {
+    state.isRankedMode = false;
     const hsEl = document.getElementById('highScore');
     if (hsEl) hsEl.textContent = state.highScore.toLocaleString();
     const scEl = document.getElementById('startCoins');
@@ -4150,6 +4151,38 @@ function startNewGame() {
   raceTurtles = [];
   showScene('scene-race');
   document.getElementById('raceTitle').textContent = '🐢 选择你的参赛乌龟！';
+  render();
+}
+
+function startRankedGame() {
+  const rank = RANKS[state.rank];
+  if (state.coins < rank.fee) return;
+
+  state.isRankedMode = true;
+  state.coins -= rank.fee;
+
+  // 为AI对手生成装备
+  state._rankedAIEquipment = [null, null, null].map(() => generateAIEquipment(state.rank));
+
+  // 进入选龟阶段（复用现有流程）
+  state.wins = 0;
+  state.round = 1;
+  state.maxRounds = 1;
+  state.pickPhase = true;
+  state.trackPickPhase = false;
+  state.progress = [0,0,0,0];
+  state.finished = [];
+  state.usedItems = [];
+
+  const ic = document.getElementById('itemBtns');
+  if (ic) ic.innerHTML = '';
+  state._lap2Announced = false;
+  state._lap3Announced = false;
+  raceTurtles = [];
+
+  saveGame();
+  showScene('scene-race');
+  document.getElementById('raceTitle').textContent = '🏆 段位赛 — 选择你的乌龟！';
   render();
 }
 
@@ -5057,6 +5090,43 @@ function beginRaceAnimation() {
     };
   });
 
+  // Apply AI equipment bonuses in ranked mode
+  if (state.isRankedMode && state._rankedAIEquipment) {
+    let aiIdx = 0;
+    for (let i = 0; i < 4; i++) {
+      if (i === state.selected) continue;
+      const ts = turtleState[i];
+      const aiEquip = state._rankedAIEquipment[aiIdx];
+      aiIdx++;
+      if (!aiEquip) continue;
+      if (aiEquip.cosmetics && aiEquip.cosmetics.length > 0) {
+        let aiSpeedBonus = 0;
+        let aiSprintBonus = 0;
+        let aiDodgeBonus = 0;
+        let aiStaminaBonus = 0;
+        aiEquip.cosmetics.forEach(cosId => {
+          const item = COSMETIC_ITEMS.find(c => c.id === cosId);
+          if (item) {
+            if (item.stat === 'speed') aiSpeedBonus += item.bonus;
+            if (item.stat === 'sprint') aiSprintBonus += item.bonus;
+            if (item.stat === 'dodge') aiDodgeBonus += item.bonus;
+            if (item.stat === 'stamina') aiStaminaBonus += item.bonus;
+          }
+        });
+        ts.baseSpeed *= (1 + aiSpeedBonus);
+        ts.sprintBonus = (ts.sprintBonus || 0) + aiSprintBonus;
+        ts.dodgeBonus = (ts.dodgeBonus || 0) + aiDodgeBonus;
+        ts.staminaBonus = (ts.staminaBonus || 0) + aiStaminaBonus;
+        ts._aiSetEffects = aiEquip.setEffects;
+        ts.activeSetEffects = aiEquip.setEffects;
+      }
+      if (aiEquip.shoe) {
+        const shoe = SHOE_ITEMS.find(s => s.id === aiEquip.shoe);
+        if (shoe) ts.baseSpeed *= 1.05;
+      }
+    }
+  }
+
   raceTurtleState = turtleState; // expose for render()
 
   // Generate obstacles for each lap
@@ -5719,6 +5789,23 @@ function finishRace() {
     showBubble(winner, 'taunt');
   }
 
+  if (state.isRankedMode) {
+    const rankedRank = RANKS[state.rank];
+    if (won) {
+      state.rankWins++;
+      state.coins += rankedRank.reward;
+      if (state.rankWins >= 3) {
+        setTimeout(() => showPromoteAnimation(), 1500);
+      }
+    } else {
+      state.rankLosses++;
+      if (state.rankLosses >= 3) {
+        setTimeout(() => showDemoteAnimation(), 1500);
+      }
+    }
+    saveGame();
+  }
+
   render();
 
   setTimeout(() => {
@@ -5822,6 +5909,26 @@ function showGameOver() {
     </div>
   `;
 
+  // Update gameover action buttons for ranked mode
+  const gameoverActions = document.querySelector('.gameover-actions');
+  if (gameoverActions) {
+    if (state.isRankedMode) {
+      const rankedRank = RANKS[state.rank];
+      const winsNow = state.rankWins;
+      const lossesNow = state.rankLosses;
+      const progressInfo = won
+        ? `<div style="margin-bottom:12px;color:var(--accent);font-size:14px">🏆 段位赛战绩：${winsNow}/3 胜 | ${lossesNow}/3 负（+${rankedRank.reward}🪙）</div>`
+        : `<div style="margin-bottom:12px;color:var(--danger);font-size:14px">段位赛战绩：${winsNow}/3 胜 | ${lossesNow}/3 负</div>`;
+      gameoverActions.innerHTML = progressInfo +
+        `<button class="menu-btn primary" onclick="startRankedGame()">🔄 再战一场</button>
+         <button class="menu-btn" onclick="state.isRankedMode=false;showScene('scene-ranked')">🏆 返回段位赛</button>`;
+    } else {
+      gameoverActions.innerHTML =
+        `<button class="menu-btn primary" onclick="startNewGame()">🔄 再来一局</button>
+         <button class="menu-btn" onclick="showScene('scene-start')">🏠 返回主页</button>`;
+    }
+  }
+
   if (won) showConfetti();
   playSound(won ? 'win' : 'lose');
   showScene('scene-gameover');
@@ -5831,6 +5938,60 @@ function nextRound() {
   document.getElementById('modal').classList.remove('show');
   document.getElementById('confetti').innerHTML = '';
   showGameOver();
+}
+
+function showPromoteAnimation() {
+  const oldRank = RANKS[state.rank];
+  if (state.rank < RANKS.length - 1) {
+    state.rank++;
+  }
+  state.rankWins = 0;
+  state.rankLosses = 0;
+  const newRank = RANKS[state.rank];
+  saveGame();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'promote-overlay';
+  overlay.innerHTML = `
+    <div class="promote-icon">${newRank.icon}</div>
+    <div class="promote-text" style="color:${newRank.color}">晋级成功！</div>
+    <div style="font-size:20px;margin-top:8px;color:var(--text-secondary);animation:promoteSlide 0.6s ease-out 0.5s both">
+      ${oldRank.icon} ${oldRank.name} → ${newRank.icon} ${newRank.name}
+    </div>
+    <div style="font-size:48px;margin-top:16px;animation:promoteSlide 0.6s ease-out 0.7s both">🎉🎊🎉</div>
+    <button class="menu-btn" style="margin-top:24px;width:200px;border-color:${newRank.color};animation:promoteSlide 0.6s ease-out 0.9s both" onclick="this.parentElement.remove();showScene('scene-ranked')">
+      继续挑战
+    </button>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function showDemoteAnimation() {
+  const oldRank = RANKS[state.rank];
+  if (state.rank > 0) {
+    state.rank--;
+  }
+  state.rankWins = 0;
+  state.rankLosses = 0;
+  const newRank = RANKS[state.rank];
+  saveGame();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'promote-overlay';
+  overlay.innerHTML = `
+    <div style="font-size:72px">${newRank.icon}</div>
+    <div class="demote-text" style="color:var(--danger)">段位下降</div>
+    <div style="font-size:18px;margin-top:8px;color:var(--text-secondary)">
+      ${oldRank.icon} ${oldRank.name} → ${newRank.icon} ${newRank.name}
+    </div>
+    <div style="font-size:15px;margin-top:12px;color:var(--text-muted)">
+      ${state.rank === 0 ? '青铜保底，不会再降了，加油！💪' : '别灰心，继续努力！💪'}
+    </div>
+    <button class="menu-btn" style="margin-top:24px;width:200px;border-color:var(--border)" onclick="this.parentElement.remove();showScene('scene-ranked')">
+      再来一次
+    </button>
+  `;
+  document.body.appendChild(overlay);
 }
 
 function showConfetti() {
