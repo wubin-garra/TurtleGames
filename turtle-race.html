@@ -2288,6 +2288,7 @@ let state = {
   unlockedTurtles: ['speedy', 'flash', 'bolt', 'slowjoe'], highScore: 0,
   ownedCosmetics: [], equippedCosmetics: [], winStreak: 0,
   ownedShoes: [], equippedShoe: null,
+  rank: 0, rankWins: 0, rankLosses: 0, isRankedMode: false,
 };
 
 let muted = false;
@@ -2620,6 +2621,9 @@ function saveGame() {
     equippedCosmetics: state.equippedCosmetics,
     ownedShoes: state.ownedShoes,
     equippedShoe: state.equippedShoe,
+    rank: state.rank,
+    rankWins: state.rankWins,
+    rankLosses: state.rankLosses,
   };
   localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
@@ -2637,6 +2641,9 @@ function loadGame() {
     state.equippedCosmetics = data.equippedCosmetics ?? [];
     state.ownedShoes = data.ownedShoes ?? [];
     state.equippedShoe = data.equippedShoe ?? null;
+    state.rank = data.rank || 0;
+    state.rankWins = data.rankWins || 0;
+    state.rankLosses = data.rankLosses || 0;
   } catch (e) { /* ignore corrupted save */ }
 }
 
@@ -2988,6 +2995,17 @@ function renderItemIcon(emoji, size) {
   return `<span style="font-size:${size || 28}px">${emoji}</span>`;
 }
 
+// === Rank definitions for ranked match mode ===
+const RANKS = [
+  { id: 'bronze',   name: '青铜', icon: '🥉', color: '#CD7F32', fee: 50,   reward: 200,   aiQuality: null,        aiSlots: 0, aiSetId: null },
+  { id: 'silver',   name: '白银', icon: '⚪', color: '#C0C0C0', fee: 100,  reward: 500,   aiQuality: 'common',    aiSlots: 1, aiSetId: null },
+  { id: 'gold',     name: '黄金', icon: '🥇', color: '#FFD700', fee: 200,  reward: 1000,  aiQuality: 'fine',      aiSlots: 2, aiSetId: null },
+  { id: 'platinum', name: '铂金', icon: '💎', color: '#E5E4E2', fee: 400,  reward: 2000,  aiQuality: 'rare',      aiSlots: 3, aiSetId: null },
+  { id: 'diamond',  name: '钻石', icon: '💠', color: '#B9F2FF', fee: 800,  reward: 4000,  aiQuality: 'epic',      aiSlots: 4, aiSetId: null },
+  { id: 'star',     name: '星耀', icon: '🌟', color: '#FFD700', fee: 1500, reward: 8000,  aiQuality: 'legendary', aiSlots: 4, aiSetId: 'random_legendary' },
+  { id: 'king',     name: '王者', icon: '👑', color: '#FF4500', fee: 3000, reward: 16000, aiQuality: 'mythic',    aiSlots: 4, aiSetId: 'random_mythic' },
+];
+
 // === Quality tier definitions ===
 const QUALITY_TIERS = [
   { id: 'common', name: '普通', icon: '⚪', color: '#9CA3AF', border: '#6B7280', glow: 'none' },
@@ -3211,6 +3229,50 @@ function getShoeBonus() {
 function getShoeAccessory() {
   const shoe = getEquippedShoe();
   return shoe ? shoe.effect : null;
+}
+
+function generateAIEquipment(rankIndex) {
+  const rank = RANKS[rankIndex];
+  if (rank.aiSlots === 0) return { cosmetics: [], shoe: null, setEffects: [] };
+
+  const selectedCosmetics = [];
+
+  // 如果有套装需求，优先选套装
+  if (rank.aiSetId) {
+    let targetSets;
+    if (rank.aiSetId === 'random_legendary') {
+      targetSets = Object.keys(SET_BONUSES).filter(k => SET_BONUSES[k].quality === 'legendary');
+    } else if (rank.aiSetId === 'random_mythic') {
+      targetSets = Object.keys(SET_BONUSES).filter(k => SET_BONUSES[k].quality === 'mythic');
+    }
+    const chosenSetId = targetSets[Math.floor(Math.random() * targetSets.length)];
+    const setItems = COSMETIC_ITEMS.filter(c => c.setId === chosenSetId);
+    setItems.forEach(item => selectedCosmetics.push(item.id));
+  } else {
+    // 按品质随机选装备填满对应槽位数
+    const qualityItems = COSMETIC_ITEMS.filter(c => c.quality === rank.aiQuality);
+    const usedSlots = [];
+    for (let i = 0; i < rank.aiSlots && i < 4; i++) {
+      const available = qualityItems.filter(c => !usedSlots.includes(c.slot));
+      if (available.length > 0) {
+        const pick = available[Math.floor(Math.random() * available.length)];
+        selectedCosmetics.push(pick.id);
+        usedSlots.push(pick.slot);
+      }
+    }
+  }
+
+  // 钻石及以上加鞋子
+  let shoe = null;
+  if (rankIndex >= 4) {
+    const shoeIdx = Math.floor(Math.random() * SHOE_ITEMS.length);
+    shoe = SHOE_ITEMS[shoeIdx].id;
+  }
+
+  // 计算套装特效
+  const setEffects = (getSetBonuses(selectedCosmetics)._activeEffects) || [];
+
+  return { cosmetics: selectedCosmetics, shoe, setEffects };
 }
 
 // Terrain affinity: which zone types each terrain relates to
