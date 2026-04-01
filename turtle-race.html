@@ -2743,6 +2743,7 @@ function loadGame() {
     state.rank = data.rank || 0;
     state.rankWins = data.rankWins || 0;
     state.rankLosses = data.rankLosses || 0;
+    state.isRankedMode = false; // 每次加载重置，不要持久化这个
   } catch (e) { /* ignore corrupted save */ }
 }
 
@@ -4025,6 +4026,11 @@ function showScene(sceneId) {
     if (hsEl) hsEl.textContent = state.highScore.toLocaleString();
     const scEl = document.getElementById('startCoins');
     if (scEl) scEl.textContent = state.coins.toLocaleString();
+    const menuBadge = document.getElementById('rankBadgeMenu');
+    if (menuBadge) {
+      const rank = RANKS[state.rank];
+      menuBadge.textContent = `${rank.icon} ${rank.name}`;
+    }
   }
   if (sceneId === 'scene-leaderboard') renderLeaderboard();
   if (sceneId === 'scene-shop') renderShop();
