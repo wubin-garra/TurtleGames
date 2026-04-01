@@ -5024,7 +5024,7 @@ function beginRaceAnimation() {
           const currentZone = Math.floor((state.progress[i] % 100) / 100 * 7);
           if (ts.rainbowLastZone !== -1 && currentZone !== ts.rainbowLastZone) {
             ts.momentum *= 1.20;
-            setTimeout(() => { if (ts.momentum > 1.0) ts.momentum /= 1.20; }, 1000);
+            setTimeout(() => { ts.momentum /= 1.20; }, 1000);
             showSetEffect(i, '🌈');
           }
           ts.rainbowLastZone = currentZone;
