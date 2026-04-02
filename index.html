@@ -167,7 +167,7 @@ body { font-family: -apple-system, 'Segoe UI', 'Noto Sans SC', sans-serif; backg
     </div>
 
     <div class="hero" id="hero">
-      <div class="hero-glow" id="heroGlow" style="background: #0070d8;"></div>
+      <div class="hero-glow" id="heroGlow" style="background: radial-gradient(circle, #0070d8, transparent);"></div>
       <div class="hero-icon" id="heroIcon">🏁</div>
       <div class="hero-title" id="heroTitle">乌龟赛跑</div>
       <div class="hero-desc" id="heroDesc">装备你的乌龟，征战排位赛，成为赛道之王</div>
@@ -228,7 +228,7 @@ function selectGame(index) {
     document.getElementById('heroDesc').textContent = game.desc;
     document.getElementById('heroTags').innerHTML =
       game.tags.map(t => `<span class="hero-tag">${t}</span>`).join('');
-    document.getElementById('heroGlow').style.background = game.glow;
+    document.getElementById('heroGlow').style.background = 'radial-gradient(circle, ' + game.glow + ', transparent)';
 
     hero.style.opacity = '1';
     hero.style.transform = 'translateY(0)';
@@ -254,7 +254,7 @@ function updateClock() {
     now.getMinutes().toString().padStart(2, '0');
 }
 updateClock();
-setInterval(updateClock, 30000);
+setInterval(updateClock, 1000);
   </script>
 </body>
 </html>
