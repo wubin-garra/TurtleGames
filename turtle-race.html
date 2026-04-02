@@ -2940,7 +2940,17 @@ function buyCosmetic(itemId) {
   state.coins -= item.cost;
   state.ownedCosmetics.push(itemId);
   if (!state.equippedCosmetics) state.equippedCosmetics = [];
-  state.equippedCosmetics.push(itemId); // auto-equip on purchase
+  // 自动穿戴：先移除同槽位冲突
+  if (item.slot) {
+    const conflictIdx = state.equippedCosmetics.findIndex(id => {
+      const equipped = COSMETIC_ITEMS.find(c => c.id === id);
+      return equipped && equipped.slot === item.slot;
+    });
+    if (conflictIdx >= 0) {
+      state.equippedCosmetics.splice(conflictIdx, 1);
+    }
+  }
+  state.equippedCosmetics.push(itemId);
   playSound('coin');
   saveGame();
   renderShop();
@@ -3812,8 +3822,20 @@ function toggleCosmetic(itemId) {
   if (!state.equippedCosmetics) state.equippedCosmetics = [];
   const idx = state.equippedCosmetics.indexOf(itemId);
   if (idx >= 0) {
+    // 卸下
     state.equippedCosmetics.splice(idx, 1);
   } else {
+    // 穿戴：先移除同槽位已装备的装备
+    const item = COSMETIC_ITEMS.find(c => c.id === itemId);
+    if (item && item.slot) {
+      const conflictIdx = state.equippedCosmetics.findIndex(id => {
+        const equipped = COSMETIC_ITEMS.find(c => c.id === id);
+        return equipped && equipped.slot === item.slot;
+      });
+      if (conflictIdx >= 0) {
+        state.equippedCosmetics.splice(conflictIdx, 1);
+      }
+    }
     state.equippedCosmetics.push(itemId);
   }
   playSound('select');
