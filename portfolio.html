@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garra — AI Engineer / Creative Developer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #1a0533;
+      --bg-deep: #0d1b2a;
+      --purple: #a855f7;
+      --cyan: #06b6d4;
+      --pink: #ec4899;
+      --orange: #f97316;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+    }
+
+    .reveal-viewport {
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-deep) 100%);
+    }
+
+    .reveal {
+      font-family: 'Noto Sans SC', -apple-system, 'Segoe UI', sans-serif;
+      color: var(--text);
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      font-weight: 900;
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+
+    .reveal h1 { font-size: 2.8em; }
+    .reveal h2 { font-size: 2em; color: var(--purple); }
+    .reveal h3 { font-size: 1.4em; color: var(--cyan); }
+
+    .reveal p, .reveal li {
+      font-size: 0.75em;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .reveal code {
+      font-family: 'Fira Code', monospace;
+    }
+
+    .reveal pre code {
+      font-size: 0.85em;
+      line-height: 1.5;
+      padding: 1em;
+      border-radius: 12px;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    /* Gradient text utility */
+    .gradient-text {
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Tag/badge styling */
+    .tag {
+      display: inline-block;
+      padding: 0.25em 0.75em;
+      border-radius: 999px;
+      font-size: 0.65em;
+      font-weight: 700;
+      margin: 0.2em;
+    }
+    .tag-purple { background: rgba(168, 85, 247, 0.2); color: var(--purple); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .tag-cyan { background: rgba(6, 182, 212, 0.2); color: var(--cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+    .tag-pink { background: rgba(236, 72, 153, 0.2); color: var(--pink); border: 1px solid rgba(236, 72, 153, 0.3); }
+    .tag-orange { background: rgba(249, 115, 22, 0.2); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.3); }
+
+    /* Highlight box */
+    .highlight-box {
+      background: rgba(168, 85, 247, 0.08);
+      border-left: 4px solid var(--purple);
+      padding: 0.8em 1.2em;
+      border-radius: 0 12px 12px 0;
+      margin: 0.5em 0;
+      text-align: left;
+    }
+
+    /* Skill bar */
+    .skill-bar {
+      display: flex;
+      align-items: center;
+      margin: 0.4em 0;
+      font-size: 0.65em;
+    }
+    .skill-bar-label {
+      width: 140px;
+      text-align: right;
+      padding-right: 1em;
+      color: var(--text);
+      font-weight: 700;
+    }
+    .skill-bar-track {
+      flex: 1;
+      height: 10px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .skill-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 1s ease;
+    }
+    .fill-purple { background: linear-gradient(90deg, var(--purple), var(--pink)); }
+    .fill-cyan { background: linear-gradient(90deg, var(--cyan), #38bdf8); }
+    .fill-orange { background: linear-gradient(90deg, var(--orange), var(--pink)); }
+    .fill-pink { background: linear-gradient(90deg, var(--pink), var(--purple)); }
+
+    /* Project card */
+    .project-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(168, 85, 247, 0.15);
+      border-radius: 16px;
+      padding: 1.5em;
+      text-align: left;
+      transition: transform 0.3s, border-color 0.3s;
+    }
+    .project-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--purple);
+    }
+
+    /* CTA button */
+    .cta-btn {
+      display: inline-block;
+      padding: 0.6em 1.8em;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.7em;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.3);
+    }
+    .cta-primary {
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: white;
+    }
+    .cta-outline {
+      border: 2px solid var(--purple);
+      color: var(--purple);
+      background: transparent;
+    }
+
+    /* Two-column layout */
+    .two-col {
+      display: flex;
+      gap: 2em;
+      align-items: flex-start;
+    }
+    .two-col > * { flex: 1; }
+
+    /* Animated cover background */
+    .cover-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .cover-bg .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    .cover-bg .orb:nth-child(1) {
+      width: 400px; height: 400px;
+      background: var(--purple);
+      top: -10%; left: -10%;
+    }
+    .cover-bg .orb:nth-child(2) {
+      width: 350px; height: 350px;
+      background: var(--cyan);
+      bottom: -15%; right: -10%;
+      animation-delay: -3s;
+    }
+    .cover-bg .orb:nth-child(3) {
+      width: 250px; height: 250px;
+      background: var(--pink);
+      top: 50%; left: 60%;
+      animation-delay: -5s;
+    }
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    /* Architecture diagram */
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6em;
+      align-items: center;
+      font-size: 0.6em;
+    }
+    .arch-layer {
+      padding: 0.6em 2em;
+      border-radius: 10px;
+      font-weight: 700;
+      width: 80%;
+      text-align: center;
+    }
+    .arch-arrow {
+      color: var(--text-muted);
+      font-size: 1.2em;
+    }
+
+    /* Contact links */
+    .contact-grid {
+      display: flex;
+      gap: 1.5em;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .contact-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(168, 85, 247, 0.15);
+      border-radius: 16px;
+      padding: 1.2em 2em;
+      text-align: center;
+      font-size: 0.7em;
+      min-width: 180px;
+      transition: border-color 0.3s;
+    }
+    .contact-item:hover { border-color: var(--purple); }
+    .contact-item a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    /* Number highlight */
+    .big-number {
+      font-size: 2.5em;
+      font-weight: 900;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Slides will be added in subsequent tasks -->
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      transition: 'slide',
+      transitionSpeed: 'default',
+      backgroundTransition: 'fade',
+      center: true,
+      plugins: [RevealHighlight],
+      width: 1200,
+      height: 700,
+    });
+  </script>
+</body>
+</html>
