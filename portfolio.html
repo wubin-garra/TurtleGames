@@ -538,6 +538,113 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-8px); }
     }
+
+    /* Timeline */
+    .timeline {
+      position: relative;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0.5em 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--purple), var(--cyan), var(--pink), var(--orange));
+      transform: translateX(-50%);
+    }
+    .timeline-item {
+      position: relative;
+      width: 50%;
+      padding: 0.4em 1.5em;
+    }
+    .timeline-item:nth-child(odd) {
+      left: 0;
+      text-align: right;
+    }
+    .timeline-item:nth-child(even) {
+      left: 50%;
+      text-align: left;
+    }
+    .timeline-dot {
+      position: absolute;
+      width: 14px; height: 14px;
+      background: var(--accent, var(--purple));
+      border-radius: 50%;
+      top: 0.8em;
+      box-shadow: 0 0 10px var(--accent, var(--purple)), 0 0 30px var(--accent, var(--purple));
+    }
+    .timeline-item:nth-child(odd) .timeline-dot {
+      right: -7px;
+    }
+    .timeline-item:nth-child(even) .timeline-dot {
+      left: -7px;
+    }
+    .timeline-content {
+      padding: 0.6em 1em;
+      border-radius: 12px;
+    }
+    .timeline-year {
+      font-size: 0.6em;
+      font-weight: 900;
+      color: var(--accent, var(--purple));
+      letter-spacing: 0.1em;
+    }
+
+    /* Floating animation for icons */
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .float-icon {
+      display: inline-block;
+      animation: gentleFloat 3s ease-in-out infinite;
+    }
+
+    /* Shimmer effect for special text */
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    .shimmer-text {
+      background: linear-gradient(90deg, var(--purple), var(--cyan), var(--pink), var(--purple));
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+
+    /* Rotating border glow for special cards */
+    @keyframes borderRotate {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .glow-border {
+      position: relative;
+      overflow: hidden;
+    }
+    .glow-border::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(45deg, var(--purple), var(--cyan), var(--pink), var(--orange), var(--purple));
+      background-size: 300% 300%;
+      animation: borderRotate 4s ease infinite;
+      border-radius: inherit;
+      z-index: -1;
+    }
+    .glow-border::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      background: var(--bg-dark);
+      border-radius: inherit;
+      z-index: -1;
+    }
   </style>
 </head>
 <body>
@@ -562,7 +669,7 @@
         </div>
         <div style="position:relative; z-index:1;">
           <p style="font-size:0.7em; color:var(--cyan); letter-spacing:0.3em; text-transform:uppercase; margin-bottom:0.5em;" class="bounce-in">Hello, I'm</p>
-          <h1 class="gradient-text glitch" data-text="Garra" style="margin-bottom:0.2em;">Garra</h1>
+          <h1 class="shimmer-text glitch" data-text="Garra" style="margin-bottom:0.2em;">Garra</h1>
           <p id="typewriter-target" style="font-size:1.1em; color:var(--text-muted); font-weight:400; min-height:1.5em;"><span class="typewriter-cursor"></span></p>
           <div style="margin-top:1.5em;" class="stagger-children">
             <span class="tag tag-purple">PyTorch</span>
@@ -629,6 +736,51 @@
               <p style="font-size:0.7em; color:var(--pink); font-weight:700; text-align:left; margin:0.8em 0 0.5em;">🚀 工程实践</p>
               <div class="skill-bar"><span class="skill-bar-label">Git / CI/CD</span><div class="skill-bar-track"><div class="skill-bar-fill fill-pink" data-width="85%"></div></div></div>
               <div class="skill-bar"><span class="skill-bar-label">Prompt Eng.</span><div class="skill-bar-track"><div class="skill-bar-fill fill-pink" data-width="90%"></div></div></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ===== Chapter 2.5: Timeline ===== -->
+      <section>
+        <section data-transition="zoom">
+          <h2 class="gradient-text neon-purple">成长时间线</h2>
+          <p class="bounce-in">每一步都算数</p>
+        </section>
+
+        <section data-transition="fade">
+          <div class="timeline">
+            <div class="timeline-item slide-in-left" style="--accent: var(--cyan);">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content glass">
+                <span class="timeline-year">2021</span>
+                <h4 style="color:var(--cyan); font-size:0.8em; margin:0.3em 0;">入门 AI 领域</h4>
+                <p style="font-size:0.55em;">深度学习基础 · PyTorch · 第一个 CV 模型</p>
+              </div>
+            </div>
+            <div class="timeline-item slide-in-right" style="--accent: var(--purple);">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content glass">
+                <span class="timeline-year">2022</span>
+                <h4 style="color:var(--purple); font-size:0.8em; margin:0.3em 0;">NLP 深耕</h4>
+                <p style="font-size:0.55em;">Transformer 架构 · 文本生成 · 语义理解</p>
+              </div>
+            </div>
+            <div class="timeline-item slide-in-left" style="--accent: var(--pink);">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content glass">
+                <span class="timeline-year">2023</span>
+                <h4 style="color:var(--pink); font-size:0.8em; margin:0.3em 0;">LLM 时代</h4>
+                <p style="font-size:0.55em;">Prompt Engineering · RAG 系统 · AI Agent 开发</p>
+              </div>
+            </div>
+            <div class="timeline-item slide-in-right" style="--accent: var(--orange);">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content glass">
+                <span class="timeline-year">2024</span>
+                <h4 style="color:var(--orange); font-size:0.8em; margin:0.3em 0;">AI × 创意开发</h4>
+                <p style="font-size:0.55em;">AI 辅助游戏开发 · 170K+ 行代码 · 3 个完整游戏</p>
+              </div>
             </div>
           </div>
         </section>
@@ -771,7 +923,7 @@ class BehaviorTree:
 
         <section data-transition="fade">
           <h3 class="neon-cyan">🐢 合成大乌龟</h3>
-          <div class="project-card glass" style="max-width:800px; margin:0.8em auto;">
+          <div class="project-card glass glow-border" style="max-width:800px; margin:0.8em auto;">
             <div class="two-col">
               <div style="text-align:left;" class="slide-in-left">
                 <p style="font-size:0.7em; color:var(--text); font-weight:700;">物理引擎 × 合成玩法 × 情绪系统</p>
@@ -854,6 +1006,33 @@ class BehaviorTree:
         </section>
       </section>
 
+      <!-- ===== Chapter 4.5: Philosophy ===== -->
+      <section data-transition="zoom">
+        <h2 class="gradient-text neon-purple" style="margin-bottom:0.8em;">开发哲学</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2em; max-width:900px; margin:0 auto;">
+          <div class="highlight-box glass scale-in" style="text-align:center; padding:1.2em;">
+            <p style="font-size:2em; margin-bottom:0.3em; animation-delay:0s;" class="float-icon">🧪</p>
+            <p style="font-size:0.75em; color:var(--purple); font-weight:700;">先验证，再扩展</p>
+            <p style="font-size:0.55em;">用最小可行方案验证核心假设，<br>再逐步增加复杂度</p>
+          </div>
+          <div class="highlight-box glass scale-in" style="text-align:center; padding:1.2em;">
+            <p style="font-size:2em; margin-bottom:0.3em; animation-delay:0.5s;" class="float-icon">🎯</p>
+            <p style="font-size:0.75em; color:var(--cyan); font-weight:700;">数据说话</p>
+            <p style="font-size:0.55em;">每个决策都有数据支撑，<br>用 A/B 测试替代直觉判断</p>
+          </div>
+          <div class="highlight-box glass scale-in" style="text-align:center; padding:1.2em;">
+            <p style="font-size:2em; margin-bottom:0.3em; animation-delay:1s;" class="float-icon">🤖</p>
+            <p style="font-size:0.75em; color:var(--pink); font-weight:700;">AI 增强，不是 AI 替代</p>
+            <p style="font-size:0.55em;">用 AI 工具放大创造力，<br>保持对技术本质的理解</p>
+          </div>
+          <div class="highlight-box glass scale-in" style="text-align:center; padding:1.2em;">
+            <p style="font-size:2em; margin-bottom:0.3em; animation-delay:1.5s;" class="float-icon">✨</p>
+            <p style="font-size:0.75em; color:var(--orange); font-weight:700;">用户体验至上</p>
+            <p style="font-size:0.55em;">技术服务于体验，<br>最好的技术是用户感受不到的技术</p>
+          </div>
+        </div>
+      </section>
+
       <!-- ===== Chapter 5: Tech Highlights ===== -->
       <section data-code-rain>
         <section data-transition="zoom">
@@ -907,6 +1086,18 @@ function detectCollisions(turtles) {
             </div>
           </div>
         </section>
+      </section>
+
+      <!-- ===== Q&A Transition ===== -->
+      <section data-transition="zoom" data-background-gradient="radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(13,27,42,0) 70%)">
+        <h2 class="gradient-text neon-purple" style="font-size:3em;">Q & A</h2>
+        <p style="font-size:0.9em; margin-top:0.5em;" class="bounce-in">有什么想了解的？</p>
+        <div style="margin-top:2em;" class="fade-scale-in">
+          <span class="tag tag-purple" style="font-size:0.8em; padding:0.4em 1.2em;">技术细节</span>
+          <span class="tag tag-cyan" style="font-size:0.8em; padding:0.4em 1.2em;">项目经历</span>
+          <span class="tag tag-pink" style="font-size:0.8em; padding:0.4em 1.2em;">团队协作</span>
+          <span class="tag tag-orange" style="font-size:0.8em; padding:0.4em 1.2em;">职业规划</span>
+        </div>
       </section>
 
       <!-- ===== Chapter 6: Contact ===== -->
@@ -1175,9 +1366,10 @@ function detectCollisions(turtles) {
           index++;
           setTimeout(type, 60 + Math.random() * 40);
         } else {
-          // Remove cursor after a delay
+          // Remove cursor after a delay, add shimmer effect
           setTimeout(() => {
             target.innerHTML = text + '<span class="typewriter-cursor" style="animation: blink 0.8s step-end infinite;"></span>';
+            target.classList.add('shimmer-text');
           }, 500);
         }
       }
