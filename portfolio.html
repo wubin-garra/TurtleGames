@@ -1085,9 +1085,10 @@ function detectCollisions(turtles) {
       const ctx = canvas.getContext('2d');
       let width, height;
       let columns = [];
-      const chars = ['$BTC','$ETH','$SOL','$DOGE','$PEPE','$ARB','$OP','$AVAX','$MATIC','$LINK','$UNI','$AAVE','$ADA','$DOT','$BNB','$SHIB','$BASE','$EIGEN','$PENDLE','$ENA'];
-      const COL_WIDTH = 120;
-      const ROW_HEIGHT = 28;
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz{}[]<>/=;()+-*&|!?#@$%^~'.split('');
+      const FONT_SIZE = 14;
+      const COL_WIDTH = FONT_SIZE;
+      const ROW_HEIGHT = FONT_SIZE;
       let animationId = null;
       let isActive = false;
 
@@ -1104,36 +1105,34 @@ function detectCollisions(turtles) {
       function draw() {
         if (!isActive) return;
 
-        ctx.fillStyle = 'rgba(13, 27, 42, 0.4)';
+        ctx.fillStyle = 'rgba(13, 27, 42, 0.08)';
         ctx.fillRect(0, 0, width, height);
 
-        ctx.font = 'bold 13px Fira Code, monospace';
+        ctx.font = FONT_SIZE + 'px Fira Code, monospace';
 
         for (let i = 0; i < columns.length; i++) {
           const char = chars[Math.floor(Math.random() * chars.length)];
-          const x = i * COL_WIDTH + (COL_WIDTH - ctx.measureText(char).width) / 2;
+          const x = i * COL_WIDTH;
           const y = columns[i] * ROW_HEIGHT;
 
           // Crypto colors: gold for BTC, blue for ETH, purple for others, green for gains
           const r = Math.random();
-          const color = r < 0.3 ?
-            `rgba(255, 193, 7, ${Math.random() * 0.12 + 0.08})` :   // gold
-            r < 0.6 ?
-            `rgba(6, 182, 212, ${Math.random() * 0.12 + 0.08})` :   // cyan
-            `rgba(16, 185, 129, ${Math.random() * 0.12 + 0.08})`;   // green
+          const color = r < 0.5 ?
+            `rgba(6, 182, 212, ${Math.random() * 0.15 + 0.05})` :
+            `rgba(168, 85, 247, ${Math.random() * 0.1 + 0.03})`;
           ctx.fillStyle = color;
           ctx.fillText(char, x, y);
 
           // Bright head — looks like a "pump"
           if (Math.random() > 0.93) {
-            ctx.fillStyle = 'rgba(255, 193, 7, 0.25)';
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.3)';
             ctx.fillText(char, x, y);
           }
 
           if (y > height && Math.random() > 0.95) {
             columns[i] = 0;
           }
-          if (Math.random() > 0.85) columns[i]++;
+          columns[i]++;
         }
 
         animationId = requestAnimationFrame(draw);
