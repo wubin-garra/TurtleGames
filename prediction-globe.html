@@ -374,13 +374,9 @@
     scene.add(markerGroup);
 
     function probabilityToColor(p) {
-      if (p > 0.5) {
-        const t = (p - 0.5) * 2;
-        return new THREE.Color().setHSL(0.3 * t, 1.0, 0.5);
-      } else {
-        const t = p * 2;
-        return new THREE.Color().setHSL(0.0 + 0.15 * t, 1.0, 0.5);
-      }
+      // Red (0) → Yellow (0.5) → Green (1.0)
+      const hue = p * 0.33; // 0=red, 0.165=yellow, 0.33=green
+      return new THREE.Color().setHSL(hue, 1.0, 0.5);
     }
 
     function volumeToScale(volume, maxVolume) {
@@ -654,6 +650,7 @@
       const events = await fetchEvents();
       processedEvents = processEvents(events);
       createMarkers(processedEvents);
+      applyFilters();
       updateStatus();
       document.getElementById('loading').classList.add('hidden');
       setInterval(refresh, 5 * 60 * 1000);
