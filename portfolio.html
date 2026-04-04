@@ -1085,9 +1085,9 @@ function detectCollisions(turtles) {
       const ctx = canvas.getContext('2d');
       let width, height;
       let columns = [];
-      const chars = 'BTC ETH SOL DOGE SHIB UNI AAVE LINK MATIC APE PEPE ARB OP BASE AVAX DOT ADA XRP BNB FTM CRV SUSHI COMP MKR SNX YFI 1INCH BAL LDO RPL SSV EIGEN STRK ZK W ONDO PENDLE ENA ETHFI 🚀🌙💎🔥⛓️₿Ξ◎'.split(' ');
-      const COL_WIDTH = 160;
-      const ROW_HEIGHT = 32;
+      const chars = ['$BTC','$ETH','$SOL','$DOGE','$PEPE','$ARB','$OP','$AVAX','$MATIC','$LINK','$UNI','$AAVE','$ADA','$DOT','$BNB','$SHIB','$BASE','$EIGEN','$PENDLE','$ENA'];
+      const COL_WIDTH = 120;
+      const ROW_HEIGHT = 28;
       let animationId = null;
       let isActive = false;
 
@@ -1107,7 +1107,7 @@ function detectCollisions(turtles) {
         ctx.fillStyle = 'rgba(13, 27, 42, 0.15)';
         ctx.fillRect(0, 0, width, height);
 
-        ctx.font = '11px Fira Code, monospace';
+        ctx.font = 'bold 13px Fira Code, monospace';
 
         for (let i = 0; i < columns.length; i++) {
           const char = chars[Math.floor(Math.random() * chars.length)];
@@ -1116,19 +1116,17 @@ function detectCollisions(turtles) {
 
           // Crypto colors: gold for BTC, blue for ETH, purple for others, green for gains
           const r = Math.random();
-          const color = r < 0.25 ?
-            `rgba(255, 193, 7, ${Math.random() * 0.08 + 0.03})` :  // gold
-            r < 0.5 ?
-            `rgba(6, 182, 212, ${Math.random() * 0.08 + 0.03})` :   // cyan
-            r < 0.75 ?
-            `rgba(168, 85, 247, ${Math.random() * 0.06 + 0.02})` :  // purple
-            `rgba(16, 185, 129, ${Math.random() * 0.06 + 0.02})`;   // green (gains)
+          const color = r < 0.3 ?
+            `rgba(255, 193, 7, ${Math.random() * 0.12 + 0.08})` :   // gold
+            r < 0.6 ?
+            `rgba(6, 182, 212, ${Math.random() * 0.12 + 0.08})` :   // cyan
+            `rgba(16, 185, 129, ${Math.random() * 0.12 + 0.08})`;   // green
           ctx.fillStyle = color;
           ctx.fillText(char, x, y);
 
           // Bright head — looks like a "pump"
           if (Math.random() > 0.93) {
-            ctx.fillStyle = 'rgba(255, 193, 7, 0.12)';
+            ctx.fillStyle = 'rgba(255, 193, 7, 0.25)';
             ctx.fillText(char, x, y);
           }
 
