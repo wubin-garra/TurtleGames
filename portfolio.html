@@ -1104,7 +1104,7 @@ function detectCollisions(turtles) {
       function draw() {
         if (!isActive) return;
 
-        ctx.fillStyle = 'rgba(13, 27, 42, 0.15)';
+        ctx.fillStyle = 'rgba(13, 27, 42, 0.4)';
         ctx.fillRect(0, 0, width, height);
 
         ctx.font = 'bold 13px Fira Code, monospace';
@@ -1130,10 +1130,10 @@ function detectCollisions(turtles) {
             ctx.fillText(char, x, y);
           }
 
-          if (y > height && Math.random() > 0.975) {
+          if (y > height && Math.random() > 0.95) {
             columns[i] = 0;
           }
-          columns[i]++;
+          if (Math.random() > 0.4) columns[i]++;
         }
 
         animationId = requestAnimationFrame(draw);
