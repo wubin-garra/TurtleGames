@@ -1085,44 +1085,50 @@ function detectCollisions(turtles) {
       const ctx = canvas.getContext('2d');
       let width, height;
       let columns = [];
-      const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF{}[]<>/=;()'.split('');
-      const FONT_SIZE = 14;
+      const chars = 'BTC ETH SOL DOGE SHIB UNI AAVE LINK MATIC APE PEPE ARB OP BASE AVAX DOT ADA XRP BNB FTM CRV SUSHI COMP MKR SNX YFI 1INCH BAL LDO RPL SSV EIGEN STRK ZK W ONDO PENDLE ENA ETHFI 🚀🌙💎🔥⛓️₿Ξ◎'.split(' ');
+      const COL_WIDTH = 70;
+      const ROW_HEIGHT = 22;
       let animationId = null;
       let isActive = false;
 
       function resize() {
         width = canvas.width = window.innerWidth;
         height = canvas.height = window.innerHeight;
-        const numCols = Math.floor(width / FONT_SIZE);
+        const numCols = Math.floor(width / COL_WIDTH);
         columns = [];
         for (let i = 0; i < numCols; i++) {
-          columns.push(Math.random() * height / FONT_SIZE | 0);
+          columns.push(Math.random() * height / ROW_HEIGHT | 0);
         }
       }
 
       function draw() {
         if (!isActive) return;
 
-        ctx.fillStyle = 'rgba(13, 27, 42, 0.08)';
+        ctx.fillStyle = 'rgba(13, 27, 42, 0.06)';
         ctx.fillRect(0, 0, width, height);
 
-        ctx.font = FONT_SIZE + 'px Fira Code, monospace';
+        ctx.font = '13px Fira Code, monospace';
 
         for (let i = 0; i < columns.length; i++) {
           const char = chars[Math.floor(Math.random() * chars.length)];
-          const x = i * FONT_SIZE;
-          const y = columns[i] * FONT_SIZE;
+          const x = i * COL_WIDTH + (COL_WIDTH - ctx.measureText(char).width) / 2;
+          const y = columns[i] * ROW_HEIGHT;
 
-          // Vary green tones
-          const green = Math.random() > 0.5 ?
-            `rgba(6, 182, 212, ${Math.random() * 0.15 + 0.05})` :
-            `rgba(168, 85, 247, ${Math.random() * 0.1 + 0.03})`;
-          ctx.fillStyle = green;
+          // Crypto colors: gold for BTC, blue for ETH, purple for others, green for gains
+          const r = Math.random();
+          const color = r < 0.25 ?
+            `rgba(255, 193, 7, ${Math.random() * 0.18 + 0.06})` :  // gold
+            r < 0.5 ?
+            `rgba(6, 182, 212, ${Math.random() * 0.18 + 0.06})` :   // cyan
+            r < 0.75 ?
+            `rgba(168, 85, 247, ${Math.random() * 0.15 + 0.05})` :  // purple
+            `rgba(16, 185, 129, ${Math.random() * 0.15 + 0.05})`;   // green (gains)
+          ctx.fillStyle = color;
           ctx.fillText(char, x, y);
 
-          // Bright head of the column
-          if (Math.random() > 0.95) {
-            ctx.fillStyle = 'rgba(6, 182, 212, 0.3)';
+          // Bright head — looks like a "pump"
+          if (Math.random() > 0.93) {
+            ctx.fillStyle = 'rgba(255, 193, 7, 0.35)';
             ctx.fillText(char, x, y);
           }
 
