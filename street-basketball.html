@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Street Basketball</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #222;
+  display: flex; justify-content: center; align-items: center;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+}
+canvas { display: block; }
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const CONFIG = {
+  WIDTH: 800,
+  HEIGHT: 450,
+  GROUND_Y: 340,
+  GRAVITY: 800,
+  COLORS: {
+    paper:    '#f5f0e0',
+    ink:      '#333333',
+    red:      '#ff3366',
+    blue:     '#3366ff',
+    orange:   '#ff8833',
+    green:    '#44cc44',
+    yellow:   '#ffcc00',
+    purple:   '#6666cc',
+    brown:    '#8B7355',
+    white:    '#ffffff',
+    rimRed:   '#ff3300',
+  }
+};
+
+// ─── GAME SCENE ───────────────────────────────────────────────────────────────
+class GameScene extends Phaser.Scene {
+  constructor() { super({ key: 'GameScene' }); }
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  initState() {
+    this.score       = 0;
+    this.combo       = 0;
+    this.isShooting  = false;
+    this.scored      = false;
+    this.hitBackboard = false;
+    this.swipeStart  = null;
+    this.ball        = null;
+    this.ballColliders = [];
+  }
+
+  // ── Preload ───────────────────────────────────────────────────────────────
+  preload() {
+    // Basketball texture generated via canvas
+    const bCanvas = document.createElement('canvas');
+    bCanvas.width = bCanvas.height = 56;
+    const ctx = bCanvas.getContext('2d');
+
+    // Orange gradient
+    const grad = ctx.createRadialGradient(20, 18, 4, 28, 28, 28);
+    grad.addColorStop(0, '#ffaa44');
+    grad.addColorStop(0.6, '#ff8833');
+    grad.addColorStop(1, '#cc5500');
+    ctx.beginPath();
+    ctx.arc(28, 28, 26, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Dark seam lines
+    ctx.strokeStyle = '#442200';
+    ctx.lineWidth = 2.2;
+    // Vertical curve
+    ctx.beginPath();
+    ctx.moveTo(28, 3);
+    ctx.bezierCurveTo(42, 14, 42, 42, 28, 53);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(28, 3);
+    ctx.bezierCurveTo(14, 14, 14, 42, 28, 53);
+    ctx.stroke();
+    // Horizontal curve
+    ctx.beginPath();
+    ctx.moveTo(3, 28);
+    ctx.bezierCurveTo(14, 16, 42, 16, 53, 28);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(3, 28);
+    ctx.bezierCurveTo(14, 40, 42, 40, 53, 28);
+    ctx.stroke();
+
+    // Dark outline
+    ctx.beginPath();
+    ctx.arc(28, 28, 26, 0, Math.PI * 2);
+    ctx.strokeStyle = '#331100';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    this.textures.addCanvas('basketball', bCanvas);
+  }
+
+  // ── Create ────────────────────────────────────────────────────────────────
+  create() {
+    this.initState();
+    this.drawBackground();
+    this.drawHoop();
+    this.drawPlayer();
+    this.createPhysicsBodies();
+    this.createBall();
+    this.setupInput();
+    this.createHUD();
+  }
+
+  // ── Background ────────────────────────────────────────────────────────────
+  drawBackground() {
+    const g = this.add.graphics();
+
+    // Paper fill
+    g.fillStyle(0xf5f0e0, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    // Notebook lines (faint blue)
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    // Red margin line
+    g.lineStyle(1.5, 0xdd6666, 0.3);
+    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
+
+    // Brick wall — upper 60%
+    const brickH = CONFIG.HEIGHT * 0.6;
+    g.lineStyle(1.5, 0x886655, 0.35);
+    const bH = 24, bW = 52;
+    for (let row = 0; row * bH < brickH; row++) {
+      const offsetX = (row % 2) * (bW / 2);
+      for (let col = -1; col * bW < CONFIG.WIDTH + bW; col++) {
+        const x = col * bW + offsetX;
+        const y = row * bH;
+        g.strokeRect(x, y, bW, bH);
+      }
+    }
+
+    // Ground
+    g.fillStyle(0x8B7355, 1);
+    g.fillRect(0, CONFIG.GROUND_Y, CONFIG.WIDTH, CONFIG.HEIGHT - CONFIG.GROUND_Y);
+    g.lineStyle(3, 0x5a4a30, 1);
+    g.beginPath(); g.moveTo(0, CONFIG.GROUND_Y); g.lineTo(CONFIG.WIDTH, CONFIG.GROUND_Y); g.strokePath();
+
+    // Ground texture lines
+    g.lineStyle(1, 0x7a6345, 0.5);
+    for (let x = 0; x < CONFIG.WIDTH; x += 15) {
+      g.beginPath();
+      g.moveTo(x, CONFIG.GROUND_Y + 4);
+      g.lineTo(x + 8, CONFIG.HEIGHT);
+      g.strokePath();
+    }
+
+    // Three-point arc (court marking)
+    g.lineStyle(2, 0xffffff, 0.18);
+    g.beginPath();
+    g.arc(180, CONFIG.GROUND_Y, 180, -Math.PI * 0.75, Math.PI * 0.05);
+    g.strokePath();
+
+    // Paint splashes
+    const splashes = [
+      { x: 120, y: 80,  r: 30, c: 0xff3366, a: 0.18 },
+      { x: 400, y: 140, r: 22, c: 0x3366ff, a: 0.15 },
+      { x: 650, y: 290, r: 18, c: 0x44cc44, a: 0.14 },
+      { x: 290, y: 60,  r: 14, c: 0xffcc00, a: 0.2  },
+      { x: 510, y: 200, r: 26, c: 0xff8833, a: 0.12 },
+    ];
+    splashes.forEach(s => {
+      g.fillStyle(s.c, s.a);
+      g.fillCircle(s.x, s.y, s.r);
+      // Drips
+      g.fillRect(s.x - 3, s.y, 6, s.r * 0.8);
+    });
+
+    // Graffiti text "BALL IS LIFE"
+    const graffiti = this.add.text(380, 155, 'BALL IS LIFE', {
+      fontFamily: "'Arial Black', 'Impact', sans-serif",
+      fontSize: '38px',
+      color: '#cc3355',
+      stroke: '#440011',
+      strokeThickness: 4,
+      alpha: 0.22
+    });
+    graffiti.setOrigin(0.5);
+    graffiti.setAngle(-8);
+
+    // Secondary tag
+    const tag2 = this.add.text(110, 240, 'GAME ON', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '20px',
+      color: '#3344bb',
+      stroke: '#001133',
+      strokeThickness: 3,
+      alpha: 0.2
+    });
+    tag2.setAngle(-15);
+  }
+
+  // ── Hoop ──────────────────────────────────────────────────────────────────
+  drawHoop() {
+    const g = this.add.graphics();
+    const POLE_X   = 610;
+    const RIM_Y    = 185;
+    const RIM_W    = 52;    // half-width each side from center
+    const RIM_CX   = POLE_X - 10; // rim center x
+    const BOARD_X  = POLE_X + 8;
+    const BOARD_Y  = RIM_Y - 60;
+    const BOARD_W  = 14;
+    const BOARD_H  = 80;
+
+    // Pole
+    g.lineStyle(5, 0x555544, 1);
+    this.drawWobblyLine(g, POLE_X, CONFIG.GROUND_Y, POLE_X + 2, RIM_Y + 10, 6);
+
+    // Backboard (white fill, dark border)
+    g.fillStyle(0xfafaf5, 1);
+    g.fillRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
+    g.lineStyle(3, 0x333322, 1);
+    this.drawWobblyRect(g, BOARD_X, BOARD_Y, BOARD_W, BOARD_H, 3);
+
+    // Inner square on backboard
+    g.lineStyle(1.5, 0xcc3333, 0.8);
+    g.strokeRect(BOARD_X + 2, BOARD_Y + BOARD_H * 0.3, BOARD_W - 4, BOARD_H * 0.35);
+
+    // Rim arm (connecting backboard to rim)
+    g.lineStyle(4, 0xcc2200, 1);
+    g.beginPath();
+    g.moveTo(BOARD_X, RIM_Y);
+    g.lineTo(RIM_CX - RIM_W * 0.5 + 4, RIM_Y);
+    g.strokePath();
+
+    // Rim — semicircle / arc shape (hand-drawn red)
+    g.lineStyle(5, 0xff3300, 1);
+    // Left and right rim edges (flat lines for arcade physics matching)
+    g.beginPath();
+    g.moveTo(RIM_CX - RIM_W / 2, RIM_Y);
+    g.lineTo(RIM_CX + RIM_W / 2, RIM_Y);
+    g.strokePath();
+    // Front rim blob
+    g.fillStyle(0xff3300, 1);
+    g.fillCircle(RIM_CX - RIM_W / 2, RIM_Y, 5);
+    g.fillCircle(RIM_CX + RIM_W / 2, RIM_Y, 5);
+
+    // Net (dashed lines down from rim)
+    g.lineStyle(1.5, 0xf5f0e0, 0.85);
+    const netTop = RIM_Y + 4;
+    const netBot = RIM_Y + 38;
+    const netSegments = 7;
+    for (let i = 0; i <= netSegments; i++) {
+      const nx = (RIM_CX - RIM_W / 2) + (RIM_W * i / netSegments);
+      const wobble = Math.sin(i * 1.3) * 3;
+      g.beginPath();
+      g.moveTo(nx, netTop);
+      g.lineTo(nx + wobble, netBot);
+      g.strokePath();
+    }
+    // Horizontal net rungs
+    for (let row = 1; row <= 3; row++) {
+      const ry = netTop + (netBot - netTop) * row / 4;
+      const shrink = row * 2;
+      g.beginPath();
+      g.moveTo(RIM_CX - RIM_W / 2 + shrink, ry);
+      g.lineTo(RIM_CX + RIM_W / 2 - shrink, ry);
+      g.strokePath();
+    }
+
+    // Store hoop geometry for physics
+    this.hoopGeom = { RIM_CX, RIM_Y, RIM_W, BOARD_X, BOARD_Y, BOARD_W, BOARD_H, POLE_X };
+  }
+
+  drawWobblyLine(g, x1, y1, x2, y2, segments) {
+    const pts = [];
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      const wx = x1 + (x2 - x1) * t + (i > 0 && i < segments ? (Math.random() - 0.5) * 3 : 0);
+      const wy = y1 + (y2 - y1) * t + (i > 0 && i < segments ? (Math.random() - 0.5) * 3 : 0);
+      pts.push({ x: wx, y: wy });
+    }
+    g.beginPath();
+    g.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
+    g.strokePath();
+  }
+
+  drawWobblyRect(g, x, y, w, h, wobble) {
+    const r = wobble;
+    g.beginPath();
+    g.moveTo(x + (Math.random() - 0.5) * r,     y + (Math.random() - 0.5) * r);
+    g.lineTo(x + w + (Math.random() - 0.5) * r, y + (Math.random() - 0.5) * r);
+    g.lineTo(x + w + (Math.random() - 0.5) * r, y + h + (Math.random() - 0.5) * r);
+    g.lineTo(x + (Math.random() - 0.5) * r,     y + h + (Math.random() - 0.5) * r);
+    g.closePath();
+    g.strokePath();
+  }
+
+  // ── Player ────────────────────────────────────────────────────────────────
+  drawPlayer() {
+    this.playerGfx = this.add.graphics();
+    this.playerX   = 160;
+    this.playerY   = CONFIG.GROUND_Y - 4;
+    this.redrawPlayer(this.playerX, this.playerY, false);
+  }
+
+  redrawPlayer(px, py, shooting) {
+    const g = this.playerGfx;
+    g.clear();
+
+    const headY  = py - 88;
+    const torsoT = py - 74;
+    const torsoB = py - 42;
+    const legBot = py;
+
+    // Shadow
+    g.fillStyle(0x000000, 0.15);
+    g.fillEllipse(px, py, 44, 10);
+
+    // Legs
+    g.lineStyle(3.5, 0x222222, 1);
+    g.beginPath();
+    g.moveTo(px, torsoB);
+    g.lineTo(px - 10, legBot);
+    g.strokePath();
+    g.beginPath();
+    g.moveTo(px, torsoB);
+    g.lineTo(px + 6, legBot);
+    g.strokePath();
+
+    // Shoes
+    g.fillStyle(0x111111, 1);
+    g.fillEllipse(px - 12, legBot + 2, 16, 6);
+    g.fillEllipse(px + 4,  legBot + 2, 16, 6);
+
+    // Jersey body (blue #23)
+    g.fillStyle(0x3366ff, 1);
+    g.fillRect(px - 14, torsoT, 28, torsoB - torsoT);
+    g.lineStyle(2, 0x1133aa, 1);
+    g.strokeRect(px - 14, torsoT, 28, torsoB - torsoT);
+
+    // Jersey number "23"
+    const numTxt = this.add.text(px, torsoT + (torsoB - torsoT) / 2, '23', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '13px', color: '#ffffff',
+      stroke: '#1133aa', strokeThickness: 2
+    });
+    numTxt.setOrigin(0.5);
+    // (static — we only draw once; could be redrawn but text is layered above)
+
+    // Arm (non-shooting)
+    g.lineStyle(3, 0xffcc99, 1);
+    g.beginPath();
+    g.moveTo(px - 14, torsoT + 8);
+    g.lineTo(px - 26, torsoT + 24);
+    g.strokePath();
+
+    // Shooting arm (raised)
+    if (shooting) {
+      g.lineStyle(3.5, 0xffcc99, 1);
+      g.beginPath();
+      g.moveTo(px + 14, torsoT + 8);
+      g.lineTo(px + 28, torsoT - 12);
+      g.strokePath();
+      // Hand
+      g.fillStyle(0xffcc99, 1);
+      g.fillCircle(px + 28, torsoT - 14, 5);
+    } else {
+      g.lineStyle(3, 0xffcc99, 1);
+      g.beginPath();
+      g.moveTo(px + 14, torsoT + 8);
+      g.lineTo(px + 24, torsoT + 20);
+      g.strokePath();
+    }
+
+    // Neck
+    g.lineStyle(3, 0xffcc99, 1);
+    g.beginPath();
+    g.moveTo(px, torsoT);
+    g.lineTo(px, headY + 14);
+    g.strokePath();
+
+    // Head
+    g.fillStyle(0xffcc99, 1);
+    g.fillCircle(px, headY + 7, 14);
+    g.lineStyle(2, 0x885533, 1);
+    g.strokeCircle(px, headY + 7, 14);
+
+    // Eyes
+    g.fillStyle(0x333333, 1);
+    g.fillCircle(px - 5, headY + 4, 2.5);
+    g.fillCircle(px + 5, headY + 4, 2.5);
+
+    // Smile
+    g.lineStyle(2, 0x553322, 1);
+    g.beginPath();
+    g.arc(px, headY + 8, 6, 0.2, Math.PI - 0.2);
+    g.strokePath();
+
+    // Headband (pink)
+    g.lineStyle(5, 0xff66aa, 1);
+    g.beginPath();
+    g.arc(px, headY + 7, 14, -Math.PI * 0.75, -Math.PI * 0.1);
+    g.strokePath();
+  }
+
+  // ── Physics Bodies ────────────────────────────────────────────────────────
+  createPhysicsBodies() {
+    const { RIM_CX, RIM_Y, RIM_W, BOARD_X, BOARD_Y, BOARD_W, BOARD_H } = this.hoopGeom;
+
+    // Ground
+    this.ground = this.physics.add.staticGroup();
+    const groundBody = this.ground.create(CONFIG.WIDTH / 2, CONFIG.GROUND_Y + 20, null);
+    groundBody.setVisible(false);
+    groundBody.body.setSize(CONFIG.WIDTH, 40);
+    groundBody.refreshBody();
+
+    // Backboard
+    this.backboard = this.physics.add.staticGroup();
+    const bb = this.backboard.create(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, null);
+    bb.setVisible(false);
+    bb.body.setSize(BOARD_W + 2, BOARD_H);
+    bb.refreshBody();
+
+    // Left rim edge
+    this.rimLeft = this.physics.add.staticGroup();
+    const rl = this.rimLeft.create(RIM_CX - RIM_W / 2, RIM_Y, null);
+    rl.setVisible(false);
+    rl.body.setSize(8, 8);
+    rl.refreshBody();
+
+    // Right rim edge
+    this.rimRight = this.physics.add.staticGroup();
+    const rr = this.rimRight.create(RIM_CX + RIM_W / 2, RIM_Y, null);
+    rr.setVisible(false);
+    rr.body.setSize(8, 8);
+    rr.refreshBody();
+
+    // Score zone (sensor) — just below rim center
+    this.scoreZone = this.physics.add.staticGroup();
+    const sz = this.scoreZone.create(RIM_CX, RIM_Y + 14, null);
+    sz.setVisible(false);
+    sz.body.setSize(RIM_W - 12, 12);
+    sz.refreshBody();
+  }
+
+  // ── Colliders (re-setup per ball) ─────────────────────────────────────────
+  setupHoopColliders() {
+    if (!this.ball || !this.ball.active) return;
+
+    // Clear old colliders
+    this.ballColliders.forEach(c => { if (c) this.physics.world.removeCollider(c); });
+    this.ballColliders = [];
+
+    // Ground — triggers miss
+    const gc = this.physics.add.collider(this.ball, this.ground, () => {
+      if (!this.isShooting) return;
+      this.onMiss();
+    });
+    this.ballColliders.push(gc);
+
+    // Backboard
+    const bc = this.physics.add.collider(this.ball, this.backboard, () => {
+      this.hitBackboard = true;
+    });
+    this.ballColliders.push(bc);
+
+    // Rim edges — bounce
+    const rlc = this.physics.add.collider(this.ball, this.rimLeft);
+    this.ballColliders.push(rlc);
+    const rrc = this.physics.add.collider(this.ball, this.rimRight);
+    this.ballColliders.push(rrc);
+
+    // Score zone — overlap
+    const sc = this.physics.add.overlap(this.ball, this.scoreZone, () => {
+      if (!this.isShooting || this.scored) return;
+      if (this.ball.body.velocity.y > 0) {
+        this.onScore();
+      }
+    });
+    this.ballColliders.push(sc);
+  }
+
+  // ── Ball ──────────────────────────────────────────────────────────────────
+  createBall() {
+    const spawnX = this.playerX + 30;
+    const spawnY = CONFIG.GROUND_Y - 80;
+
+    this.ball = this.physics.add.sprite(spawnX, spawnY, 'basketball');
+    this.ball.setDisplaySize(56, 56);
+    this.ball.body.setAllowGravity(false);
+    this.ball.body.setBounce(0.6);
+    this.ball.body.setCircle(26, 2, 2);
+
+    this.isShooting = false;
+    this.scored     = false;
+    this.hitBackboard = false;
+
+    this.setupHoopColliders();
+
+    // Idle bob tween
+    if (this.ballTween) this.ballTween.stop();
+    this.ballTween = this.tweens.add({
+      targets: this.ball,
+      y: spawnY - 8,
+      duration: 700,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+  }
+
+  // ── Input / Swipe ─────────────────────────────────────────────────────────
+  setupInput() {
+    // Trajectory preview graphics
+    this.trajectoryGfx = this.add.graphics();
+
+    this.input.on('pointerdown', (ptr) => {
+      if (this.isShooting) return;
+      this.swipeStart = { x: ptr.x, y: ptr.y, time: this.time.now };
+    });
+
+    this.input.on('pointermove', (ptr) => {
+      if (!this.swipeStart || this.isShooting) return;
+      this.drawTrajectoryPreview(ptr.x, ptr.y);
+    });
+
+    this.input.on('pointerup', (ptr) => {
+      if (!this.swipeStart || this.isShooting) return;
+      this.trajectoryGfx.clear();
+
+      const dx   = ptr.x - this.swipeStart.x;
+      const dy   = ptr.y - this.swipeStart.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dt   = this.time.now - this.swipeStart.time;
+
+      if (dist < 30 || dt > 1000) {
+        this.swipeStart = null;
+        return;
+      }
+
+      this.shootBall(dx, dy, dist, dt);
+      this.swipeStart = null;
+    });
+  }
+
+  drawTrajectoryPreview(ex, ey) {
+    if (!this.swipeStart) return;
+    const g = this.trajectoryGfx;
+    g.clear();
+
+    const sx = this.ball.x;
+    const sy = this.ball.y;
+
+    // Velocity estimate
+    const dx    = ex - this.swipeStart.x;
+    const dy    = ey - this.swipeStart.y;
+    const dist  = Math.sqrt(dx * dx + dy * dy);
+    const speed = Math.min(dist * 4, 1400);
+    const vx    = -(dx / dist) * speed;
+    const vy    = -(dy / dist) * speed;
+
+    // Simulate parabola
+    const g_accel = CONFIG.GRAVITY;
+    const dt      = 1 / 60;
+    let px = sx, py = sy, pvx = vx, pvy = vy;
+    let dotCount = 0;
+
+    g.fillStyle(0xff8833, 0.7);
+    for (let i = 0; i < 90; i++) {
+      pvy += g_accel * dt;
+      px  += pvx * dt;
+      py  += pvy * dt;
+      if (py > CONFIG.GROUND_Y || px < 0 || px > CONFIG.WIDTH) break;
+      if (i % 5 === 0) {
+        const r = Phaser.Math.Lerp(5, 2, i / 90);
+        g.fillCircle(px, py, r);
+        dotCount++;
+      }
+    }
+  }
+
+  shootBall(dx, dy, dist, dt) {
+    if (this.ballTween) { this.ballTween.stop(); this.ballTween = null; }
+
+    const speed = Math.min((dist / Math.max(dt, 50)) * 1200, 1400);
+    const vx    = -(dx / dist) * speed;
+    const vy    = -(dy / dist) * speed;
+
+    this.ball.body.setAllowGravity(true);
+    this.ball.body.setVelocity(vx, vy);
+    this.ball.body.setAngularVelocity(vx * 0.4);
+
+    this.isShooting   = true;
+    this.scored       = false;
+    this.hitBackboard = false;
+
+    // Determine shot distance for scoring
+    const rimX = this.hoopGeom.RIM_CX;
+    const dToRim = Math.abs(this.ball.x - rimX);
+    if (dToRim < 150)       this.shotZone = 'near';
+    else if (dToRim < 280)  this.shotZone = 'mid';
+    else                    this.shotZone = 'far';
+
+    // Player shoot animation
+    this.tweens.add({
+      targets: this.playerGfx,
+      y: -16,
+      duration: 130,
+      yoyo: true,
+      ease: 'Quad.easeOut'
+    });
+  }
+
+  // ── Score / Miss ──────────────────────────────────────────────────────────
+  onScore() {
+    if (this.scored) return;
+    this.scored = true;
+
+    // Base points
+    let pts = this.shotZone === 'far' ? 200 : this.shotZone === 'mid' ? 150 : 100;
+    let label = pts + '';
+    let bonusLabel = '';
+
+    if (!this.hitBackboard) {
+      pts += 50;
+      bonusLabel = 'SWISH! +50';
+    } else {
+      pts += 30;
+      bonusLabel = 'BANK! +30';
+    }
+
+    // Combo
+    this.combo = Math.min(this.combo + 1, 10);
+    pts *= this.combo;
+
+    this.score += pts;
+
+    const rimX = this.hoopGeom.RIM_CX;
+    const rimY = this.hoopGeom.RIM_Y;
+
+    // Main score popup
+    const colors  = ['#ff3366','#3366ff','#ff8833','#44cc44','#ffcc00'];
+    const color   = colors[Math.floor(Math.random() * colors.length)];
+    const angle   = Phaser.Math.Between(-15, 15);
+    const ptsTxt  = this.add.text(rimX, rimY - 20, '+' + pts, {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '36px',
+      color: color,
+      stroke: '#ffffff',
+      strokeThickness: 4
+    });
+    ptsTxt.setOrigin(0.5);
+    ptsTxt.setAngle(angle);
+
+    this.tweens.add({
+      targets: ptsTxt,
+      y: rimY - 90,
+      alpha: 0,
+      duration: 1100,
+      ease: 'Quad.easeOut',
+      onComplete: () => ptsTxt.destroy()
+    });
+
+    // Bonus label
+    if (bonusLabel) {
+      const bTxt = this.add.text(rimX + 10, rimY - 55, bonusLabel, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '18px',
+        color: '#ffcc00',
+        stroke: '#333300',
+        strokeThickness: 3
+      });
+      bTxt.setOrigin(0.5);
+      bTxt.setAngle(Phaser.Math.Between(-8, 8));
+      this.tweens.add({
+        targets: bTxt,
+        y: rimY - 110,
+        alpha: 0,
+        duration: 1000,
+        ease: 'Quad.easeOut',
+        onComplete: () => bTxt.destroy()
+      });
+    }
+
+    // Combo text
+    if (this.combo > 1) {
+      const cTxt = this.add.text(rimX - 40, rimY - 80, 'x' + this.combo + ' COMBO!', {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '22px',
+        color: '#ff3366',
+        stroke: '#440011',
+        strokeThickness: 3
+      });
+      cTxt.setOrigin(0.5);
+      cTxt.setAngle(Phaser.Math.Between(-12, 12));
+      this.tweens.add({
+        targets: cTxt,
+        y: rimY - 130,
+        scaleX: 1.4, scaleY: 1.4,
+        alpha: 0,
+        duration: 1000,
+        ease: 'Back.easeOut',
+        onComplete: () => cTxt.destroy()
+      });
+    }
+
+    this.updateHUD();
+    this.time.delayedCall(1600, () => this.respawnBall());
+  }
+
+  onMiss() {
+    if (this.scored) return;
+
+    this.combo = 0;
+    const missWords = ['MISS...', 'NOPE', 'AIR BALL', 'BRICK!', 'OH NO'];
+    const word = missWords[Math.floor(Math.random() * missWords.length)];
+
+    const mTxt = this.add.text(
+      this.ball ? this.ball.x : 400,
+      this.ball ? this.ball.y - 20 : 200,
+      word,
+      {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '28px',
+        color: '#888888',
+        stroke: '#444444',
+        strokeThickness: 3
+      }
+    );
+    mTxt.setOrigin(0.5);
+    mTxt.setAngle(Phaser.Math.Between(-10, 10));
+    this.tweens.add({
+      targets: mTxt,
+      y: mTxt.y - 60,
+      alpha: 0,
+      duration: 900,
+      ease: 'Quad.easeOut',
+      onComplete: () => mTxt.destroy()
+    });
+
+    this.updateHUD();
+    this.time.delayedCall(800, () => this.respawnBall());
+  }
+
+  respawnBall() {
+    if (this.ball) {
+      this.ball.destroy();
+      this.ball = null;
+    }
+    this.ballColliders.forEach(c => { if (c) this.physics.world.removeCollider(c); });
+    this.ballColliders = [];
+    this.createBall();
+  }
+
+  // ── HUD ───────────────────────────────────────────────────────────────────
+  createHUD() {
+    // Score bg
+    const scoreBg = this.add.graphics();
+    scoreBg.fillStyle(0xffffff, 0.75);
+    scoreBg.fillRoundedRect(10, 10, 130, 46, 10);
+    scoreBg.lineStyle(2, 0x333333, 0.6);
+    scoreBg.strokeRoundedRect(10, 10, 130, 46, 10);
+
+    // Star icon
+    this.add.text(18, 16, '⭐', { fontSize: '20px' });
+
+    // Score label
+    this.scoreTxt = this.add.text(44, 18, 'SCORE: 0', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '14px',
+      color: '#333333'
+    });
+
+    // Combo counter
+    this.comboTxt = this.add.text(CONFIG.WIDTH / 2, 16, '', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '18px',
+      color: '#ff3366',
+      stroke: '#440011',
+      strokeThickness: 3
+    });
+    this.comboTxt.setOrigin(0.5, 0);
+
+    // Instructions
+    this.instrTxt = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT - 22, 'SWIPE TO SHOOT', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '14px',
+      color: '#888877',
+      stroke: '#f5f0e0',
+      strokeThickness: 3
+    });
+    this.instrTxt.setOrigin(0.5);
+  }
+
+  updateHUD() {
+    this.scoreTxt.setText('SCORE: ' + this.score);
+    if (this.combo > 1) {
+      this.comboTxt.setText('🔥 x' + this.combo);
+      this.comboTxt.setVisible(true);
+    } else {
+      this.comboTxt.setVisible(false);
+    }
+  }
+
+  // ── Update ────────────────────────────────────────────────────────────────
+  update() {
+    if (!this.ball || !this.ball.active) return;
+    if (!this.isShooting) return;
+
+    // Out-of-bounds check
+    const b = this.ball;
+    if (
+      b.x < -80 || b.x > CONFIG.WIDTH + 80 ||
+      b.y > CONFIG.HEIGHT + 60
+    ) {
+      this.onMiss();
+    }
+  }
+}
+
+// ─── PHASER CONFIG ────────────────────────────────────────────────────────────
+new Phaser.Game({
+  type: Phaser.CANVAS,
+  width:  CONFIG.WIDTH,
+  height: CONFIG.HEIGHT,
+  backgroundColor: CONFIG.COLORS.paper,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: CONFIG.GRAVITY },
+      debug: false
+    }
+  },
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  scene: [GameScene]
+});
+</script>
+</body>
+</html>
