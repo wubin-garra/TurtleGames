@@ -1883,24 +1883,24 @@ class GameScene extends Phaser.Scene {
     this.rimLeft = this.physics.add.staticGroup();
     const rl = this.rimLeft.create(RIM_CX - RIM_W / 2, RIM_Y, null);
     rl.setVisible(false);
-    rl.body.setSize(8, 8);
+    rl.body.setSize(4, 4);
     rl.refreshBody();
 
     // Right rim edge
     this.rimRight = this.physics.add.staticGroup();
     const rr = this.rimRight.create(RIM_CX + RIM_W / 2, RIM_Y, null);
     rr.setVisible(false);
-    rr.body.setSize(8, 8);
+    rr.body.setSize(4, 4);
     rr.refreshBody();
 
-    // Score zone (sensor)
+    // Score zone (sensor) — generous size for easier scoring
     this.scoreZone = this.physics.add.staticGroup();
-    const sz = this.scoreZone.create(RIM_CX, RIM_Y + 14, null);
+    const sz = this.scoreZone.create(RIM_CX, RIM_Y + 16, null);
     sz.setVisible(false);
-    sz.body.setSize(RIM_W - 12, 12);
+    sz.body.setSize(RIM_W + 8, 24);
     sz.refreshBody();
     this.scoreZoneBody = sz;
-    this.defaultScoreZoneW = RIM_W - 12;
+    this.defaultScoreZoneW = RIM_W + 8;
 
     // Store backboard body ref for bankBoost
     this.backboardBody = bb;
@@ -2207,7 +2207,7 @@ class GameScene extends Phaser.Scene {
     this.ball = this.physics.add.sprite(spawnX, spawnY, 'basketball');
     this.ball.setDisplaySize(56, 56);
     this.ball.body.setAllowGravity(false);
-    this.ball.body.setBounce(0.6);
+    this.ball.body.setBounce(0.4);
     this.ball.body.setCircle(26, 2, 2);
 
     this.isShooting   = false;
@@ -2250,7 +2250,7 @@ class GameScene extends Phaser.Scene {
       const dist = Math.sqrt(dx * dx + dy * dy);
       const dt   = this.time.now - this.swipeStart.time;
 
-      if (dist < 30 || dt > 1000) {
+      if (dist < 20 || dt > 1500) {
         this.swipeStart = null;
         return;
       }
@@ -2276,7 +2276,7 @@ class GameScene extends Phaser.Scene {
     const dx    = ex - this.swipeStart.x;
     const dy    = ey - this.swipeStart.y;
     const dist  = Math.sqrt(dx * dx + dy * dy);
-    const speed = Math.min(dist * 4, 1400);
+    const speed = Math.min(dist * 3.5, 900);
     const vx    = -(dx / dist) * speed;
     const vy    = -(dy / dist) * speed;
 
@@ -2320,7 +2320,8 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    const speed = Math.min((dist / Math.max(dt, 50)) * 1200, 1400);
+    // Use distance-based speed (less sensitive to swipe speed, more forgiving)
+    const speed = Math.min(dist * 3.5, 900);
     const vx    = -(dx / dist) * speed;
     const vy    = -(dy / dist) * speed;
 
@@ -2959,15 +2960,21 @@ class GameScene extends Phaser.Scene {
       this.ball.body.velocity.x += (Math.random() - 0.5) * 2;
     }
 
-    // Magnet power-up: nudge ball toward rim
-    if (this.isShooting && this.activePowerUps.magnet) {
+    // Subtle aim-assist: gentle nudge toward rim when ball is close
+    if (this.isShooting) {
       const { RIM_CX, RIM_Y } = this.hoopGeom;
       const dx = RIM_CX - this.ball.x;
-      const dy = RIM_Y  - this.ball.y;
+      const dy = (RIM_Y + 10) - this.ball.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 150 && dist > 1) {
-        this.ball.body.velocity.x += (dx / dist) * 3;
-        this.ball.body.velocity.y += (dy / dist) * 2;
+      // Magnet power-up: strong pull
+      if (this.activePowerUps.magnet && dist < 150 && dist > 1) {
+        this.ball.body.velocity.x += (dx / dist) * 4;
+        this.ball.body.velocity.y += (dy / dist) * 3;
+      }
+      // Default aim-assist: very gentle nudge within 100px
+      else if (dist < 100 && dist > 1) {
+        this.ball.body.velocity.x += (dx / dist) * 1.2;
+        this.ball.body.velocity.y += (dy / dist) * 0.8;
       }
     }
 
