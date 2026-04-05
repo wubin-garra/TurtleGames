@@ -3361,12 +3361,13 @@ class GameScene extends Phaser.Scene {
 }
 
 // ─── PHASER CONFIG ────────────────────────────────────────────────────────────
-new Phaser.Game({
+const _dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+const _game = new Phaser.Game({
   type: Phaser.AUTO,
   width:  CONFIG.WIDTH,
   height: CONFIG.HEIGHT,
   backgroundColor: CONFIG.COLORS.paper,
-  resolution: window.devicePixelRatio || 1,
   physics: {
     default: 'arcade',
     arcade: {
@@ -3378,7 +3379,18 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [MenuScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene]
+  scene: [MenuScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene],
+  callbacks: {
+    postBoot: (game) => {
+      // Patch text factory so all text renders at device pixel ratio for crisp display
+      const origText = Phaser.GameObjects.GameObjectFactory.prototype.text;
+      Phaser.GameObjects.GameObjectFactory.prototype.text = function(x, y, text, style) {
+        const t = origText.call(this, x, y, text, style);
+        t.setResolution(_dpr);
+        return t;
+      };
+    }
+  }
 });
 </script>
 </body>
