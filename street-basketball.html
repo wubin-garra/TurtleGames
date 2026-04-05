@@ -1051,6 +1051,18 @@ class GameScene extends Phaser.Scene {
     // Combo effect state
     this.comboEmitter   = null;
 
+    // Moving rim state
+    this.rimMoving      = false;
+    this.rimBaseX       = 0;
+    this.rimMoveRange   = 40;
+    this.rimMoveSpeed   = 0.02;
+    this.rimMovePhase   = 0;
+    this.hoopGraphics   = null;
+
+    // Obstacles state
+    this.obstacles      = [];
+    this.obstacleTimer  = null;
+
     // Power-up state
     this.activePowerUps  = {};
     this.powerUpSprite   = null;
@@ -1127,10 +1139,25 @@ class GameScene extends Phaser.Scene {
     this.startTimer();
     this.setupWeather();
     this.setupPowerUps();
+    // Moving rim / obstacles from level config
+    if (this.gameMode === 'level' && this.levelConfig) {
+      if (this.levelConfig.rimMove) this.setupMovingRim();
+      if (this.levelConfig.obstacles) this.setupObstacles();
+    }
   }
 
   // ── Background ────────────────────────────────────────────────────────────
   drawBackground() {
+    // Determine area
+    let area = 'street';
+    if (this.gameMode === 'level' && this.levelConfig) {
+      area = this.levelConfig.area || 'street';
+    } else if (this.gameMode === 'endless') {
+      const areas = ['street', 'park', 'rooftop'];
+      area = areas[Math.floor(Math.random() * areas.length)];
+    }
+    this.currentArea = area;
+
     const g = this.add.graphics();
 
     // Paper fill
@@ -1146,20 +1173,16 @@ class GameScene extends Phaser.Scene {
     g.lineStyle(1.5, 0xdd6666, 0.3);
     g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
 
-    // Brick wall — upper 60%
-    const brickH = CONFIG.HEIGHT * 0.6;
-    g.lineStyle(1.5, 0x886655, 0.35);
-    const bH = 24, bW = 52;
-    for (let row = 0; row * bH < brickH; row++) {
-      const offsetX = (row % 2) * (bW / 2);
-      for (let col = -1; col * bW < CONFIG.WIDTH + bW; col++) {
-        const x = col * bW + offsetX;
-        const y = row * bH;
-        g.strokeRect(x, y, bW, bH);
-      }
+    // Area-specific wall/background
+    if (area === 'street') {
+      this._drawStreetBackground(g);
+    } else if (area === 'park') {
+      this._drawParkBackground(g);
+    } else if (area === 'rooftop') {
+      this._drawRooftopBackground(g);
     }
 
-    // Ground
+    // Ground (shared)
     g.fillStyle(0x8B7355, 1);
     g.fillRect(0, CONFIG.GROUND_Y, CONFIG.WIDTH, CONFIG.HEIGHT - CONFIG.GROUND_Y);
     g.lineStyle(3, 0x5a4a30, 1);
@@ -1179,6 +1202,21 @@ class GameScene extends Phaser.Scene {
     g.beginPath();
     g.arc(180, CONFIG.GROUND_Y, 180, -Math.PI * 0.75, Math.PI * 0.05);
     g.strokePath();
+  }
+
+  _drawStreetBackground(g) {
+    // Brick wall — upper 60%
+    const brickH = CONFIG.HEIGHT * 0.6;
+    g.lineStyle(1.5, 0x886655, 0.35);
+    const bH = 24, bW = 52;
+    for (let row = 0; row * bH < brickH; row++) {
+      const offsetX = (row % 2) * (bW / 2);
+      for (let col = -1; col * bW < CONFIG.WIDTH + bW; col++) {
+        const x = col * bW + offsetX;
+        const y = row * bH;
+        g.strokeRect(x, y, bW, bH);
+      }
+    }
 
     // Paint splashes
     const splashes = [
@@ -1214,6 +1252,156 @@ class GameScene extends Phaser.Scene {
       stroke: '#001133',
       strokeThickness: 3,
       alpha: 0.2
+    });
+    tag2.setAngle(-15);
+  }
+
+  _drawParkBackground(g) {
+    // Concrete/gray wall — upper 60%
+    g.fillStyle(0xbbbbaa, 0.25);
+    g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT * 0.6);
+
+    // Concrete panel lines (horizontal)
+    g.lineStyle(1, 0x999988, 0.3);
+    for (let y = 0; y < CONFIG.HEIGHT * 0.6; y += 40) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    // Concrete panel lines (vertical)
+    for (let x = 0; x < CONFIG.WIDTH; x += 80) {
+      g.beginPath(); g.moveTo(x, 0); g.lineTo(x, CONFIG.HEIGHT * 0.6); g.strokePath();
+    }
+
+    // Green bushes along ground line
+    g.fillStyle(0x44aa44, 0.7);
+    for (let bx = 0; bx < CONFIG.WIDTH; bx += 60) {
+      const bsize = 18 + (bx % 3) * 6;
+      g.fillCircle(bx + 20, CONFIG.GROUND_Y - bsize * 0.4, bsize);
+    }
+    // Darker inner bush detail
+    g.fillStyle(0x228822, 0.5);
+    for (let bx = 10; bx < CONFIG.WIDTH; bx += 60) {
+      const bsize = 12 + (bx % 3) * 4;
+      g.fillCircle(bx + 20, CONFIG.GROUND_Y - bsize * 0.5, bsize * 0.7);
+    }
+
+    // Paint splashes (park colors)
+    const splashes = [
+      { x: 150, y: 70,  r: 24, c: 0x44cc44, a: 0.18 },
+      { x: 420, y: 130, r: 18, c: 0x88dd44, a: 0.15 },
+      { x: 600, y: 220, r: 20, c: 0xffcc00, a: 0.13 },
+    ];
+    splashes.forEach(s => {
+      g.fillStyle(s.c, s.a);
+      g.fillCircle(s.x, s.y, s.r);
+      g.fillRect(s.x - 3, s.y, 6, s.r * 0.8);
+    });
+
+    // Graffiti text "PARK LIFE"
+    const graffiti = this.add.text(380, 155, 'PARK LIFE', {
+      fontFamily: "'Arial Black', 'Impact', sans-serif",
+      fontSize: '38px',
+      color: '#337733',
+      stroke: '#001100',
+      strokeThickness: 4,
+      alpha: 0.22
+    });
+    graffiti.setOrigin(0.5);
+    graffiti.setAngle(-8);
+
+    const tag2 = this.add.text(110, 240, 'GREEN', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '20px',
+      color: '#2255aa',
+      stroke: '#001133',
+      strokeThickness: 3,
+      alpha: 0.2
+    });
+    tag2.setAngle(-15);
+  }
+
+  _drawRooftopBackground(g) {
+    // Sky gradient — upper 40%
+    const skyH = CONFIG.HEIGHT * 0.4;
+    g.fillStyle(0x111833, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, skyH * 0.5);
+    g.fillStyle(0x223355, 1);
+    g.fillRect(0, skyH * 0.5, CONFIG.WIDTH, skyH * 0.5);
+
+    // City skyline silhouette
+    const buildings = [
+      { x: 0,   w: 60,  h: 120 },
+      { x: 55,  w: 45,  h: 80  },
+      { x: 95,  w: 70,  h: 150 },
+      { x: 160, w: 40,  h: 100 },
+      { x: 195, w: 80,  h: 130 },
+      { x: 270, w: 50,  h: 90  },
+      { x: 315, w: 65,  h: 140 },
+      { x: 375, w: 45,  h: 110 },
+      { x: 415, w: 90,  h: 160 },
+      { x: 500, w: 55,  h: 95  },
+      { x: 550, w: 70,  h: 125 },
+      { x: 615, w: 50,  h: 85  },
+      { x: 660, w: 80,  h: 145 },
+      { x: 735, w: 65,  h: 105 },
+    ];
+    g.fillStyle(0x111122, 1);
+    buildings.forEach(b => {
+      const by = CONFIG.GROUND_Y - b.h;
+      g.fillRect(b.x, by, b.w, b.h);
+    });
+
+    // Yellow window dots on buildings
+    g.fillStyle(0xffee88, 0.7);
+    buildings.forEach(b => {
+      const by = CONFIG.GROUND_Y - b.h;
+      for (let wy = by + 10; wy < CONFIG.GROUND_Y - 10; wy += 18) {
+        for (let wx = b.x + 6; wx < b.x + b.w - 6; wx += 14) {
+          if (Math.random() > 0.4) g.fillRect(wx, wy, 5, 6);
+        }
+      }
+    });
+
+    // Chain-link fence pattern (crossed diagonals)
+    g.lineStyle(0.8, 0x888899, 0.3);
+    const fenceTop = CONFIG.GROUND_Y - 50;
+    const fenceBot = CONFIG.GROUND_Y;
+    const fenceSpacing = 20;
+    for (let x = 0; x < CONFIG.WIDTH + fenceSpacing; x += fenceSpacing) {
+      g.beginPath(); g.moveTo(x, fenceTop); g.lineTo(x - fenceSpacing, fenceBot); g.strokePath();
+      g.beginPath(); g.moveTo(x, fenceTop); g.lineTo(x + fenceSpacing, fenceBot); g.strokePath();
+    }
+
+    // Paint splashes (rooftop dark/neon)
+    const splashes = [
+      { x: 100, y: 90,  r: 22, c: 0x3366ff, a: 0.2  },
+      { x: 380, y: 160, r: 18, c: 0xff3366, a: 0.18 },
+      { x: 640, y: 200, r: 20, c: 0xcc44ff, a: 0.16 },
+    ];
+    splashes.forEach(s => {
+      g.fillStyle(s.c, s.a);
+      g.fillCircle(s.x, s.y, s.r);
+      g.fillRect(s.x - 3, s.y, 6, s.r * 0.8);
+    });
+
+    // Graffiti text "ROOFTOP"
+    const graffiti = this.add.text(380, 165, 'ROOFTOP', {
+      fontFamily: "'Arial Black', 'Impact', sans-serif",
+      fontSize: '38px',
+      color: '#aabbff',
+      stroke: '#000033',
+      strokeThickness: 4,
+      alpha: 0.28
+    });
+    graffiti.setOrigin(0.5);
+    graffiti.setAngle(-8);
+
+    const tag2 = this.add.text(110, 240, 'SKY HIGH', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '20px',
+      color: '#6688cc',
+      stroke: '#000022',
+      strokeThickness: 3,
+      alpha: 0.25
     });
     tag2.setAngle(-15);
   }
@@ -1309,6 +1497,239 @@ class GameScene extends Phaser.Scene {
     g.lineTo(x + (Math.random() - 0.5) * r,     y + h + (Math.random() - 0.5) * r);
     g.closePath();
     g.strokePath();
+  }
+
+  // ── Moving Rim ────────────────────────────────────────────────────────────
+  setupMovingRim() {
+    this.rimMoving    = true;
+    this.rimBaseX     = this.hoopGeom.RIM_CX;
+    this.rimMoveRange = 40;
+    this.rimMoveSpeed = 0.02;
+    this.rimMovePhase = 0;
+
+    // Create a graphics layer for the animated hoop (above static)
+    this.hoopGraphics = this.add.graphics().setDepth(2);
+    // Hide the static hoop's visual elements by redrawing them clear
+    // (static hoop is already drawn; we just overlay with hoopGraphics each frame)
+    // We hide via a covering graphics rect that matches background in the hoop area
+    // Actually: the static hoop graphics object cannot be easily hidden post-create,
+    // so we cover it with an area-matching fill and redraw on top.
+    // We'll draw a background patch over the static hoop to erase it.
+    this.hoopCoverGfx = this.add.graphics().setDepth(1);
+    this._coverStaticHoop();
+  }
+
+  _coverStaticHoop() {
+    if (!this.hoopCoverGfx) return;
+    const g = this.hoopCoverGfx;
+    g.clear();
+    // Cover the hoop area with a paper-colored rect
+    g.fillStyle(0xf5f0e0, 1);
+    g.fillRect(560, 120, 120, 240);
+    // Re-apply notebook lines over the covered area
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      if (y < 360) {
+        g.beginPath(); g.moveTo(560, y); g.lineTo(680, y); g.strokePath();
+      }
+    }
+    // Re-apply area background texture in the hoop column
+    const area = this.currentArea || 'street';
+    if (area === 'street') {
+      g.lineStyle(1.5, 0x886655, 0.35);
+      const bH = 24, bW = 52;
+      for (let row = 0; row * bH < CONFIG.HEIGHT * 0.6; row++) {
+        const offsetX = (row % 2) * (bW / 2);
+        for (let col = 10; col < 14; col++) {
+          const x = col * bW + offsetX;
+          const y2 = row * bH;
+          if (x >= 550 && x <= 690) g.strokeRect(x, y2, bW, bH);
+        }
+      }
+    } else if (area === 'park') {
+      g.fillStyle(0xbbbbaa, 0.25);
+      g.fillRect(560, 120, 120, CONFIG.HEIGHT * 0.6 - 120);
+    } else if (area === 'rooftop') {
+      g.fillStyle(0x111833, 1);
+      g.fillRect(560, 120, 120, CONFIG.HEIGHT * 0.4 * 0.5 - 120 < 0 ? 0 : CONFIG.HEIGHT * 0.2 - 120 < 0 ? 0 : 10);
+      g.fillStyle(0x111122, 1);
+      // redraw one building column
+      g.fillRect(560, 200, 120, CONFIG.GROUND_Y - 200);
+    }
+    // Ground continuation
+    g.fillStyle(0x8B7355, 1);
+    g.fillRect(560, CONFIG.GROUND_Y, 120, CONFIG.HEIGHT - CONFIG.GROUND_Y);
+    g.lineStyle(3, 0x5a4a30, 1);
+    g.beginPath(); g.moveTo(560, CONFIG.GROUND_Y); g.lineTo(680, CONFIG.GROUND_Y); g.strokePath();
+  }
+
+  updateMovingRim() {
+    if (!this.rimMoving) return;
+    this.rimMovePhase += this.rimMoveSpeed;
+    const offsetX = Math.sin(this.rimMovePhase) * this.rimMoveRange;
+    const newRimCX = this.rimBaseX + offsetX;
+    this.redrawHoopAt(newRimCX);
+  }
+
+  redrawHoopAt(rimCX) {
+    if (!this.hoopGraphics) return;
+    const g = this.hoopGraphics;
+    g.clear();
+
+    const { RIM_Y, RIM_W, BOARD_W, BOARD_H, POLE_X } = this.hoopGeom;
+    // Compute new board position based on offset from original
+    const origRimCX = this.hoopGeom.RIM_CX;
+    const delta = rimCX - origRimCX;
+    const BOARD_X = this.hoopGeom.BOARD_X + delta;
+    const BOARD_Y = this.hoopGeom.BOARD_Y;
+
+    // Rim shake Y offset
+    let rimShake = 0;
+    if (this.gameMode === 'level' && this.levelConfig && this.levelConfig.rimShake) {
+      rimShake = Math.sin(Date.now() * 0.01) * 3;
+    }
+    const rimY = RIM_Y + rimShake;
+
+    // Pole
+    g.lineStyle(5, 0x555544, 1);
+    g.beginPath();
+    g.moveTo(POLE_X + delta, CONFIG.GROUND_Y);
+    g.lineTo(POLE_X + delta + 2, rimY + 10);
+    g.strokePath();
+
+    // Backboard
+    g.fillStyle(0xfafaf5, 1);
+    g.fillRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
+    g.lineStyle(3, 0x333322, 1);
+    g.strokeRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
+    g.lineStyle(1.5, 0xcc3333, 0.8);
+    g.strokeRect(BOARD_X + 2, BOARD_Y + BOARD_H * 0.3, BOARD_W - 4, BOARD_H * 0.35);
+
+    // Rim arm
+    g.lineStyle(4, 0xcc2200, 1);
+    g.beginPath();
+    g.moveTo(BOARD_X, rimY);
+    g.lineTo(rimCX - RIM_W * 0.5 + 4, rimY);
+    g.strokePath();
+
+    // Rim
+    g.lineStyle(5, 0xff3300, 1);
+    g.beginPath();
+    g.moveTo(rimCX - RIM_W / 2, rimY);
+    g.lineTo(rimCX + RIM_W / 2, rimY);
+    g.strokePath();
+    g.fillStyle(0xff3300, 1);
+    g.fillCircle(rimCX - RIM_W / 2, rimY, 5);
+    g.fillCircle(rimCX + RIM_W / 2, rimY, 5);
+
+    // Net
+    g.lineStyle(1.5, 0xf5f0e0, 0.85);
+    const netTop = rimY + 4;
+    const netBot = rimY + 38;
+    const netSegments = 7;
+    for (let i = 0; i <= netSegments; i++) {
+      const nx = (rimCX - RIM_W / 2) + (RIM_W * i / netSegments);
+      const wobble = Math.sin(i * 1.3) * 3;
+      g.beginPath();
+      g.moveTo(nx, netTop);
+      g.lineTo(nx + wobble, netBot);
+      g.strokePath();
+    }
+    for (let row = 1; row <= 3; row++) {
+      const ry = netTop + (netBot - netTop) * row / 4;
+      const shrink = row * 2;
+      g.beginPath();
+      g.moveTo(rimCX - RIM_W / 2 + shrink, ry);
+      g.lineTo(rimCX + RIM_W / 2 - shrink, ry);
+      g.strokePath();
+    }
+
+    // Update physics bodies
+    const sz = this.scoreZoneBody;
+    if (sz) {
+      sz.body.reset(rimCX, RIM_Y + rimShake + 14);
+    }
+    const bb = this.backboardBody;
+    if (bb) {
+      bb.body.reset(BOARD_X + BOARD_W / 2, this.hoopGeom.BOARD_Y + BOARD_H / 2);
+    }
+    const rl = this.rimLeft.getChildren()[0];
+    if (rl) rl.body.reset(rimCX - RIM_W / 2, RIM_Y + rimShake);
+    const rr = this.rimRight.getChildren()[0];
+    if (rr) rr.body.reset(rimCX + RIM_W / 2, RIM_Y + rimShake);
+  }
+
+  // ── Obstacles ─────────────────────────────────────────────────────────────
+  setupObstacles() {
+    this._scheduleNextObstacle();
+  }
+
+  _scheduleNextObstacle() {
+    const delay = Phaser.Math.Between(5000, 8000);
+    this.obstacleTimer = this.time.delayedCall(delay, () => {
+      if (!this.isGameOver) {
+        this.spawnObstacle();
+        this._scheduleNextObstacle();
+      }
+    });
+  }
+
+  spawnObstacle() {
+    const spawnY = Phaser.Math.Between(100, 250);
+    const goLeft = Math.random() > 0.5;
+    const spawnX = goLeft ? CONFIG.WIDTH + 20 : -20;
+    const velX   = goLeft ? -Phaser.Math.Between(80, 150) : Phaser.Math.Between(80, 150);
+
+    const bird = this.add.text(spawnX, spawnY, '🐦', {
+      fontSize: '28px',
+    }).setOrigin(0.5).setDepth(7);
+    bird.setFlipX(goLeft ? false : true);
+
+    const birdBody = this.physics.add.staticGroup();
+    const bz = birdBody.create(spawnX, spawnY, null);
+    bz.setVisible(false);
+    bz.body.setSize(24, 24);
+    bz.refreshBody();
+
+    const obstacleObj = { text: bird, physGroup: birdBody, velX, alive: true };
+    this.obstacles.push(obstacleObj);
+
+    // Move the bird manually in update via stored velocity
+    obstacleObj._startX = spawnX;
+    obstacleObj._startTime = this.time.now;
+
+    // Collide with ball
+    if (this.ball && this.ball.active) {
+      const oc = this.physics.add.overlap(this.ball, birdBody, () => {
+        if (!obstacleObj.alive) return;
+        // Deflect ball downward
+        if (this.ball && this.ball.body) {
+          this.ball.body.velocity.y += 50;
+        }
+        this._destroyObstacle(obstacleObj);
+      });
+      this.ballColliders.push(oc);
+    }
+
+    // Auto-destroy after 8 seconds
+    this.time.delayedCall(8000, () => {
+      if (obstacleObj.alive) this._destroyObstacle(obstacleObj);
+    });
+  }
+
+  _destroyObstacle(obs) {
+    if (!obs.alive) return;
+    obs.alive = false;
+    if (obs.text)       obs.text.destroy();
+    if (obs.physGroup)  obs.physGroup.clear(true, true);
+    const idx = this.obstacles.indexOf(obs);
+    if (idx >= 0) this.obstacles.splice(idx, 1);
+  }
+
+  cleanupObstacles() {
+    if (this.obstacleTimer) { this.obstacleTimer.remove(); this.obstacleTimer = null; }
+    this.obstacles.slice().forEach(obs => this._destroyObstacle(obs));
+    this.obstacles = [];
   }
 
   // ── Player ────────────────────────────────────────────────────────────────
@@ -2132,7 +2553,64 @@ class GameScene extends Phaser.Scene {
     }
     this.ballColliders.forEach(c => { if (c) this.physics.world.removeCollider(c); });
     this.ballColliders = [];
+
+    // Randomize player position per shot if level has randomPos
+    if (this.gameMode === 'level' && this.levelConfig && this.levelConfig.randomPos) {
+      this.playerX = Phaser.Math.Between(80, 250);
+      this.redrawPlayer(this.playerX, this.playerY, false);
+    }
+
+    // Endless mode progressive difficulty
+    if (this.gameMode === 'endless') {
+      this.applyEndlessDifficulty();
+    }
+
     this.createBall();
+  }
+
+  applyEndlessDifficulty() {
+    const bc = this.basketCount;
+
+    // Shrink score zone
+    if (this.scoreZoneBody) {
+      const newW = (this.defaultScoreZoneW - 10) * Math.max(0.7, 1 - bc * 0.005);
+      this.scoreZoneBody.body.setSize(newW, 12);
+      this.scoreZoneBody.refreshBody();
+    }
+
+    // Increase wind after 10 baskets
+    if (bc > 10) {
+      this.windForce = Math.min(1 + (bc - 10) * 0.15, 5);
+      this.updateHUD();
+      if (!this.windTxt) {
+        this.windTxt = this.add.text(14, CONFIG.HEIGHT - 40, '', {
+          fontFamily: "'Arial Black', sans-serif",
+          fontSize: '13px',
+          color: '#446688',
+          stroke: '#f5f0e0',
+          strokeThickness: 2,
+        }).setDepth(10);
+      }
+      this.windTxt.setVisible(true);
+      this.updateHUD();
+    }
+
+    // Moving rim after 15 baskets
+    if (bc >= 15 && !this.rimMoving) {
+      this.setupMovingRim();
+    }
+
+    // Obstacles after 25 baskets
+    if (bc >= 25 && !this.obstacleTimer && this.obstacles.length === 0) {
+      this.setupObstacles();
+    }
+
+    // Shift player further away
+    const newPX = Math.max(80, 160 - bc * 2);
+    if (Math.abs(newPX - this.playerX) > 2) {
+      this.playerX = newPX;
+      this.redrawPlayer(this.playerX, this.playerY, false);
+    }
   }
 
   // ── Timer ─────────────────────────────────────────────────────────────────
@@ -2178,6 +2656,7 @@ class GameScene extends Phaser.Scene {
     if (this.timerEvent) this.timerEvent.remove();
     this.cleanupWeather();
     this.cleanupPowerUps();
+    this.cleanupObstacles();
 
     // Save to localStorage
     const save = loadSave();
@@ -2236,6 +2715,7 @@ class GameScene extends Phaser.Scene {
 
     this.cleanupWeather();
     this.cleanupPowerUps();
+    this.cleanupObstacles();
     this.checkUnlocks();
 
     const overlay = this.add.graphics();
@@ -2425,6 +2905,25 @@ class GameScene extends Phaser.Scene {
   update() {
     if (this.isGameOver) return;
     if (!this.ball || !this.ball.active) return;
+
+    // Moving rim update
+    if (this.rimMoving) this.updateMovingRim();
+
+    // Move obstacle birds
+    const now = this.time.now;
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+      const obs = this.obstacles[i];
+      if (!obs.alive) continue;
+      const elapsed = (now - obs._startTime) / 1000;
+      const newX = obs._startX + obs.velX * elapsed;
+      obs.text.x = newX;
+      const bz = obs.physGroup.getChildren()[0];
+      if (bz) bz.body.reset(newX, obs.text.y);
+      // Remove when off screen
+      if (newX < -100 || newX > CONFIG.WIDTH + 100) {
+        this._destroyObstacle(obs);
+      }
+    }
 
     // Wind physics when ball is in flight
     if (this.isShooting && this.windForce > 0) {
