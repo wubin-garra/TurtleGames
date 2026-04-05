@@ -2277,8 +2277,8 @@ class GameScene extends Phaser.Scene {
     const dy    = ey - this.swipeStart.y;
     const dist  = Math.sqrt(dx * dx + dy * dy);
     const speed = Math.min(dist * 3.5, 900);
-    const vx    = -(dx / dist) * speed;
-    const vy    = -(dy / dist) * speed;
+    const vx    = (dx / dist) * speed;
+    const vy    = (dy / dist) * speed;
 
     const g_accel = CONFIG.GRAVITY;
     const dt      = 1 / 60;
@@ -2322,8 +2322,8 @@ class GameScene extends Phaser.Scene {
 
     // Use distance-based speed (less sensitive to swipe speed, more forgiving)
     const speed = Math.min(dist * 3.5, 900);
-    const vx    = -(dx / dist) * speed;
-    const vy    = -(dy / dist) * speed;
+    const vx    = (dx / dist) * speed;
+    const vy    = (dy / dist) * speed;
 
     this.ball.body.setAllowGravity(true);
     this.ball.body.setVelocity(vx, vy);
