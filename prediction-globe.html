@@ -234,23 +234,38 @@
 
     // --- Polymarket Data ---
     const POLYMARKET_API = 'https://gamma-api.polymarket.com';
+    const CORS_PROXIES = [
+      (url) => url, // direct first
+      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    ];
 
     async function fetchEvents() {
-      try {
-        const res = await fetch(`${POLYMARKET_API}/events?limit=50&order=volume24hr&ascending=false&active=true`);
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
-        const events = await res.json();
-        localStorage.setItem('prediction-globe-cache', JSON.stringify({ events, timestamp: Date.now() }));
-        return events;
-      } catch (err) {
-        console.warn('API fetch failed, trying cache:', err);
-        const cached = localStorage.getItem('prediction-globe-cache');
-        if (cached) {
-          const { events } = JSON.parse(cached);
-          return events;
+      const apiUrl = `${POLYMARKET_API}/events?limit=50&order=volume24hr&ascending=false&active=true`;
+
+      for (const proxy of CORS_PROXIES) {
+        try {
+          const res = await fetch(proxy(apiUrl));
+          if (!res.ok) continue;
+          const events = await res.json();
+          if (Array.isArray(events) && events.length > 0) {
+            console.log(`Loaded ${events.length} events`);
+            localStorage.setItem('prediction-globe-cache', JSON.stringify({ events, timestamp: Date.now() }));
+            return events;
+          }
+        } catch (err) {
+          console.warn('Fetch attempt failed:', err.message);
         }
-        return [];
       }
+
+      // Try cache
+      console.warn('All fetch attempts failed, trying cache');
+      const cached = localStorage.getItem('prediction-globe-cache');
+      if (cached) {
+        const { events } = JSON.parse(cached);
+        return events;
+      }
+      return [];
     }
 
     function processEvents(events) {
@@ -381,12 +396,12 @@
 
     function volumeToScale(volume, maxVolume) {
       const normalized = Math.log1p(volume) / Math.log1p(maxVolume);
-      return 0.01 + normalized * 0.03;
+      return 0.015 + normalized * 0.045;
     }
 
     function volumeToBeamHeight(volume, maxVolume) {
       const normalized = Math.log1p(volume) / Math.log1p(maxVolume);
-      return 0.05 + normalized * 0.3;
+      return 0.08 + normalized * 0.4;
     }
 
     function createMarkers(processedEvents) {
