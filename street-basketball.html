@@ -40,20 +40,460 @@ const CONFIG = {
   }
 };
 
+CONFIG.ENDLESS = {
+  INITIAL_TIME: 60,
+  BONUS_TIME: 5,
+  BONUS_EVERY: 5,
+};
+
+// ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
+function loadSave() {
+  try { return JSON.parse(localStorage.getItem('streetball') || '{}'); } catch(e) { return {}; }
+}
+function writeSave(data) {
+  try { localStorage.setItem('streetball', JSON.stringify(data)); } catch(e) {}
+}
+
+// ─── MENU SCENE ───────────────────────────────────────────────────────────────
+class MenuScene extends Phaser.Scene {
+  constructor() { super({ key: 'MenuScene' }); }
+
+  create() {
+    this.drawBackground();
+    this.drawTitle();
+    this.drawModeButtons();
+    this.drawHighScore();
+    this.drawBottomBar();
+    this.drawBouncer();
+  }
+
+  drawBackground() {
+    const g = this.add.graphics();
+
+    // Paper fill
+    g.fillStyle(0xf5f0e0, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    // Notebook lines
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    // Red margin line
+    g.lineStyle(1.5, 0xdd6666, 0.3);
+    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
+
+    // Random paint splashes
+    const splashes = [
+      { x: 80,  y: 60,  r: 28, c: 0xff3366, a: 0.12 },
+      { x: 720, y: 90,  r: 20, c: 0x3366ff, a: 0.13 },
+      { x: 150, y: 380, r: 22, c: 0x44cc44, a: 0.11 },
+      { x: 650, y: 350, r: 18, c: 0xffcc00, a: 0.15 },
+      { x: 400, y: 30,  r: 16, c: 0xff8833, a: 0.13 },
+      { x: 760, y: 230, r: 24, c: 0x6666cc, a: 0.12 },
+      { x: 30,  y: 200, r: 20, c: 0xff3366, a: 0.10 },
+    ];
+    splashes.forEach(s => {
+      g.fillStyle(s.c, s.a);
+      g.fillCircle(s.x, s.y, s.r);
+      g.fillRect(s.x - 3, s.y, 6, s.r * 0.7);
+    });
+  }
+
+  drawTitle() {
+    // Main title
+    const title = this.add.text(CONFIG.WIDTH / 2, 90, '🏀 街头篮球', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '56px',
+      color: CONFIG.COLORS.ink,
+      stroke: '#888866',
+      strokeThickness: 3,
+    });
+    title.setOrigin(0.5);
+    title.setAngle(-2);
+
+    // Subtitle
+    const sub = this.add.text(CONFIG.WIDTH / 2, 150, 'STREET BASKETBALL', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '22px',
+      color: CONFIG.COLORS.red,
+      stroke: '#440011',
+      strokeThickness: 3,
+    });
+    sub.setOrigin(0.5);
+    sub.setAngle(1);
+  }
+
+  drawModeButtons() {
+    const btnW = 300, btnH = 60, btnR = 14;
+    const centerX = CONFIG.WIDTH / 2;
+    const btnY1 = 220, btnY2 = 310;
+
+    // ── Endless mode button ──
+    const endlessBg = this.add.graphics();
+    endlessBg.fillStyle(0xff3333, 0.12);
+    endlessBg.fillRoundedRect(centerX - btnW / 2, btnY1 - btnH / 2, btnW, btnH, btnR);
+    endlessBg.lineStyle(3, 0xff3333, 0.9);
+    endlessBg.strokeRoundedRect(centerX - btnW / 2, btnY1 - btnH / 2, btnW, btnH, btnR);
+
+    const endlessTxt = this.add.text(centerX, btnY1 - 8, '⏱ 无尽挑战', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '22px',
+      color: '#cc2200',
+      stroke: '#ffffff',
+      strokeThickness: 2,
+    });
+    endlessTxt.setOrigin(0.5);
+    endlessTxt.setInteractive({ useHandCursor: true });
+
+    const endlessSub = this.add.text(centerX, btnY1 + 16, '60秒 · 冲击最高分', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '13px',
+      color: '#885533',
+    });
+    endlessSub.setOrigin(0.5);
+
+    // ── Level mode button ──
+    const levelBg = this.add.graphics();
+    levelBg.fillStyle(0x3366ff, 0.12);
+    levelBg.fillRoundedRect(centerX - btnW / 2, btnY2 - btnH / 2, btnW, btnH, btnR);
+    levelBg.lineStyle(3, 0x3366ff, 0.9);
+    levelBg.strokeRoundedRect(centerX - btnW / 2, btnY2 - btnH / 2, btnW, btnH, btnR);
+
+    const levelTxt = this.add.text(centerX, btnY2 - 8, '🏆 关卡模式', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '22px',
+      color: '#1133aa',
+      stroke: '#ffffff',
+      strokeThickness: 2,
+    });
+    levelTxt.setOrigin(0.5);
+    levelTxt.setInteractive({ useHandCursor: true });
+
+    const levelSub = this.add.text(centerX, btnY2 + 16, '15关挑战 · 3大区域', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '13px',
+      color: '#224488',
+    });
+    levelSub.setOrigin(0.5);
+
+    // ── Character select placeholder ──
+    const charTxt = this.add.text(centerX, 385, '👤 角色选择', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '15px',
+      color: '#888877',
+      stroke: '#f5f0e0',
+      strokeThickness: 2,
+    });
+    charTxt.setOrigin(0.5);
+    charTxt.setInteractive({ useHandCursor: true });
+
+    // ── Hover effects ──
+    const addHover = (txt, scale) => {
+      txt.on('pointerover', () => this.tweens.add({ targets: txt, scaleX: scale, scaleY: scale, duration: 100 }));
+      txt.on('pointerout',  () => this.tweens.add({ targets: txt, scaleX: 1,     scaleY: 1,     duration: 100 }));
+    };
+    addHover(endlessTxt, 1.07);
+    addHover(levelTxt,   1.07);
+    addHover(charTxt,    1.1);
+
+    // ── Click handlers ──
+    endlessTxt.on('pointerdown', () => {
+      this.scene.start('GameScene', { mode: 'endless', level: 1 });
+    });
+    levelTxt.on('pointerdown', () => {
+      this.scene.start('GameScene', { mode: 'level', level: 1 });
+    });
+  }
+
+  drawHighScore() {
+    const save = loadSave();
+    const hs = save.highScore || 0;
+    if (hs <= 0) return;
+
+    const hsTxt = this.add.text(CONFIG.WIDTH / 2, 175, '🏆 最高分: ' + hs, {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '16px',
+      color: '#cc8800',
+      stroke: '#f5f0e0',
+      strokeThickness: 3,
+    });
+    hsTxt.setOrigin(0.5);
+  }
+
+  drawBottomBar() {
+    // Back to game library
+    const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回游戏库', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '13px',
+      color: '#888877',
+      stroke: '#f5f0e0',
+      strokeThickness: 2,
+    });
+    backTxt.setOrigin(0, 1);
+    backTxt.setInteractive({ useHandCursor: true });
+    backTxt.on('pointerover', () => backTxt.setColor('#444433'));
+    backTxt.on('pointerout',  () => backTxt.setColor('#888877'));
+    backTxt.on('pointerdown', () => { window.location.href = 'index.html'; });
+
+    // Sound toggle
+    const save = loadSave();
+    let soundOn = save.soundOn !== false; // default true
+    const soundTxt = this.add.text(CONFIG.WIDTH - 14, CONFIG.HEIGHT - 22, soundOn ? '🔊' : '🔇', {
+      fontSize: '22px',
+    });
+    soundTxt.setOrigin(1, 1);
+    soundTxt.setInteractive({ useHandCursor: true });
+    soundTxt.on('pointerdown', () => {
+      soundOn = !soundOn;
+      soundTxt.setText(soundOn ? '🔊' : '🔇');
+      const s = loadSave();
+      s.soundOn = soundOn;
+      writeSave(s);
+    });
+  }
+
+  drawBouncer() {
+    // Bouncing basketball decoration
+    const ball = this.add.text(CONFIG.WIDTH - 80, 240, '🏀', { fontSize: '40px' });
+    ball.setOrigin(0.5);
+    this.tweens.add({
+      targets: ball,
+      y: 270,
+      duration: 400,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Bounce.easeOut',
+    });
+  }
+}
+
+// ─── RESULT SCENE ─────────────────────────────────────────────────────────────
+class ResultScene extends Phaser.Scene {
+  constructor() { super({ key: 'ResultScene' }); }
+
+  init(data) {
+    this.resultScore = data?.score   || 0;
+    this.resultCombo = data?.combo   || 0;
+    this.resultBasks = data?.baskets || 0;
+    this.resultMode  = data?.mode    || 'endless';
+    this.resultLevel = data?.level   || 1;
+    this.isNewHigh   = data?.isNewHigh || false;
+  }
+
+  create() {
+    this.drawBackground();
+    this.drawTitle();
+    this.drawScore();
+    this.drawStats();
+    this.drawButtons();
+  }
+
+  drawBackground() {
+    const g = this.add.graphics();
+
+    // Paper fill
+    g.fillStyle(0xf5f0e0, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    // Notebook lines
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    // Red margin
+    g.lineStyle(1.5, 0xdd6666, 0.3);
+    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
+  }
+
+  drawTitle() {
+    // Shadow
+    const shadow = this.add.text(CONFIG.WIDTH / 2 + 3, 78, 'GAME OVER', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '64px',
+      color: '#ffcc00',
+    });
+    shadow.setOrigin(0.5);
+    shadow.setAngle(-4);
+
+    // Main title
+    const title = this.add.text(CONFIG.WIDTH / 2, 75, 'GAME OVER', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '64px',
+      color: '#cc2233',
+      stroke: '#440011',
+      strokeThickness: 5,
+    });
+    title.setOrigin(0.5);
+    title.setAngle(-4);
+  }
+
+  drawScore() {
+    const cx = CONFIG.WIDTH / 2;
+
+    // Score number
+    const scoreTxt = this.add.text(cx, 165, '' + this.resultScore, {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '72px',
+      color: CONFIG.COLORS.ink,
+      stroke: '#888866',
+      strokeThickness: 3,
+    });
+    scoreTxt.setOrigin(0.5);
+
+    // POINTS label
+    const label = this.add.text(cx, 215, 'POINTS', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '18px',
+      color: '#888877',
+    });
+    label.setOrigin(0.5);
+
+    // New high score
+    if (this.isNewHigh) {
+      const hsTxt = this.add.text(cx, 248, '★ NEW HIGH SCORE! ★', {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '20px',
+        color: '#ffcc00',
+        stroke: '#884400',
+        strokeThickness: 3,
+      });
+      hsTxt.setOrigin(0.5);
+      // Pulsing tween
+      this.tweens.add({
+        targets: hsTxt,
+        scaleX: 1.12, scaleY: 1.12,
+        duration: 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+  }
+
+  drawStats() {
+    const cardW = 150, cardH = 72, cardR = 12;
+    const y = 290;
+    const cx = CONFIG.WIDTH / 2;
+    const gap = 30;
+    const x1 = cx - cardW - gap / 2;
+    const x2 = cx + gap / 2;
+
+    // Card helper
+    const drawCard = (x, icon, topLabel, value) => {
+      const bg = this.add.graphics();
+      bg.fillStyle(0xffffff, 0.85);
+      bg.fillRoundedRect(x, y, cardW, cardH, cardR);
+      bg.lineStyle(2, 0xccccbb, 0.8);
+      bg.strokeRoundedRect(x, y, cardW, cardH, cardR);
+
+      this.add.text(x + cardW / 2, y + 14, icon + ' ' + topLabel, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '13px',
+        color: '#888877',
+      }).setOrigin(0.5);
+
+      this.add.text(x + cardW / 2, y + 44, '' + value, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '28px',
+        color: CONFIG.COLORS.ink,
+        stroke: '#ccccaa',
+        strokeThickness: 2,
+      }).setOrigin(0.5);
+    };
+
+    drawCard(x1, '🏀', 'BASKETS', this.resultBasks);
+    drawCard(x2, '🔥', 'MAX COMBO', this.resultCombo);
+  }
+
+  drawButtons() {
+    const btnW = 170, btnH = 50, btnR = 12;
+    const y = 385;
+    const cx = CONFIG.WIDTH / 2;
+    const gap = 20;
+    const x1 = cx - btnW - gap / 2;
+    const x2 = cx + gap / 2;
+
+    // Replay button
+    const replayBg = this.add.graphics();
+    replayBg.fillStyle(0x3366ff, 0.15);
+    replayBg.fillRoundedRect(x1, y - btnH / 2, btnW, btnH, btnR);
+    replayBg.lineStyle(3, 0x3366ff, 0.9);
+    replayBg.strokeRoundedRect(x1, y - btnH / 2, btnW, btnH, btnR);
+
+    const replayTxt = this.add.text(x1 + btnW / 2, y, '🔄 REPLAY', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '18px',
+      color: '#1133aa',
+      stroke: '#ffffff',
+      strokeThickness: 2,
+    });
+    replayTxt.setOrigin(0.5);
+    replayTxt.setInteractive({ useHandCursor: true });
+
+    // Menu button
+    const menuBg = this.add.graphics();
+    menuBg.fillStyle(0x6666cc, 0.15);
+    menuBg.fillRoundedRect(x2, y - btnH / 2, btnW, btnH, btnR);
+    menuBg.lineStyle(3, 0x6666cc, 0.9);
+    menuBg.strokeRoundedRect(x2, y - btnH / 2, btnW, btnH, btnR);
+
+    const menuTxt = this.add.text(x2 + btnW / 2, y, '🏠 MENU', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '18px',
+      color: '#444499',
+      stroke: '#ffffff',
+      strokeThickness: 2,
+    });
+    menuTxt.setOrigin(0.5);
+    menuTxt.setInteractive({ useHandCursor: true });
+
+    // Hover effects
+    const addHover = (txt, scale) => {
+      txt.on('pointerover', () => this.tweens.add({ targets: txt, scaleX: scale, scaleY: scale, duration: 100 }));
+      txt.on('pointerout',  () => this.tweens.add({ targets: txt, scaleX: 1,     scaleY: 1,     duration: 100 }));
+    };
+    addHover(replayTxt, 1.08);
+    addHover(menuTxt,   1.08);
+
+    // Click handlers
+    replayTxt.on('pointerdown', () => {
+      this.scene.start('GameScene', { mode: this.resultMode, level: this.resultLevel });
+    });
+    menuTxt.on('pointerdown', () => {
+      this.scene.start('MenuScene');
+    });
+  }
+}
+
 // ─── GAME SCENE ───────────────────────────────────────────────────────────────
 class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
 
+  // ── Init (receives mode data from scene transitions) ──────────────────────
+  init(data) {
+    this.gameMode     = data?.mode  || 'endless';
+    this.currentLevel = data?.level || 1;
+  }
+
   // ── State ─────────────────────────────────────────────────────────────────
   initState() {
-    this.score       = 0;
-    this.combo       = 0;
-    this.isShooting  = false;
-    this.scored      = false;
+    this.score        = 0;
+    this.combo        = 0;
+    this.maxCombo     = 0;
+    this.isShooting   = false;
+    this.scored       = false;
     this.hitBackboard = false;
-    this.swipeStart  = null;
-    this.ball        = null;
+    this.swipeStart   = null;
+    this.ball         = null;
     this.ballColliders = [];
+
+    // Timer / mode state
+    this.timeLeft    = CONFIG.ENDLESS.INITIAL_TIME;
+    this.basketCount = 0;
+    this.isGameOver  = false;
+    this.gameStarted = false;
+    this.timerFrozen = false; // reserved for future power-up use
   }
 
   // ── Preload ───────────────────────────────────────────────────────────────
@@ -76,7 +516,6 @@ class GameScene extends Phaser.Scene {
     // Dark seam lines
     ctx.strokeStyle = '#442200';
     ctx.lineWidth = 2.2;
-    // Vertical curve
     ctx.beginPath();
     ctx.moveTo(28, 3);
     ctx.bezierCurveTo(42, 14, 42, 42, 28, 53);
@@ -85,7 +524,6 @@ class GameScene extends Phaser.Scene {
     ctx.moveTo(28, 3);
     ctx.bezierCurveTo(14, 14, 14, 42, 28, 53);
     ctx.stroke();
-    // Horizontal curve
     ctx.beginPath();
     ctx.moveTo(3, 28);
     ctx.bezierCurveTo(14, 16, 42, 16, 53, 28);
@@ -115,6 +553,7 @@ class GameScene extends Phaser.Scene {
     this.createBall();
     this.setupInput();
     this.createHUD();
+    this.startTimer();
   }
 
   // ── Background ────────────────────────────────────────────────────────────
@@ -162,7 +601,7 @@ class GameScene extends Phaser.Scene {
       g.strokePath();
     }
 
-    // Three-point arc (court marking)
+    // Three-point arc
     g.lineStyle(2, 0xffffff, 0.18);
     g.beginPath();
     g.arc(180, CONFIG.GROUND_Y, 180, -Math.PI * 0.75, Math.PI * 0.05);
@@ -179,7 +618,6 @@ class GameScene extends Phaser.Scene {
     splashes.forEach(s => {
       g.fillStyle(s.c, s.a);
       g.fillCircle(s.x, s.y, s.r);
-      // Drips
       g.fillRect(s.x - 3, s.y, 6, s.r * 0.8);
     });
 
@@ -212,8 +650,8 @@ class GameScene extends Phaser.Scene {
     const g = this.add.graphics();
     const POLE_X   = 610;
     const RIM_Y    = 185;
-    const RIM_W    = 52;    // half-width each side from center
-    const RIM_CX   = POLE_X - 10; // rim center x
+    const RIM_W    = 52;
+    const RIM_CX   = POLE_X - 10;
     const BOARD_X  = POLE_X + 8;
     const BOARD_Y  = RIM_Y - 60;
     const BOARD_W  = 14;
@@ -223,7 +661,7 @@ class GameScene extends Phaser.Scene {
     g.lineStyle(5, 0x555544, 1);
     this.drawWobblyLine(g, POLE_X, CONFIG.GROUND_Y, POLE_X + 2, RIM_Y + 10, 6);
 
-    // Backboard (white fill, dark border)
+    // Backboard
     g.fillStyle(0xfafaf5, 1);
     g.fillRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
     g.lineStyle(3, 0x333322, 1);
@@ -233,26 +671,24 @@ class GameScene extends Phaser.Scene {
     g.lineStyle(1.5, 0xcc3333, 0.8);
     g.strokeRect(BOARD_X + 2, BOARD_Y + BOARD_H * 0.3, BOARD_W - 4, BOARD_H * 0.35);
 
-    // Rim arm (connecting backboard to rim)
+    // Rim arm
     g.lineStyle(4, 0xcc2200, 1);
     g.beginPath();
     g.moveTo(BOARD_X, RIM_Y);
     g.lineTo(RIM_CX - RIM_W * 0.5 + 4, RIM_Y);
     g.strokePath();
 
-    // Rim — semicircle / arc shape (hand-drawn red)
+    // Rim
     g.lineStyle(5, 0xff3300, 1);
-    // Left and right rim edges (flat lines for arcade physics matching)
     g.beginPath();
     g.moveTo(RIM_CX - RIM_W / 2, RIM_Y);
     g.lineTo(RIM_CX + RIM_W / 2, RIM_Y);
     g.strokePath();
-    // Front rim blob
     g.fillStyle(0xff3300, 1);
     g.fillCircle(RIM_CX - RIM_W / 2, RIM_Y, 5);
     g.fillCircle(RIM_CX + RIM_W / 2, RIM_Y, 5);
 
-    // Net (dashed lines down from rim)
+    // Net
     g.lineStyle(1.5, 0xf5f0e0, 0.85);
     const netTop = RIM_Y + 4;
     const netBot = RIM_Y + 38;
@@ -265,7 +701,6 @@ class GameScene extends Phaser.Scene {
       g.lineTo(nx + wobble, netBot);
       g.strokePath();
     }
-    // Horizontal net rungs
     for (let row = 1; row <= 3; row++) {
       const ry = netTop + (netBot - netTop) * row / 4;
       const shrink = row * 2;
@@ -275,7 +710,6 @@ class GameScene extends Phaser.Scene {
       g.strokePath();
     }
 
-    // Store hoop geometry for physics
     this.hoopGeom = { RIM_CX, RIM_Y, RIM_W, BOARD_X, BOARD_Y, BOARD_W, BOARD_H, POLE_X };
   }
 
@@ -341,7 +775,7 @@ class GameScene extends Phaser.Scene {
     g.fillEllipse(px - 12, legBot + 2, 16, 6);
     g.fillEllipse(px + 4,  legBot + 2, 16, 6);
 
-    // Jersey body (blue #23)
+    // Jersey body
     g.fillStyle(0x3366ff, 1);
     g.fillRect(px - 14, torsoT, 28, torsoB - torsoT);
     g.lineStyle(2, 0x1133aa, 1);
@@ -354,23 +788,21 @@ class GameScene extends Phaser.Scene {
       stroke: '#1133aa', strokeThickness: 2
     });
     numTxt.setOrigin(0.5);
-    // (static — we only draw once; could be redrawn but text is layered above)
 
-    // Arm (non-shooting)
+    // Non-shooting arm
     g.lineStyle(3, 0xffcc99, 1);
     g.beginPath();
     g.moveTo(px - 14, torsoT + 8);
     g.lineTo(px - 26, torsoT + 24);
     g.strokePath();
 
-    // Shooting arm (raised)
+    // Shooting arm
     if (shooting) {
       g.lineStyle(3.5, 0xffcc99, 1);
       g.beginPath();
       g.moveTo(px + 14, torsoT + 8);
       g.lineTo(px + 28, torsoT - 12);
       g.strokePath();
-      // Hand
       g.fillStyle(0xffcc99, 1);
       g.fillCircle(px + 28, torsoT - 14, 5);
     } else {
@@ -405,7 +837,7 @@ class GameScene extends Phaser.Scene {
     g.arc(px, headY + 8, 6, 0.2, Math.PI - 0.2);
     g.strokePath();
 
-    // Headband (pink)
+    // Headband
     g.lineStyle(5, 0xff66aa, 1);
     g.beginPath();
     g.arc(px, headY + 7, 14, -Math.PI * 0.75, -Math.PI * 0.1);
@@ -444,7 +876,7 @@ class GameScene extends Phaser.Scene {
     rr.body.setSize(8, 8);
     rr.refreshBody();
 
-    // Score zone (sensor) — just below rim center
+    // Score zone (sensor)
     this.scoreZone = this.physics.add.staticGroup();
     const sz = this.scoreZone.create(RIM_CX, RIM_Y + 14, null);
     sz.setVisible(false);
@@ -452,34 +884,29 @@ class GameScene extends Phaser.Scene {
     sz.refreshBody();
   }
 
-  // ── Colliders (re-setup per ball) ─────────────────────────────────────────
+  // ── Colliders ─────────────────────────────────────────────────────────────
   setupHoopColliders() {
     if (!this.ball || !this.ball.active) return;
 
-    // Clear old colliders
     this.ballColliders.forEach(c => { if (c) this.physics.world.removeCollider(c); });
     this.ballColliders = [];
 
-    // Ground — triggers miss
     const gc = this.physics.add.collider(this.ball, this.ground, () => {
       if (!this.isShooting) return;
       this.onMiss();
     });
     this.ballColliders.push(gc);
 
-    // Backboard
     const bc = this.physics.add.collider(this.ball, this.backboard, () => {
       this.hitBackboard = true;
     });
     this.ballColliders.push(bc);
 
-    // Rim edges — bounce
     const rlc = this.physics.add.collider(this.ball, this.rimLeft);
     this.ballColliders.push(rlc);
     const rrc = this.physics.add.collider(this.ball, this.rimRight);
     this.ballColliders.push(rrc);
 
-    // Score zone — overlap
     const sc = this.physics.add.overlap(this.ball, this.scoreZone, () => {
       if (!this.isShooting || this.scored) return;
       if (this.ball.body.velocity.y > 0) {
@@ -500,13 +927,12 @@ class GameScene extends Phaser.Scene {
     this.ball.body.setBounce(0.6);
     this.ball.body.setCircle(26, 2, 2);
 
-    this.isShooting = false;
-    this.scored     = false;
+    this.isShooting   = false;
+    this.scored       = false;
     this.hitBackboard = false;
 
     this.setupHoopColliders();
 
-    // Idle bob tween
     if (this.ballTween) this.ballTween.stop();
     this.ballTween = this.tweens.add({
       targets: this.ball,
@@ -520,11 +946,10 @@ class GameScene extends Phaser.Scene {
 
   // ── Input / Swipe ─────────────────────────────────────────────────────────
   setupInput() {
-    // Trajectory preview graphics
     this.trajectoryGfx = this.add.graphics();
 
     this.input.on('pointerdown', (ptr) => {
-      if (this.isShooting) return;
+      if (this.isShooting || this.isGameOver) return;
       this.swipeStart = { x: ptr.x, y: ptr.y, time: this.time.now };
     });
 
@@ -547,6 +972,11 @@ class GameScene extends Phaser.Scene {
         return;
       }
 
+      // Start timer on first swipe
+      if (!this.gameStarted && this.gameMode === 'endless') {
+        this.gameStarted = true;
+      }
+
       this.shootBall(dx, dy, dist, dt);
       this.swipeStart = null;
     });
@@ -560,7 +990,6 @@ class GameScene extends Phaser.Scene {
     const sx = this.ball.x;
     const sy = this.ball.y;
 
-    // Velocity estimate
     const dx    = ex - this.swipeStart.x;
     const dy    = ey - this.swipeStart.y;
     const dist  = Math.sqrt(dx * dx + dy * dy);
@@ -568,11 +997,9 @@ class GameScene extends Phaser.Scene {
     const vx    = -(dx / dist) * speed;
     const vy    = -(dy / dist) * speed;
 
-    // Simulate parabola
     const g_accel = CONFIG.GRAVITY;
     const dt      = 1 / 60;
     let px = sx, py = sy, pvx = vx, pvy = vy;
-    let dotCount = 0;
 
     g.fillStyle(0xff8833, 0.7);
     for (let i = 0; i < 90; i++) {
@@ -583,7 +1010,6 @@ class GameScene extends Phaser.Scene {
       if (i % 5 === 0) {
         const r = Phaser.Math.Lerp(5, 2, i / 90);
         g.fillCircle(px, py, r);
-        dotCount++;
       }
     }
   }
@@ -603,14 +1029,12 @@ class GameScene extends Phaser.Scene {
     this.scored       = false;
     this.hitBackboard = false;
 
-    // Determine shot distance for scoring
     const rimX = this.hoopGeom.RIM_CX;
     const dToRim = Math.abs(this.ball.x - rimX);
     if (dToRim < 150)       this.shotZone = 'near';
     else if (dToRim < 280)  this.shotZone = 'mid';
     else                    this.shotZone = 'far';
 
-    // Player shoot animation
     this.tweens.add({
       targets: this.playerGfx,
       y: -16,
@@ -625,9 +1049,13 @@ class GameScene extends Phaser.Scene {
     if (this.scored) return;
     this.scored = true;
 
+    // Track baskets and combo
+    this.basketCount++;
+    this.combo = Math.min(this.combo + 1, 10);
+    if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+
     // Base points
     let pts = this.shotZone === 'far' ? 200 : this.shotZone === 'mid' ? 150 : 100;
-    let label = pts + '';
     let bonusLabel = '';
 
     if (!this.hitBackboard) {
@@ -638,10 +1066,7 @@ class GameScene extends Phaser.Scene {
       bonusLabel = 'BANK! +30';
     }
 
-    // Combo
-    this.combo = Math.min(this.combo + 1, 10);
     pts *= this.combo;
-
     this.score += pts;
 
     const rimX = this.hoopGeom.RIM_CX;
@@ -650,7 +1075,6 @@ class GameScene extends Phaser.Scene {
     // Main score popup
     const colors  = ['#ff3366','#3366ff','#ff8833','#44cc44','#ffcc00'];
     const color   = colors[Math.floor(Math.random() * colors.length)];
-    const angle   = Phaser.Math.Between(-15, 15);
     const ptsTxt  = this.add.text(rimX, rimY - 20, '+' + pts, {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '36px',
@@ -659,7 +1083,7 @@ class GameScene extends Phaser.Scene {
       strokeThickness: 4
     });
     ptsTxt.setOrigin(0.5);
-    ptsTxt.setAngle(angle);
+    ptsTxt.setAngle(Phaser.Math.Between(-15, 15));
 
     this.tweens.add({
       targets: ptsTxt,
@@ -713,8 +1137,34 @@ class GameScene extends Phaser.Scene {
       });
     }
 
+    // Endless: bonus time every BONUS_EVERY baskets
+    if (this.gameMode === 'endless' && this.gameStarted &&
+        this.basketCount % CONFIG.ENDLESS.BONUS_EVERY === 0) {
+      this.timeLeft += CONFIG.ENDLESS.BONUS_TIME;
+      this.showBonusTime();
+    }
+
     this.updateHUD();
     this.time.delayedCall(1600, () => this.respawnBall());
+  }
+
+  showBonusTime() {
+    const popup = this.add.text(CONFIG.WIDTH - 80, 65, '+' + CONFIG.ENDLESS.BONUS_TIME + 's!', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '26px',
+      color: '#44cc44',
+      stroke: '#003300',
+      strokeThickness: 3,
+    });
+    popup.setOrigin(0.5);
+    this.tweens.add({
+      targets: popup,
+      y: popup.y - 50,
+      alpha: 0,
+      duration: 1200,
+      ease: 'Quad.easeOut',
+      onComplete: () => popup.destroy(),
+    });
   }
 
   onMiss() {
@@ -752,6 +1202,7 @@ class GameScene extends Phaser.Scene {
   }
 
   respawnBall() {
+    if (this.isGameOver) return;
     if (this.ball) {
       this.ball.destroy();
       this.ball = null;
@@ -759,6 +1210,79 @@ class GameScene extends Phaser.Scene {
     this.ballColliders.forEach(c => { if (c) this.physics.world.removeCollider(c); });
     this.ballColliders = [];
     this.createBall();
+  }
+
+  // ── Timer ─────────────────────────────────────────────────────────────────
+  startTimer() {
+    if (this.gameMode !== 'endless') return;
+
+    // 1-second countdown timer event
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: this.tickTimer,
+      callbackScope: this,
+      loop: true,
+    });
+  }
+
+  tickTimer() {
+    if (!this.gameStarted || this.isGameOver || this.timerFrozen) return;
+
+    this.timeLeft = Math.max(0, this.timeLeft - 1);
+    this.updateHUD();
+
+    if (this.timeLeft <= 0) {
+      this.gameOver();
+    }
+  }
+
+  gameOver() {
+    if (this.isGameOver) return;
+    this.isGameOver = true;
+
+    if (this.timerEvent) this.timerEvent.remove();
+
+    // Save to localStorage
+    const save = loadSave();
+    const prevHigh = save.highScore || 0;
+    const isNewHigh = this.score > prevHigh;
+    if (isNewHigh) save.highScore = this.score;
+    writeSave(save);
+
+    // Brief flash before transition
+    const overlay = this.add.graphics();
+    overlay.fillStyle(0xff0000, 0);
+    overlay.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    this.tweens.add({
+      targets: overlay,
+      alpha: 0.3,
+      duration: 200,
+      yoyo: true,
+      repeat: 2,
+      onComplete: () => {
+        this.scene.start('ResultScene', {
+          score:     this.score,
+          combo:     this.maxCombo,
+          baskets:   this.basketCount,
+          mode:      this.gameMode,
+          level:     this.currentLevel,
+          isNewHigh: isNewHigh,
+        });
+      }
+    });
+  }
+
+  levelComplete() {
+    // Wire-up placeholder for future level implementation
+    this.scene.start('ResultScene', {
+      score:     this.score,
+      combo:     this.maxCombo,
+      baskets:   this.basketCount,
+      mode:      this.gameMode,
+      level:     this.currentLevel,
+      isNewHigh: false,
+    });
   }
 
   // ── HUD ───────────────────────────────────────────────────────────────────
@@ -770,15 +1294,48 @@ class GameScene extends Phaser.Scene {
     scoreBg.lineStyle(2, 0x333333, 0.6);
     scoreBg.strokeRoundedRect(10, 10, 130, 46, 10);
 
-    // Star icon
     this.add.text(18, 16, '⭐', { fontSize: '20px' });
 
-    // Score label
     this.scoreTxt = this.add.text(44, 18, 'SCORE: 0', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '14px',
       color: '#333333'
     });
+
+    // Timer HUD (top-right, matching score style)
+    if (this.gameMode === 'endless') {
+      this.timerBg = this.add.graphics();
+      this.timerBg.fillStyle(0xffffff, 0.75);
+      this.timerBg.fillRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+      this.timerBg.lineStyle(2, 0x333333, 0.6);
+      this.timerBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+
+      this.add.text(CONFIG.WIDTH - 132, 16, '⏱', { fontSize: '20px' });
+
+      this.timerTxt = this.add.text(CONFIG.WIDTH - 106, 18, '1:00', {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '20px',
+        color: '#333333',
+      });
+
+      // Waiting for first shot indicator
+      this.waitTxt = this.add.text(CONFIG.WIDTH / 2, 40, 'SWIPE TO START!', {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '16px',
+        color: '#cc6600',
+        stroke: '#f5f0e0',
+        strokeThickness: 3,
+      });
+      this.waitTxt.setOrigin(0.5);
+      // Blink tween
+      this.tweens.add({
+        targets: this.waitTxt,
+        alpha: 0.3,
+        duration: 600,
+        yoyo: true,
+        repeat: -1,
+      });
+    }
 
     // Combo counter
     this.comboTxt = this.add.text(CONFIG.WIDTH / 2, 16, '', {
@@ -803,20 +1360,51 @@ class GameScene extends Phaser.Scene {
 
   updateHUD() {
     this.scoreTxt.setText('SCORE: ' + this.score);
+
     if (this.combo > 1) {
       this.comboTxt.setText('🔥 x' + this.combo);
       this.comboTxt.setVisible(true);
     } else {
       this.comboTxt.setVisible(false);
     }
+
+    // Timer display
+    if (this.timerTxt) {
+      const secs = Math.max(0, Math.ceil(this.timeLeft));
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      const formatted = m + ':' + (s < 10 ? '0' : '') + s;
+      this.timerTxt.setText(formatted);
+
+      // Flash red when <= 10 seconds
+      if (secs <= 10 && this.gameStarted) {
+        const flash = secs % 2 === 0;
+        this.timerTxt.setColor(flash ? '#ff2222' : '#cc0000');
+        // Also flash the bg
+        if (this.timerBg) {
+          this.timerBg.clear();
+          this.timerBg.fillStyle(flash ? 0xff4444 : 0xff0000, flash ? 0.25 : 0.35);
+          this.timerBg.fillRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+          this.timerBg.lineStyle(2, 0xff0000, 0.9);
+          this.timerBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+        }
+      } else {
+        this.timerTxt.setColor('#333333');
+      }
+    }
+
+    // Hide wait text once started
+    if (this.gameStarted && this.waitTxt) {
+      this.waitTxt.setVisible(false);
+    }
   }
 
   // ── Update ────────────────────────────────────────────────────────────────
   update() {
+    if (this.isGameOver) return;
     if (!this.ball || !this.ball.active) return;
     if (!this.isShooting) return;
 
-    // Out-of-bounds check
     const b = this.ball;
     if (
       b.x < -80 || b.x > CONFIG.WIDTH + 80 ||
@@ -844,7 +1432,7 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [GameScene]
+  scene: [MenuScene, GameScene, ResultScene]
 });
 </script>
 </body>
