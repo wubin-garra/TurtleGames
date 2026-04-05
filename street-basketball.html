@@ -1009,6 +1009,13 @@ class GameScene extends Phaser.Scene {
     this.hitBackboard = false;
     this.swipeStart   = null;
     this.ball         = null;
+    this.jerseyNumTxt = null;
+    this.comboEmitter = null;
+    this.scoreBg      = null;
+    this.scoreIcon    = null;
+    this.timerIcon    = null;
+    this.ballsIcon    = null;
+    this.levelTxt     = null;
     this.ballColliders = [];
 
     // Timer / mode state
@@ -1749,6 +1756,8 @@ class GameScene extends Phaser.Scene {
   redrawPlayer(px, py, shooting) {
     const g = this.playerGfx;
     g.clear();
+    // Destroy previous jersey number text to prevent accumulation
+    if (this.jerseyNumTxt) { this.jerseyNumTxt.destroy(); this.jerseyNumTxt = null; }
 
     const headY  = py - 88;
     const torsoT = py - 74;
@@ -1790,12 +1799,12 @@ class GameScene extends Phaser.Scene {
     g.strokeRect(px - 14, torsoT, 28, torsoB - torsoT);
 
     // Jersey number "23"
-    const numTxt = this.add.text(px, torsoT + (torsoB - torsoT) / 2, '23', {
+    this.jerseyNumTxt = this.add.text(px, torsoT + (torsoB - torsoT) / 2, '23', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '13px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 2
     });
-    numTxt.setOrigin(0.5);
+    this.jerseyNumTxt.setOrigin(0.5);
 
     // Non-shooting arm
     g.lineStyle(3, 0xffcc99, 1);
@@ -2501,9 +2510,15 @@ class GameScene extends Phaser.Scene {
 
   onMiss() {
     if (this.scored) return;
+    if (!this.isShooting) return;
+    this.isShooting = false; // prevent double-call from ground + off-screen checks
 
     soundManager.play('miss');
     this.combo = 0;
+
+    // Destroy combo effects emitter since combo resets
+    if (this.comboEmitter) { this.comboEmitter.destroy(); this.comboEmitter = null; }
+    if (this.ball) this.ball.clearTint();
     const missWords = ['MISS...', 'NOPE', 'AIR BALL', 'BRICK!', 'OH NO'];
     const word = missWords[Math.floor(Math.random() * missWords.length)];
 
@@ -2547,7 +2562,10 @@ class GameScene extends Phaser.Scene {
 
   respawnBall() {
     if (this.isGameOver) return;
+    // Destroy combo emitter before ball, so it doesn't follow a destroyed sprite
+    if (this.comboEmitter) { this.comboEmitter.destroy(); this.comboEmitter = null; }
     if (this.ball) {
+      this.ball.clearTint();
       this.ball.destroy();
       this.ball = null;
     }
@@ -2566,6 +2584,8 @@ class GameScene extends Phaser.Scene {
     }
 
     this.createBall();
+    // Re-apply combo effects on the new ball if combo is still active
+    if (this.combo > 1) this.updateComboEffects();
   }
 
   applyEndlessDifficulty() {
@@ -2745,13 +2765,13 @@ class GameScene extends Phaser.Scene {
   // ── HUD ───────────────────────────────────────────────────────────────────
   createHUD() {
     // Score bg
-    const scoreBg = this.add.graphics();
-    scoreBg.fillStyle(0xffffff, 0.75);
-    scoreBg.fillRoundedRect(10, 10, 130, 46, 10);
-    scoreBg.lineStyle(2, 0x333333, 0.6);
-    scoreBg.strokeRoundedRect(10, 10, 130, 46, 10);
+    this.scoreBg = this.add.graphics();
+    this.scoreBg.fillStyle(0xffffff, 0.75);
+    this.scoreBg.fillRoundedRect(10, 10, 130, 46, 10);
+    this.scoreBg.lineStyle(2, 0x333333, 0.6);
+    this.scoreBg.strokeRoundedRect(10, 10, 130, 46, 10);
 
-    this.add.text(18, 16, '⭐', { fontSize: '20px' });
+    this.scoreIcon = this.add.text(18, 16, '⭐', { fontSize: '20px' });
 
     this.scoreTxt = this.add.text(44, 18, 'SCORE: 0', {
       fontFamily: "'Arial Black', sans-serif",
@@ -2771,7 +2791,7 @@ class GameScene extends Phaser.Scene {
       this.timerBg.lineStyle(2, 0x333333, 0.6);
       this.timerBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
 
-      this.add.text(CONFIG.WIDTH - 132, 16, '⏱', { fontSize: '20px' });
+      this.timerIcon = this.add.text(CONFIG.WIDTH - 132, 16, '⏱', { fontSize: '20px' });
 
       const initSecs = Math.ceil(this.timeLeft);
       const im = Math.floor(initSecs / 60), is = initSecs % 60;
@@ -2808,7 +2828,7 @@ class GameScene extends Phaser.Scene {
       this.ballsBg.lineStyle(2, 0x333333, 0.6);
       this.ballsBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
 
-      this.add.text(CONFIG.WIDTH - 132, 16, '🏀', { fontSize: '20px' });
+      this.ballsIcon = this.add.text(CONFIG.WIDTH - 132, 16, '🏀', { fontSize: '20px' });
 
       this.ballsTxt = this.add.text(CONFIG.WIDTH - 104, 18, 'x' + this.ballsLeft, {
         fontFamily: "'Arial Black', sans-serif",
@@ -2820,7 +2840,7 @@ class GameScene extends Phaser.Scene {
     // Level info header (level mode)
     if (this.gameMode === 'level' && this.levelConfig) {
       const cfg = this.levelConfig;
-      this.add.text(CONFIG.WIDTH / 2, 18, 'LV.' + cfg.id + ' ' + cfg.name, {
+      this.levelTxt = this.add.text(CONFIG.WIDTH / 2, 18, 'LV.' + cfg.id + ' ' + cfg.name, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '13px',
         color: '#444433',
@@ -3131,14 +3151,20 @@ class GameScene extends Phaser.Scene {
         }
       }
       // HUD to high depth so it's visible above night overlay
+      if (this.scoreBg)   this.scoreBg.setDepth(19);
+      if (this.scoreIcon) this.scoreIcon.setDepth(20);
       if (this.scoreTxt)  this.scoreTxt.setDepth(20);
       if (this.comboTxt)  this.comboTxt.setDepth(20);
       if (this.timerTxt)  this.timerTxt.setDepth(20);
       if (this.ballsTxt)  this.ballsTxt.setDepth(20);
       if (this.instrTxt)  this.instrTxt.setDepth(20);
       if (this.windTxt)   this.windTxt.setDepth(20);
+      if (this.waitTxt)   this.waitTxt.setDepth(20);
       if (this.timerBg)   this.timerBg.setDepth(19);
+      if (this.timerIcon) this.timerIcon.setDepth(20);
       if (this.ballsBg)   this.ballsBg.setDepth(19);
+      if (this.ballsIcon) this.ballsIcon.setDepth(20);
+      if (this.levelTxt)  this.levelTxt.setDepth(20);
     }
   }
 
