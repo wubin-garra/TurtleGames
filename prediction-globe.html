@@ -17,6 +17,21 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
     }
+    .marker-label {
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      background: rgba(10, 15, 30, 0.75);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(100, 150, 255, 0.25);
+      white-space: nowrap;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+      text-shadow: 0 0 4px rgba(0,0,0,0.8);
+    }
     #sidebar {
       position: fixed; top: 0; right: -400px; width: 400px; height: 100%;
       background: rgba(10, 15, 30, 0.92); backdrop-filter: blur(20px);
@@ -170,6 +185,7 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
     // --- Geo Location Database ---
     const GEO_KEYWORDS = {
@@ -346,6 +362,14 @@
     renderer.setClearColor(0x000000);
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
+    // --- CSS2D Label Renderer ---
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.getElementById('canvas-container').appendChild(labelRenderer.domElement);
+
     // --- Controls ---
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -370,18 +394,38 @@
     const earthGeometry = new THREE.SphereGeometry(EARTH_RADIUS, 64, 64);
 
     const textureLoader = new THREE.TextureLoader();
+    // Dark earth with visible topology
     const earthTexture = textureLoader.load(
       'https://unpkg.com/three-globe@2.31.1/example/img/earth-night.jpg'
     );
+    // Country borders overlay — blue outlines on transparent background
+    const bordersTexture = textureLoader.load(
+      'https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png'
+    );
     const earthMaterial = new THREE.MeshPhongMaterial({
       map: earthTexture,
-      bumpScale: 0.02,
+      bumpMap: bordersTexture,
+      bumpScale: 0.05,
     });
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earth);
 
-    scene.add(new THREE.AmbientLight(0x333366, 1.5));
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    // Semi-transparent country borders overlay sphere
+    const bordersMaterial = new THREE.MeshPhongMaterial({
+      map: bordersTexture,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const bordersMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_RADIUS * 1.002, 64, 64),
+      bordersMaterial
+    );
+    earth.add(bordersMesh);
+
+    scene.add(new THREE.AmbientLight(0x556688, 2.0));
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
     sunLight.position.set(5, 3, 5);
     scene.add(sunLight);
 
@@ -425,12 +469,12 @@
 
     function volumeToScale(volume, maxVolume) {
       const normalized = Math.log1p(volume) / Math.log1p(maxVolume);
-      return 0.015 + normalized * 0.045;
+      return 0.01 + normalized * 0.03;
     }
 
     function volumeToBeamHeight(volume, maxVolume) {
       const normalized = Math.log1p(volume) / Math.log1p(maxVolume);
-      return 0.08 + normalized * 0.4;
+      return 0.05 + normalized * 0.3;
     }
 
     function createMarkers(processedEvents) {
@@ -473,11 +517,21 @@
         beam.rotateX(Math.PI / 2);
         markerGroup.add(beam);
 
+        // Text label
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'marker-label';
+        labelDiv.textContent = event.title.length > 22 ? event.title.slice(0, 20) + '...' : event.title;
+        const label = new CSS2DObject(labelDiv);
+        const labelOffset = surfacePos.clone().normalize().multiplyScalar(0.06 + beamHeight);
+        label.position.copy(surfacePos.clone().add(labelOffset));
+        markerGroup.add(label);
+
         markers.push({
           event,
           dot,
           ring,
           beam,
+          label,
           baseScale: scale,
           surfacePos,
         });
@@ -489,6 +543,7 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
     });
 
     // --- Animation Loop ---
@@ -507,6 +562,7 @@
 
       controls.update();
       renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
     }
     animate();
 
@@ -653,6 +709,7 @@
         m.dot.material.opacity = visible ? 0.9 : 0.08;
         m.beam.material.opacity = visible ? 0.3 : 0.02;
         m.ring.visible = visible;
+        m.label.visible = visible;
       });
     }
 
