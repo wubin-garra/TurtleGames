@@ -106,6 +106,55 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     #loading-text { margin-top: 16px; font-size: 14px; opacity: 0.6; }
+    /* Flat map view */
+    #flat-map {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #0a0f1e;
+      display: none; z-index: 1; overflow: hidden;
+    }
+    #flat-map.active { display: block; }
+    #flat-map-img {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.45;
+    }
+    .flat-marker {
+      position: absolute; cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: transform 0.2s;
+    }
+    .flat-marker:hover { transform: translate(-50%, -50%) scale(1.5); z-index: 10; }
+    .flat-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+      animation: flat-pulse 2s ease-in-out infinite;
+    }
+    .flat-label {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: #fff; font-size: 11px; font-weight: 500;
+      background: rgba(10,15,30,0.8); padding: 2px 8px; border-radius: 4px;
+      border: 1px solid rgba(100,150,255,0.25);
+      white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .flat-marker:hover .flat-label { opacity: 1; }
+    @keyframes flat-pulse {
+      0%, 100% { box-shadow: 0 0 6px currentColor; }
+      50% { box-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+    }
+    /* View toggle button */
+    #view-toggle {
+      position: fixed; bottom: 40px; right: 24px; z-index: 300;
+      background: rgba(10,15,30,0.85); backdrop-filter: blur(12px);
+      border: 1px solid rgba(100,150,255,0.3); border-radius: 12px;
+      color: #fff; padding: 10px 16px; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.2s; pointer-events: auto;
+    }
+    #view-toggle:hover { background: rgba(100,150,255,0.25); border-color: rgba(100,150,255,0.5); }
+    #view-toggle svg { width: 18px; height: 18px; fill: #7db4ff; }
     @media (max-width: 768px) {
       #sidebar { width: 100%; right: auto; bottom: -100%; left: 0; top: auto; height: 70%; border-left: none; border-top: 1px solid rgba(100,150,255,0.2); transition: bottom 0.4s cubic-bezier(0.4,0,0.2,1); border-radius: 16px 16px 0 0; }
       #sidebar.open { bottom: 0; }
@@ -164,6 +213,17 @@
     <div id="sidebar-stats"></div>
     <a id="sidebar-link" href="#" target="_blank" rel="noopener">View on Polymarket →</a>
   </div>
+
+  <!-- Flat Map View -->
+  <div id="flat-map">
+    <img id="flat-map-img" src="https://unpkg.com/three-globe@2.31.1/example/img/earth-night.jpg" alt="world map">
+  </div>
+
+  <!-- View Toggle -->
+  <button id="view-toggle">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    <span id="toggle-label">2D Map</span>
+  </button>
 
   <!-- Bottom Bar -->
   <div id="bottom-bar">
@@ -743,6 +803,104 @@
       applyFilters();
       updateStatus();
     }
+
+    // --- Flat Map ---
+    const flatMap = document.getElementById('flat-map');
+    const flatMapImg = document.getElementById('flat-map-img');
+    let flatMarkerElements = [];
+    let isFlat = false;
+
+    function latLngToFlatXY(lat, lng, width, height) {
+      // Mercator-like projection
+      const x = (lng + 180) / 360 * width;
+      const latRad = lat * Math.PI / 180;
+      const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+      const y = height / 2 - (mercN / Math.PI) * (height / 2);
+      return { x, y };
+    }
+
+    function renderFlatMap() {
+      // Clear old flat markers
+      flatMarkerElements.forEach(el => el.remove());
+      flatMarkerElements = [];
+
+      // Size the map image to fill viewport
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const mapW = vw;
+      const mapH = vw * 0.5; // 2:1 aspect ratio for equirectangular
+      flatMapImg.style.width = mapW + 'px';
+      flatMapImg.style.height = mapH + 'px';
+
+      const offsetX = (vw - mapW) / 2;
+      const offsetY = (vh - mapH) / 2;
+
+      const maxVolume = Math.max(...processedEvents.map(e => e.volume), 1);
+
+      processedEvents.forEach((event, i) => {
+        const { x, y } = latLngToFlatXY(event.lat, event.lng, mapW, mapH);
+        const color = `hsl(${event.probability * 0.33 * 360}, 100%, 50%)`;
+        const normalized = Math.log1p(event.volume) / Math.log1p(maxVolume);
+        const size = 8 + normalized * 16;
+
+        const el = document.createElement('div');
+        el.className = 'flat-marker';
+        el.style.left = (offsetX + x) + 'px';
+        el.style.top = (offsetY + y) + 'px';
+
+        const category = detectCategory(event.title);
+        const matchesCategory = activeCategory === 'all' || category === activeCategory;
+        const matchesSearch = !searchQuery || event.title.toLowerCase().includes(searchQuery);
+        if (!matchesCategory || !matchesSearch) el.style.opacity = '0.1';
+
+        el.innerHTML = `
+          <div class="flat-dot" style="width:${size}px;height:${size}px;color:${color};background:${color};"></div>
+          <div class="flat-label">${event.title}</div>
+        `;
+
+        // Click to open sidebar
+        el.addEventListener('click', () => {
+          const marker = markers[i];
+          if (marker) openSidebar(marker);
+        });
+
+        flatMap.appendChild(el);
+        flatMarkerElements.push(el);
+      });
+    }
+
+    // --- View Toggle ---
+    const viewToggle = document.getElementById('view-toggle');
+    const toggleLabel = document.getElementById('toggle-label');
+    const canvasContainer = document.getElementById('canvas-container');
+
+    viewToggle.addEventListener('click', () => {
+      isFlat = !isFlat;
+      if (isFlat) {
+        canvasContainer.style.display = 'none';
+        flatMap.classList.add('active');
+        toggleLabel.textContent = '3D Globe';
+        viewToggle.querySelector('svg').innerHTML = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>';
+        renderFlatMap();
+      } else {
+        canvasContainer.style.display = 'block';
+        flatMap.classList.remove('active');
+        toggleLabel.textContent = '2D Map';
+        viewToggle.querySelector('svg').innerHTML = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>';
+      }
+    });
+
+    // Re-render flat map on filter change
+    const origApplyFilters = applyFilters;
+    applyFilters = function() {
+      origApplyFilters();
+      if (isFlat) renderFlatMap();
+    };
+
+    // Re-render flat map on resize
+    window.addEventListener('resize', () => {
+      if (isFlat) renderFlatMap();
+    });
 
     // --- Initialize ---
     let processedEvents = [];
