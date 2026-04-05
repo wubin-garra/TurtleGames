@@ -46,6 +46,27 @@ CONFIG.ENDLESS = {
   BONUS_EVERY: 5,
 };
 
+CONFIG.LEVELS = [
+  // Area 1: Street Corner (1-5)
+  { id:1,  area:'street',  name:'初试身手', target:300,  balls:10, playerX:200, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[300,500,800] },
+  { id:2,  area:'street',  name:'左右开弓', target:400,  balls:10, playerX:0,   wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[400,700,1000], randomPos:true },
+  { id:3,  area:'street',  name:'移动目标', target:500,  balls:12, playerX:180, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[500,800,1200] },
+  { id:4,  area:'street',  name:'逆风投篮', target:500,  balls:12, playerX:160, wind:2, weather:'windy', rimMove:false, obstacles:false, stars:[500,900,1300] },
+  { id:5,  area:'street',  name:'街角之王', target:800,  balls:0,  playerX:180, wind:1, weather:'clear', rimMove:false, obstacles:false, stars:[800,1200,1800], timeLimit:30 },
+  // Area 2: City Park (6-10)
+  { id:6,  area:'park',    name:'远距离',   target:600,  balls:10, playerX:120, wind:1, weather:'clear', rimMove:false, obstacles:false, stars:[600,1000,1500] },
+  { id:7,  area:'park',    name:'雨中作战', target:600,  balls:12, playerX:150, wind:0, weather:'rain',  rimMove:false, obstacles:false, stars:[600,1000,1500] },
+  { id:8,  area:'park',    name:'夜幕降临', target:700,  balls:12, playerX:160, wind:1, weather:'night', rimMove:false, obstacles:false, stars:[700,1100,1600] },
+  { id:9,  area:'park',    name:'风雨交加', target:700,  balls:12, playerX:140, wind:3, weather:'rain',  rimMove:true,  obstacles:false, stars:[700,1200,1800] },
+  { id:10, area:'park',    name:'公园霸主', target:1000, balls:0,  playerX:130, wind:3, weather:'rain',  rimMove:true,  obstacles:false, stars:[1000,1600,2400], timeLimit:30 },
+  // Area 3: Rooftop (11-15)
+  { id:11, area:'rooftop', name:'天台初探', target:800,  balls:12, playerX:130, wind:2, weather:'windy', rimMove:false, obstacles:true,  stars:[800,1300,1900] },
+  { id:12, area:'rooftop', name:'摇晃篮筐', target:900,  balls:12, playerX:140, wind:2, weather:'clear', rimMove:true,  obstacles:true,  stars:[900,1400,2100], rimShake:true },
+  { id:13, area:'rooftop', name:'暴风之夜', target:900,  balls:12, playerX:120, wind:4, weather:'night', rimMove:false, obstacles:true,  stars:[900,1500,2200] },
+  { id:14, area:'rooftop', name:'极限挑战', target:1000, balls:14, playerX:110, wind:3, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1000,1600,2400], rimShake:true },
+  { id:15, area:'rooftop', name:'街球传奇', target:1500, balls:0,  playerX:110, wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1500,2200,3200], timeLimit:35, rimShake:true },
+];
+
 // ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
 function loadSave() {
   try { return JSON.parse(localStorage.getItem('streetball') || '{}'); } catch(e) { return {}; }
@@ -202,7 +223,7 @@ class MenuScene extends Phaser.Scene {
       this.scene.start('GameScene', { mode: 'endless', level: 1 });
     });
     levelTxt.on('pointerdown', () => {
-      this.scene.start('GameScene', { mode: 'level', level: 1 });
+      this.scene.start('LevelSelectScene');
     });
   }
 
@@ -279,6 +300,8 @@ class ResultScene extends Phaser.Scene {
     this.resultMode  = data?.mode    || 'endless';
     this.resultLevel = data?.level   || 1;
     this.isNewHigh   = data?.isNewHigh || false;
+    this.resultStars = data?.stars   ?? null;
+    this.resultPassed = data?.passed ?? null;
   }
 
   create() {
@@ -286,6 +309,9 @@ class ResultScene extends Phaser.Scene {
     this.drawTitle();
     this.drawScore();
     this.drawStats();
+    if (this.resultMode === 'level') {
+      this.drawLevelResult();
+    }
     this.drawButtons();
   }
 
@@ -330,11 +356,12 @@ class ResultScene extends Phaser.Scene {
 
   drawScore() {
     const cx = CONFIG.WIDTH / 2;
+    const isLevel = this.resultMode === 'level';
 
     // Score number
-    const scoreTxt = this.add.text(cx, 165, '' + this.resultScore, {
+    const scoreTxt = this.add.text(cx, isLevel ? 140 : 165, '' + this.resultScore, {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '72px',
+      fontSize: isLevel ? '56px' : '72px',
       color: CONFIG.COLORS.ink,
       stroke: '#888866',
       strokeThickness: 3,
@@ -342,7 +369,7 @@ class ResultScene extends Phaser.Scene {
     scoreTxt.setOrigin(0.5);
 
     // POINTS label
-    const label = this.add.text(cx, 215, 'POINTS', {
+    const label = this.add.text(cx, isLevel ? 182 : 215, 'POINTS', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '18px',
       color: '#888877',
@@ -373,7 +400,7 @@ class ResultScene extends Phaser.Scene {
 
   drawStats() {
     const cardW = 150, cardH = 72, cardR = 12;
-    const y = 290;
+    const y = this.resultMode === 'level' ? 240 : 290;
     const cx = CONFIG.WIDTH / 2;
     const gap = 30;
     const x1 = cx - cardW - gap / 2;
@@ -408,7 +435,7 @@ class ResultScene extends Phaser.Scene {
 
   drawButtons() {
     const btnW = 170, btnH = 50, btnR = 12;
-    const y = 385;
+    const y = this.resultMode === 'level' ? 355 : 385;
     const cx = CONFIG.WIDTH / 2;
     const gap = 20;
     const x1 = cx - btnW - gap / 2;
@@ -461,8 +488,219 @@ class ResultScene extends Phaser.Scene {
       this.scene.start('GameScene', { mode: this.resultMode, level: this.resultLevel });
     });
     menuTxt.on('pointerdown', () => {
-      this.scene.start('MenuScene');
+      if (this.resultMode === 'level') {
+        this.scene.start('LevelSelectScene');
+      } else {
+        this.scene.start('MenuScene');
+      }
     });
+
+    // Next level button (level mode, passed, not last level)
+    if (this.resultMode === 'level' && this.resultPassed && this.resultLevel < 15) {
+      const nextBtnW = 170, nextBtnH = 50, nextBtnR = 12;
+      const nextY = y + 60;
+      const nextX = cx - nextBtnW / 2;
+
+      const nextBg = this.add.graphics();
+      nextBg.fillStyle(0xff8833, 0.2);
+      nextBg.fillRoundedRect(nextX, nextY - nextBtnH / 2, nextBtnW, nextBtnH, nextBtnR);
+      nextBg.lineStyle(3, 0xff8833, 0.9);
+      nextBg.strokeRoundedRect(nextX, nextY - nextBtnH / 2, nextBtnW, nextBtnH, nextBtnR);
+
+      const nextTxt = this.add.text(nextX + nextBtnW / 2, nextY, '▶ 下一关', {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '18px',
+        color: '#884400',
+        stroke: '#ffffff',
+        strokeThickness: 2,
+      });
+      nextTxt.setOrigin(0.5);
+      nextTxt.setInteractive({ useHandCursor: true });
+      nextTxt.on('pointerover', () => this.tweens.add({ targets: nextTxt, scaleX: 1.08, scaleY: 1.08, duration: 100 }));
+      nextTxt.on('pointerout',  () => this.tweens.add({ targets: nextTxt, scaleX: 1, scaleY: 1, duration: 100 }));
+      nextTxt.on('pointerdown', () => {
+        this.scene.start('GameScene', { mode: 'level', level: this.resultLevel + 1 });
+      });
+    }
+  }
+
+  drawLevelResult() {
+    const cx = CONFIG.WIDTH / 2;
+    const cfg = CONFIG.LEVELS[this.resultLevel - 1];
+    const stars = this.resultStars || 0;
+    const passed = this.resultPassed;
+
+    // PASSED / FAILED label
+    const statusTxt = this.add.text(cx, 248, passed ? 'PASSED!' : 'FAILED...', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '26px',
+      color: passed ? '#44cc44' : '#cc4444',
+      stroke: passed ? '#004400' : '#440000',
+      strokeThickness: 3,
+    });
+    statusTxt.setOrigin(0.5);
+    if (passed) {
+      this.tweens.add({ targets: statusTxt, scaleX: 1.1, scaleY: 1.1, duration: 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+
+    // Star display
+    const starStr = [0,1,2].map(i => i < stars ? '⭐' : '☆').join(' ');
+    this.add.text(cx, 278, starStr, { fontSize: '28px' }).setOrigin(0.5);
+
+    // Target score info
+    if (cfg) {
+      const targetTxt = this.add.text(cx, 310, '目标: ' + cfg.stars[0] + ' / ' + cfg.stars[1] + ' / ' + cfg.stars[2], {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '12px',
+        color: '#888877',
+      });
+      targetTxt.setOrigin(0.5);
+    }
+  }
+}
+
+// ─── LEVEL SELECT SCENE ───────────────────────────────────────────────────────
+class LevelSelectScene extends Phaser.Scene {
+  constructor() { super({ key: 'LevelSelectScene' }); }
+
+  create() {
+    this.drawBackground();
+    this.drawTitle();
+    this.drawAreas();
+    this.drawBackButton();
+  }
+
+  drawBackground() {
+    const g = this.add.graphics();
+    g.fillStyle(0xf5f0e0, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    g.lineStyle(1.5, 0xdd6666, 0.3);
+    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
+  }
+
+  drawTitle() {
+    const title = this.add.text(CONFIG.WIDTH / 2, 30, '🏆 选择关卡', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '30px',
+      color: '#333333',
+      stroke: '#888866',
+      strokeThickness: 3,
+    });
+    title.setOrigin(0.5);
+    title.setAngle(-1);
+  }
+
+  drawAreas() {
+    const save = loadSave();
+    const levelStars = save.levelStars || {};
+
+    const areas = [
+      { key: 'street',  label: '🏙 街角球场', color: 0xff3333, ids: [1,2,3,4,5],    y: 90  },
+      { key: 'park',    label: '🌳 城市公园', color: 0x44aa44, ids: [6,7,8,9,10],   y: 220 },
+      { key: 'rooftop', label: '🏢 天台球场', color: 0x3366ff, ids: [11,12,13,14,15], y: 350 },
+    ];
+
+    areas.forEach(area => {
+      // Area header
+      const hg = this.add.graphics();
+      hg.fillStyle(area.color, 0.15);
+      hg.fillRoundedRect(80, area.y, 640, 28, 8);
+      hg.lineStyle(2, area.color, 0.7);
+      hg.strokeRoundedRect(80, area.y, 640, 28, 8);
+
+      this.add.text(CONFIG.WIDTH / 2, area.y + 14, area.label, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '14px',
+        color: '#333333',
+      }).setOrigin(0.5);
+
+      // Level boxes
+      const boxW = 96, boxH = 90, boxR = 10;
+      const totalW = area.ids.length * boxW + (area.ids.length - 1) * 16;
+      const startX = (CONFIG.WIDTH - totalW) / 2;
+
+      area.ids.forEach((levelId, i) => {
+        const bx = startX + i * (boxW + 16);
+        const by = area.y + 35;
+
+        // Check lock state: level 1 always unlocked, others need prev level stars > 0
+        const isUnlocked = levelId === 1 || (levelStars[levelId - 1] || 0) > 0;
+        const stars = levelStars[levelId] || 0;
+
+        const bg = this.add.graphics();
+        bg.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.9);
+        bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
+        bg.lineStyle(2, isUnlocked ? area.color : 0xaaaaaa, isUnlocked ? 0.8 : 0.4);
+        bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
+
+        if (!isUnlocked) {
+          this.add.text(bx + boxW / 2, by + boxH / 2 - 6, '🔒', { fontSize: '24px' }).setOrigin(0.5);
+          this.add.text(bx + boxW / 2, by + boxH / 2 + 16, 'LV.' + levelId, {
+            fontFamily: "'Arial Black', sans-serif",
+            fontSize: '11px', color: '#aaaaaa',
+          }).setOrigin(0.5);
+        } else {
+          // Level number
+          this.add.text(bx + boxW / 2, by + 14, 'LV.' + levelId, {
+            fontFamily: "'Arial Black', sans-serif",
+            fontSize: '13px', color: '#333333',
+            stroke: '#ffffff', strokeThickness: 2,
+          }).setOrigin(0.5);
+
+          // Level name
+          const cfg = CONFIG.LEVELS[levelId - 1];
+          this.add.text(bx + boxW / 2, by + 32, cfg.name, {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '10px', color: '#555544',
+          }).setOrigin(0.5);
+
+          // Star display
+          const starStr = ['⭐','⭐','⭐'].map((s, si) => si < stars ? '⭐' : '☆').join('');
+          this.add.text(bx + boxW / 2, by + 54, starStr, {
+            fontSize: '14px',
+          }).setOrigin(0.5);
+
+          // Click zone
+          const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+          zone.on('pointerover', () => {
+            bg.clear();
+            bg.fillStyle(area.color, 0.2);
+            bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
+            bg.lineStyle(3, area.color, 1);
+            bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
+          });
+          zone.on('pointerout', () => {
+            bg.clear();
+            bg.fillStyle(0xffffff, 0.9);
+            bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
+            bg.lineStyle(2, area.color, 0.8);
+            bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
+          });
+          zone.on('pointerdown', () => {
+            this.scene.start('GameScene', { mode: 'level', level: levelId });
+          });
+        }
+      });
+    });
+  }
+
+  drawBackButton() {
+    const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '13px',
+      color: '#888877',
+      stroke: '#f5f0e0',
+      strokeThickness: 2,
+    });
+    backTxt.setOrigin(0, 1);
+    backTxt.setInteractive({ useHandCursor: true });
+    backTxt.on('pointerover', () => backTxt.setColor('#444433'));
+    backTxt.on('pointerout',  () => backTxt.setColor('#888877'));
+    backTxt.on('pointerdown', () => { this.scene.start('MenuScene'); });
   }
 }
 
@@ -474,6 +712,13 @@ class GameScene extends Phaser.Scene {
   init(data) {
     this.gameMode     = data?.mode  || 'endless';
     this.currentLevel = data?.level || 1;
+
+    // Load level config if in level mode
+    if (this.gameMode === 'level') {
+      this.levelConfig = CONFIG.LEVELS[this.currentLevel - 1] || CONFIG.LEVELS[0];
+    } else {
+      this.levelConfig = null;
+    }
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -493,7 +738,40 @@ class GameScene extends Phaser.Scene {
     this.basketCount = 0;
     this.isGameOver  = false;
     this.gameStarted = false;
-    this.timerFrozen = false; // reserved for future power-up use
+    this.timerFrozen = false;
+
+    // Level mode state
+    if (this.gameMode === 'level' && this.levelConfig) {
+      const cfg = this.levelConfig;
+      if (cfg.balls > 0 && !cfg.timeLimit) {
+        // Ball counter mode
+        this.ballsLeft = cfg.balls;
+        this.levelMode = 'balls';
+        this.timeLeft  = 999; // no time limit
+      } else if (cfg.timeLimit) {
+        // Timed mode
+        this.ballsLeft = -1;
+        this.levelMode = 'time';
+        this.timeLeft  = cfg.timeLimit;
+      }
+    } else {
+      this.ballsLeft = -1;
+      this.levelMode = 'time';
+    }
+
+    // Weather state
+    this.windForce      = 0;
+    this.windDirection  = 1;
+    this.weatherType    = 'clear';
+    this.rainEmitter    = null;
+    this.nightOverlay   = null;
+    this.nightRimGlow   = null;
+    this.nightBallGlow  = null;
+    this.windChangeTimer = null;
+    this.weatherTimer   = null;
+
+    // Combo effect state
+    this.comboEmitter   = null;
   }
 
   // ── Preload ───────────────────────────────────────────────────────────────
@@ -550,10 +828,12 @@ class GameScene extends Phaser.Scene {
     this.drawHoop();
     this.drawPlayer();
     this.createPhysicsBodies();
+    this.createTextures();
     this.createBall();
     this.setupInput();
     this.createHUD();
     this.startTimer();
+    this.setupWeather();
   }
 
   // ── Background ────────────────────────────────────────────────────────────
@@ -741,7 +1021,13 @@ class GameScene extends Phaser.Scene {
   // ── Player ────────────────────────────────────────────────────────────────
   drawPlayer() {
     this.playerGfx = this.add.graphics();
-    this.playerX   = 160;
+    // Use levelConfig playerX if available; 0 means random
+    let px = 160;
+    if (this.levelConfig) {
+      px = this.levelConfig.playerX || 160;
+      if (this.levelConfig.randomPos) px = Phaser.Math.Between(80, 300);
+    }
+    this.playerX   = px;
     this.playerY   = CONFIG.GROUND_Y - 4;
     this.redrawPlayer(this.playerX, this.playerY, false);
   }
@@ -1144,7 +1430,23 @@ class GameScene extends Phaser.Scene {
       this.showBonusTime();
     }
 
+    // Combo visual effects
+    this.updateComboEffects();
+    // Score splash
+    this.doScoreSplash(rimX, rimY);
+
     this.updateHUD();
+
+    // Level ball-counter mode
+    if (this.gameMode === 'level' && this.levelMode === 'balls') {
+      this.ballsLeft = Math.max(0, this.ballsLeft - 1);
+      this.updateHUD();
+      if (this.ballsLeft <= 0) {
+        this.time.delayedCall(1600, () => this.levelComplete());
+        return;
+      }
+    }
+
     this.time.delayedCall(1600, () => this.respawnBall());
   }
 
@@ -1198,6 +1500,17 @@ class GameScene extends Phaser.Scene {
     });
 
     this.updateHUD();
+
+    // Level ball-counter mode: miss also costs a ball
+    if (this.gameMode === 'level' && this.levelMode === 'balls') {
+      this.ballsLeft = Math.max(0, this.ballsLeft - 1);
+      this.updateHUD();
+      if (this.ballsLeft <= 0) {
+        this.time.delayedCall(800, () => this.levelComplete());
+        return;
+      }
+    }
+
     this.time.delayedCall(800, () => this.respawnBall());
   }
 
@@ -1214,15 +1527,23 @@ class GameScene extends Phaser.Scene {
 
   // ── Timer ─────────────────────────────────────────────────────────────────
   startTimer() {
-    if (this.gameMode !== 'endless') return;
+    // Endless mode: timer starts on first swipe
+    // Level timed mode: timer starts immediately
+    const needsTimer = this.gameMode === 'endless' ||
+      (this.gameMode === 'level' && this.levelMode === 'time');
+    if (!needsTimer) return;
 
-    // 1-second countdown timer event
     this.timerEvent = this.time.addEvent({
       delay: 1000,
       callback: this.tickTimer,
       callbackScope: this,
       loop: true,
     });
+
+    // Level timed mode starts immediately
+    if (this.gameMode === 'level' && this.levelMode === 'time') {
+      this.gameStarted = true;
+    }
   }
 
   tickTimer() {
@@ -1232,7 +1553,11 @@ class GameScene extends Phaser.Scene {
     this.updateHUD();
 
     if (this.timeLeft <= 0) {
-      this.gameOver();
+      if (this.gameMode === 'level') {
+        this.levelComplete();
+      } else {
+        this.gameOver();
+      }
     }
   }
 
@@ -1241,6 +1566,7 @@ class GameScene extends Phaser.Scene {
     this.isGameOver = true;
 
     if (this.timerEvent) this.timerEvent.remove();
+    this.cleanupWeather();
 
     // Save to localStorage
     const save = loadSave();
@@ -1274,14 +1600,51 @@ class GameScene extends Phaser.Scene {
   }
 
   levelComplete() {
-    // Wire-up placeholder for future level implementation
-    this.scene.start('ResultScene', {
-      score:     this.score,
-      combo:     this.maxCombo,
-      baskets:   this.basketCount,
-      mode:      this.gameMode,
-      level:     this.currentLevel,
-      isNewHigh: false,
+    if (this.isGameOver) return;
+    this.isGameOver = true;
+    if (this.timerEvent) this.timerEvent.remove();
+
+    const cfg = this.levelConfig;
+    let stars = 0;
+    if (cfg && cfg.stars) {
+      if (this.score >= cfg.stars[2])      stars = 3;
+      else if (this.score >= cfg.stars[1]) stars = 2;
+      else if (this.score >= cfg.stars[0]) stars = 1;
+    }
+    const passed = stars > 0;
+
+    // Save stars to localStorage
+    const save = loadSave();
+    const levelStars = save.levelStars || {};
+    if ((levelStars[this.currentLevel] || 0) < stars) {
+      levelStars[this.currentLevel] = stars;
+    }
+    save.levelStars = levelStars;
+    writeSave(save);
+
+    this.cleanupWeather();
+
+    const overlay = this.add.graphics();
+    overlay.fillStyle(passed ? 0x00cc44 : 0xff0000, 0);
+    overlay.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+    this.tweens.add({
+      targets: overlay,
+      alpha: 0.25,
+      duration: 200,
+      yoyo: true,
+      repeat: 2,
+      onComplete: () => {
+        this.scene.start('ResultScene', {
+          score:     this.score,
+          combo:     this.maxCombo,
+          baskets:   this.basketCount,
+          mode:      this.gameMode,
+          level:     this.currentLevel,
+          isNewHigh: false,
+          stars:     stars,
+          passed:    passed,
+        });
+      }
     });
   }
 
@@ -1302,8 +1665,12 @@ class GameScene extends Phaser.Scene {
       color: '#333333'
     });
 
-    // Timer HUD (top-right, matching score style)
-    if (this.gameMode === 'endless') {
+    // Timer / ball HUD (top-right)
+    const showTimer = this.gameMode === 'endless' ||
+      (this.gameMode === 'level' && this.levelMode === 'time');
+    const showBalls = this.gameMode === 'level' && this.levelMode === 'balls';
+
+    if (showTimer) {
       this.timerBg = this.add.graphics();
       this.timerBg.fillStyle(0xffffff, 0.75);
       this.timerBg.fillRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
@@ -1312,29 +1679,60 @@ class GameScene extends Phaser.Scene {
 
       this.add.text(CONFIG.WIDTH - 132, 16, '⏱', { fontSize: '20px' });
 
-      this.timerTxt = this.add.text(CONFIG.WIDTH - 106, 18, '1:00', {
+      const initSecs = Math.ceil(this.timeLeft);
+      const im = Math.floor(initSecs / 60), is = initSecs % 60;
+      this.timerTxt = this.add.text(CONFIG.WIDTH - 106, 18, im + ':' + (is < 10 ? '0' : '') + is, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '20px',
         color: '#333333',
       });
 
-      // Waiting for first shot indicator
-      this.waitTxt = this.add.text(CONFIG.WIDTH / 2, 40, 'SWIPE TO START!', {
+      // Waiting for first shot indicator (endless only)
+      if (this.gameMode === 'endless') {
+        this.waitTxt = this.add.text(CONFIG.WIDTH / 2, 40, 'SWIPE TO START!', {
+          fontFamily: "'Arial Black', sans-serif",
+          fontSize: '16px',
+          color: '#cc6600',
+          stroke: '#f5f0e0',
+          strokeThickness: 3,
+        });
+        this.waitTxt.setOrigin(0.5);
+        this.tweens.add({
+          targets: this.waitTxt,
+          alpha: 0.3,
+          duration: 600,
+          yoyo: true,
+          repeat: -1,
+        });
+      }
+    }
+
+    if (showBalls) {
+      this.ballsBg = this.add.graphics();
+      this.ballsBg.fillStyle(0xffffff, 0.75);
+      this.ballsBg.fillRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+      this.ballsBg.lineStyle(2, 0x333333, 0.6);
+      this.ballsBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+
+      this.add.text(CONFIG.WIDTH - 132, 16, '🏀', { fontSize: '20px' });
+
+      this.ballsTxt = this.add.text(CONFIG.WIDTH - 104, 18, 'x' + this.ballsLeft, {
         fontFamily: "'Arial Black', sans-serif",
-        fontSize: '16px',
-        color: '#cc6600',
+        fontSize: '20px',
+        color: '#333333',
+      });
+    }
+
+    // Level info header (level mode)
+    if (this.gameMode === 'level' && this.levelConfig) {
+      const cfg = this.levelConfig;
+      this.add.text(CONFIG.WIDTH / 2, 18, 'LV.' + cfg.id + ' ' + cfg.name, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '13px',
+        color: '#444433',
         stroke: '#f5f0e0',
-        strokeThickness: 3,
-      });
-      this.waitTxt.setOrigin(0.5);
-      // Blink tween
-      this.tweens.add({
-        targets: this.waitTxt,
-        alpha: 0.3,
-        duration: 600,
-        yoyo: true,
-        repeat: -1,
-      });
+        strokeThickness: 2,
+      }).setOrigin(0.5);
     }
 
     // Combo counter
@@ -1380,7 +1778,6 @@ class GameScene extends Phaser.Scene {
       if (secs <= 10 && this.gameStarted) {
         const flash = secs % 2 === 0;
         this.timerTxt.setColor(flash ? '#ff2222' : '#cc0000');
-        // Also flash the bg
         if (this.timerBg) {
           this.timerBg.clear();
           this.timerBg.fillStyle(flash ? 0xff4444 : 0xff0000, flash ? 0.25 : 0.35);
@@ -1393,6 +1790,17 @@ class GameScene extends Phaser.Scene {
       }
     }
 
+    // Balls counter display
+    if (this.ballsTxt) {
+      this.ballsTxt.setText('x' + Math.max(0, this.ballsLeft));
+    }
+
+    // Wind indicator display
+    if (this.windTxt) {
+      const dir = this.windDirection > 0 ? '→' : '←';
+      this.windTxt.setText('💨 ' + dir + ' ' + this.windForce + '级');
+    }
+
     // Hide wait text once started
     if (this.gameStarted && this.waitTxt) {
       this.waitTxt.setVisible(false);
@@ -1403,6 +1811,23 @@ class GameScene extends Phaser.Scene {
   update() {
     if (this.isGameOver) return;
     if (!this.ball || !this.ball.active) return;
+
+    // Wind physics when ball is in flight
+    if (this.isShooting && this.windForce > 0) {
+      this.ball.body.velocity.x += this.windDirection * this.windForce * 0.5;
+    }
+
+    // Rain wobble
+    if (this.isShooting && this.weatherType === 'rain') {
+      this.ball.body.velocity.x += (Math.random() - 0.5) * 2;
+    }
+
+    // Night: move ball glow to follow ball
+    if (this.nightBallGlow && this.ball) {
+      this.nightBallGlow.x = this.ball.x;
+      this.nightBallGlow.y = this.ball.y;
+    }
+
     if (!this.isShooting) return;
 
     const b = this.ball;
@@ -1411,6 +1836,358 @@ class GameScene extends Phaser.Scene {
       b.y > CONFIG.HEIGHT + 60
     ) {
       this.onMiss();
+    }
+  }
+
+  // ── Textures (particles) ──────────────────────────────────────────────────
+  createTextures() {
+    // fireparticle: 8x8 radial gradient yellow→orange→transparent
+    if (!this.textures.exists('fireparticle')) {
+      const fc = document.createElement('canvas');
+      fc.width = fc.height = 8;
+      const fctx = fc.getContext('2d');
+      const fg = fctx.createRadialGradient(4, 4, 0, 4, 4, 4);
+      fg.addColorStop(0,   'rgba(255,220,0,1)');
+      fg.addColorStop(0.5, 'rgba(255,100,0,0.8)');
+      fg.addColorStop(1,   'rgba(255,50,0,0)');
+      fctx.fillStyle = fg;
+      fctx.fillRect(0, 0, 8, 8);
+      this.textures.addCanvas('fireparticle', fc);
+    }
+
+    // spark: 4x4 bright cross
+    if (!this.textures.exists('spark')) {
+      const sc = document.createElement('canvas');
+      sc.width = sc.height = 4;
+      const sctx = sc.getContext('2d');
+      sctx.fillStyle = '#ffffff';
+      sctx.fillRect(1, 0, 2, 4);
+      sctx.fillRect(0, 1, 4, 2);
+      this.textures.addCanvas('spark', sc);
+    }
+
+    // inksplat: 10x10 pink circle
+    if (!this.textures.exists('inksplat')) {
+      const ic = document.createElement('canvas');
+      ic.width = ic.height = 10;
+      const ictx = ic.getContext('2d');
+      ictx.beginPath();
+      ictx.arc(5, 5, 4.5, 0, Math.PI * 2);
+      ictx.fillStyle = '#ff66aa';
+      ictx.fill();
+      this.textures.addCanvas('inksplat', ic);
+    }
+
+    // raindrop: 3x12 blue-white rectangle, alpha 0.5
+    if (!this.textures.exists('raindrop')) {
+      const rc = document.createElement('canvas');
+      rc.width = 3; rc.height = 12;
+      const rctx = rc.getContext('2d');
+      rctx.fillStyle = 'rgba(180,210,255,0.5)';
+      rctx.fillRect(0, 0, 3, 12);
+      this.textures.addCanvas('raindrop', rc);
+    }
+  }
+
+  // ── Weather Setup ─────────────────────────────────────────────────────────
+  setupWeather() {
+    // Determine weather type
+    if (this.gameMode === 'level' && this.levelConfig) {
+      this.weatherType  = this.levelConfig.weather || 'clear';
+      this.windForce    = this.levelConfig.wind    || 0;
+      this.windDirection = 1;
+    } else if (this.gameMode === 'endless') {
+      // Start clear, cycle every 20s
+      this.weatherType  = 'clear';
+      this.windForce    = 0;
+      this.windDirection = 1;
+      this.weatherTimer = this.time.addEvent({
+        delay: 20000,
+        callback: this.cycleEndlessWeather,
+        callbackScope: this,
+        loop: true,
+      });
+    }
+
+    this.applyWeather();
+
+    // Wind direction changes every 4s
+    if (this.windForce > 0) {
+      this.windChangeTimer = this.time.addEvent({
+        delay: 4000,
+        callback: () => {
+          this.windDirection *= -1;
+          this.updateHUD();
+        },
+        loop: true,
+      });
+    }
+  }
+
+  cycleEndlessWeather() {
+    const options = ['clear', 'windy', 'rain', 'night'];
+    const next = options[Math.floor(Math.random() * options.length)];
+    this.cleanupWeatherEffects();
+    this.weatherType = next;
+    this.windForce = next === 'windy' ? 2 : next === 'rain' ? 1 : 0;
+    this.applyWeather();
+    if (this.windChangeTimer) this.windChangeTimer.remove();
+    if (this.windForce > 0) {
+      this.windChangeTimer = this.time.addEvent({
+        delay: 4000,
+        callback: () => { this.windDirection *= -1; this.updateHUD(); },
+        loop: true,
+      });
+    }
+    this.updateHUD();
+  }
+
+  applyWeather() {
+    // Wind HUD indicator
+    if (this.windForce > 0) {
+      if (!this.windTxt) {
+        this.windTxt = this.add.text(14, CONFIG.HEIGHT - 40, '', {
+          fontFamily: "'Arial Black', sans-serif",
+          fontSize: '13px',
+          color: '#446688',
+          stroke: '#f5f0e0',
+          strokeThickness: 2,
+        }).setDepth(10);
+      }
+      this.updateHUD();
+    } else if (this.windTxt) {
+      this.windTxt.setVisible(false);
+    }
+
+    // Rain
+    if (this.weatherType === 'rain') {
+      if (!this.rainEmitter && this.textures.exists('raindrop')) {
+        this.rainEmitter = this.add.particles(0, -10, 'raindrop', {
+          x: { min: 0, max: CONFIG.WIDTH },
+          y: -10,
+          speedY: { min: 300, max: 500 },
+          speedX: { min: -20, max: 20 },
+          lifespan: 2000,
+          quantity: 4,
+          frequency: 30,
+          alpha: 0.6,
+        });
+        this.rainEmitter.setDepth(5);
+      }
+    }
+
+    // Night
+    if (this.weatherType === 'night') {
+      if (!this.nightOverlay) {
+        this.nightOverlay = this.add.graphics().setDepth(4);
+        this.nightOverlay.fillStyle(0x000022, 0.6);
+        this.nightOverlay.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+      }
+      if (!this.nightRimGlow && this.hoopGeom) {
+        const { RIM_CX, RIM_Y } = this.hoopGeom;
+        this.nightRimGlow = this.add.graphics().setDepth(5);
+        this.nightRimGlow.fillStyle(0xffff00, 0.15);
+        this.nightRimGlow.fillCircle(RIM_CX, RIM_Y, 50);
+      }
+      if (!this.nightBallGlow) {
+        this.nightBallGlow = this.add.graphics().setDepth(5);
+        this.nightBallGlow.fillStyle(0xff8800, 0.2);
+        this.nightBallGlow.fillCircle(0, 0, 36);
+        if (this.ball) {
+          this.nightBallGlow.x = this.ball.x;
+          this.nightBallGlow.y = this.ball.y;
+        }
+      }
+      // HUD to high depth so it's visible above night overlay
+      if (this.scoreTxt)  this.scoreTxt.setDepth(20);
+      if (this.comboTxt)  this.comboTxt.setDepth(20);
+      if (this.timerTxt)  this.timerTxt.setDepth(20);
+      if (this.ballsTxt)  this.ballsTxt.setDepth(20);
+      if (this.instrTxt)  this.instrTxt.setDepth(20);
+      if (this.windTxt)   this.windTxt.setDepth(20);
+      if (this.timerBg)   this.timerBg.setDepth(19);
+      if (this.ballsBg)   this.ballsBg.setDepth(19);
+    }
+  }
+
+  cleanupWeatherEffects() {
+    if (this.rainEmitter)   { this.rainEmitter.destroy();   this.rainEmitter   = null; }
+    if (this.nightOverlay)  { this.nightOverlay.destroy();  this.nightOverlay  = null; }
+    if (this.nightRimGlow)  { this.nightRimGlow.destroy();  this.nightRimGlow  = null; }
+    if (this.nightBallGlow) { this.nightBallGlow.destroy(); this.nightBallGlow = null; }
+    if (this.windTxt)       { this.windTxt.destroy();       this.windTxt       = null; }
+  }
+
+  cleanupWeather() {
+    this.cleanupWeatherEffects();
+    if (this.windChangeTimer) { this.windChangeTimer.remove(); this.windChangeTimer = null; }
+    if (this.weatherTimer)    { this.weatherTimer.remove();    this.weatherTimer    = null; }
+  }
+
+  // ── Combo Visual Effects ──────────────────────────────────────────────────
+  updateComboEffects() {
+    // Destroy previous emitter if exists
+    if (this.comboEmitter) {
+      this.comboEmitter.destroy();
+      this.comboEmitter = null;
+    }
+
+    // Clear ball tint
+    if (this.ball) this.ball.clearTint();
+
+    const c = this.combo;
+
+    if (c >= 10) {
+      // BEAST MODE
+      this.doBeastMode();
+    } else if (c >= 7) {
+      // Lightning sparks + blue ball tint
+      if (this.ball && this.textures.exists('spark')) {
+        this.comboEmitter = this.add.particles(this.ball.x, this.ball.y, 'spark', {
+          follow: this.ball,
+          speedX: { min: -80, max: 80 },
+          speedY: { min: -80, max: 80 },
+          lifespan: 300,
+          quantity: 3,
+          frequency: 40,
+          blendMode: 'ADD',
+          alpha: { start: 1, end: 0 },
+        });
+        this.comboEmitter.setDepth(8);
+      }
+      if (this.ball) this.ball.setTint(0x4488ff);
+    } else if (c >= 4) {
+      // Fire trail + screen shake
+      if (this.ball && this.textures.exists('fireparticle')) {
+        this.comboEmitter = this.add.particles(this.ball.x, this.ball.y, 'fireparticle', {
+          follow: this.ball,
+          speedX: { min: -30, max: 30 },
+          speedY: { min: -30, max: 30 },
+          lifespan: 400,
+          quantity: 4,
+          frequency: 30,
+          alpha: { start: 0.9, end: 0 },
+          scale: { start: 1.2, end: 0.2 },
+        });
+        this.comboEmitter.setDepth(8);
+      }
+      this.cameras.main.shake(100, 0.003);
+    } else if (c >= 2) {
+      // Orange trail
+      if (this.ball && this.textures.exists('fireparticle')) {
+        this.comboEmitter = this.add.particles(this.ball.x, this.ball.y, 'fireparticle', {
+          follow: this.ball,
+          speedX: { min: -20, max: 20 },
+          speedY: { min: -20, max: 20 },
+          lifespan: 300,
+          quantity: 2,
+          frequency: 50,
+          alpha: { start: 0.7, end: 0 },
+          tint: 0xff8833,
+        });
+        this.comboEmitter.setDepth(8);
+      }
+    }
+  }
+
+  doBeastMode() {
+    const cx = CONFIG.WIDTH / 2;
+    const cy = CONFIG.HEIGHT / 2;
+
+    // Yellow screen flash
+    const flash = this.add.graphics().setDepth(30);
+    flash.fillStyle(0xffff00, 0.3);
+    flash.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      duration: 500,
+      onComplete: () => flash.destroy()
+    });
+
+    // Camera shake
+    this.cameras.main.shake(300, 0.006);
+
+    // BEAST MODE!! text
+    const bTxt = this.add.text(cx, cy - 40, 'BEAST MODE!!', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '40px',
+      color: '#ff2200',
+      stroke: '#ffff00',
+      strokeThickness: 5,
+    }).setOrigin(0.5).setDepth(32).setAngle(Phaser.Math.Between(-8, 8));
+    this.tweens.add({
+      targets: bTxt,
+      scaleX: 1.6, scaleY: 1.6,
+      alpha: 0,
+      duration: 1200,
+      ease: 'Back.easeOut',
+      onComplete: () => bTxt.destroy()
+    });
+
+    // 10 colored graffiti splats
+    const splatColors = [0xff3366, 0x3366ff, 0xffcc00, 0x44cc44, 0xff8833, 0xcc44ff];
+    for (let i = 0; i < 10; i++) {
+      const sx = Phaser.Math.Between(50, CONFIG.WIDTH - 50);
+      const sy = Phaser.Math.Between(40, CONFIG.HEIGHT - 80);
+      const sc = splatColors[i % splatColors.length];
+      const sg = this.add.graphics().setDepth(31);
+      sg.fillStyle(sc, 0.7);
+      sg.fillCircle(0, 0, Phaser.Math.Between(12, 24));
+      sg.x = sx; sg.y = sy;
+      sg.setScale(0.1);
+      this.tweens.add({
+        targets: sg,
+        scaleX: 1, scaleY: 1,
+        alpha: 0,
+        duration: Phaser.Math.Between(600, 1200),
+        delay: i * 60,
+        ease: 'Back.easeOut',
+        onComplete: () => sg.destroy()
+      });
+    }
+
+    // Fire emitter on ball
+    if (this.ball && this.textures.exists('fireparticle')) {
+      if (this.comboEmitter) { this.comboEmitter.destroy(); this.comboEmitter = null; }
+      this.comboEmitter = this.add.particles(this.ball.x, this.ball.y, 'fireparticle', {
+        follow: this.ball,
+        speedX: { min: -60, max: 60 },
+        speedY: { min: -60, max: 60 },
+        lifespan: 500,
+        quantity: 6,
+        frequency: 20,
+        alpha: { start: 1, end: 0 },
+        scale: { start: 1.5, end: 0.2 },
+        blendMode: 'ADD',
+      });
+      this.comboEmitter.setDepth(9);
+      if (this.ball) this.ball.setTint(0xff4400);
+    }
+  }
+
+  // ── Score Splash ──────────────────────────────────────────────────────────
+  doScoreSplash(rimX, rimY) {
+    if (!this.textures.exists('inksplat')) return;
+    const colors = [0xff3366, 0x3366ff, 0xffcc00, 0x44cc44, 0xff8833, 0x6644ff];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const dist  = Phaser.Math.Between(20, 55);
+      const sx    = rimX + Math.cos(angle) * dist;
+      const sy    = rimY + Math.sin(angle) * dist;
+      const g     = this.add.graphics().setDepth(15);
+      g.fillStyle(colors[i % colors.length], 0.8);
+      g.fillCircle(0, 0, Phaser.Math.Between(6, 14));
+      g.x = sx; g.y = sy; g.setScale(0.2);
+      this.tweens.add({
+        targets: g,
+        scaleX: 1.2, scaleY: 1.2,
+        alpha: 0,
+        duration: 700,
+        delay: i * 40,
+        ease: 'Quad.easeOut',
+        onComplete: () => g.destroy()
+      });
     }
   }
 }
@@ -1432,7 +2209,7 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [MenuScene, GameScene, ResultScene]
+  scene: [MenuScene, GameScene, ResultScene, LevelSelectScene]
 });
 </script>
 </body>
