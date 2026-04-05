@@ -67,6 +67,23 @@ CONFIG.LEVELS = [
   { id:15, area:'rooftop', name:'街球传奇', target:1500, balls:0,  playerX:110, wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1500,2200,3200], timeLimit:35, rimShake:true },
 ];
 
+CONFIG.POWERUPS = {
+  bigRim:       { name:'大篮筐',   icon:'🎯', duration:3, color:'#ff6600', desc:'篮筐 x1.5' },
+  magnet:       { name:'磁铁球',   icon:'🧲', duration:2, color:'#3366ff', desc:'自动微调' },
+  freeze:       { name:'冻结',     icon:'❄️', duration:5, color:'#00ccff', desc:'时间暂停5秒' },
+  doubleScore:  { name:'双倍分',   icon:'✨', duration:3, color:'#ffcc00', desc:'得分x2' },
+  graffitiBomb: { name:'涂鸦炸弹', icon:'💥', duration:1, color:'#ff3366', desc:'自动进球' },
+};
+
+CONFIG.CHARACTERS = [
+  { id:'default', name:'小涂鸦',  color:'#3366ff', headband:'#ff3366', unlock:null,                        skill:null,          desc:'默认角色' },
+  { id:'fire',    name:'火焰哥',  color:'#ff4400', headband:'#ffcc00', unlock:{type:'level',value:5},       skill:'fireBoost',   desc:'combo火焰更猛' },
+  { id:'spring',  name:'弹簧妹',  color:'#44cc44', headband:'#88ff88', unlock:{type:'level',value:10},      skill:'bankBoost',   desc:'篮板反弹区更大' },
+  { id:'wind',    name:'风之子',  color:'#00aaff', headband:'#88ddff', unlock:{type:'level',value:15},      skill:'windResist',  desc:'风力影响减半' },
+  { id:'lucky',   name:'幸运星',  color:'#ffaa00', headband:'#ffdd44', unlock:{type:'stars',value:50},      skill:'luckyDrop',   desc:'道具+30%' },
+  { id:'king',    name:'涂鸦王',  color:'#cc33ff', headband:'#ff66ff', unlock:{type:'score',value:5000},    skill:'scoreBoost',  desc:'得分+10%' },
+];
+
 // ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
 function loadSave() {
   try { return JSON.parse(localStorage.getItem('streetball') || '{}'); } catch(e) { return {}; }
@@ -74,6 +91,60 @@ function loadSave() {
 function writeSave(data) {
   try { localStorage.setItem('streetball', JSON.stringify(data)); } catch(e) {}
 }
+
+// ─── SOUND MANAGER ────────────────────────────────────────────────────────────
+class SoundManager {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { this.enabled = false; }
+    // Load saved preference
+    try {
+      const s = JSON.parse(localStorage.getItem('streetball') || '{}');
+      if (s.soundOn === false) this.enabled = false;
+    } catch(e) {}
+  }
+  resume() { if (this.ctx?.state === 'suspended') this.ctx.resume(); }
+  play(type) {
+    if (!this.enabled || !this.ctx) return;
+    this.resume();
+    if (typeof this[type] === 'function') this[type]();
+  }
+  tone(freq, dur, type='sine', vol=0.3) {
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + dur);
+    } catch(e) {}
+  }
+  noise(dur, vol=0.15) {
+    try {
+      const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * vol;
+      const src = this.ctx.createBufferSource();
+      const gain = this.ctx.createGain();
+      src.buffer = buf;
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+      src.connect(gain); gain.connect(this.ctx.destination);
+      src.start();
+    } catch(e) {}
+  }
+  shoot()  { this.tone(800,0.1,'sine',0.2); this.tone(1200,0.08,'sine',0.15); }
+  swish()  { this.noise(0.15,0.2); this.tone(1000,0.2,'sine',0.25); setTimeout(()=>this.tone(1200,0.15,'sine',0.2),50); }
+  bank()   { this.tone(300,0.15,'square',0.3); setTimeout(()=>this.swish(),100); }
+  miss()   { this.tone(200,0.2,'triangle',0.2); }
+  combo()  { this.tone(600,0.1,'square',0.2); setTimeout(()=>this.tone(800,0.1,'square',0.2),80); setTimeout(()=>this.tone(1000,0.15,'square',0.2),160); }
+  pickup() { this.tone(1200,0.08,'sine',0.2); setTimeout(()=>this.tone(1600,0.1,'sine',0.2),60); }
+  beast()  { this.tone(80,0.5,'sawtooth',0.3); this.tone(100,0.5,'square',0.2); this.noise(0.6,0.15); }
+}
+const soundManager = new SoundManager();
 
 // ─── MENU SCENE ───────────────────────────────────────────────────────────────
 class MenuScene extends Phaser.Scene {
@@ -225,6 +296,9 @@ class MenuScene extends Phaser.Scene {
     levelTxt.on('pointerdown', () => {
       this.scene.start('LevelSelectScene');
     });
+    charTxt.on('pointerdown', () => {
+      this.scene.start('CharSelectScene');
+    });
   }
 
   drawHighScore() {
@@ -260,6 +334,7 @@ class MenuScene extends Phaser.Scene {
     // Sound toggle
     const save = loadSave();
     let soundOn = save.soundOn !== false; // default true
+    soundManager.enabled = soundOn;
     const soundTxt = this.add.text(CONFIG.WIDTH - 14, CONFIG.HEIGHT - 22, soundOn ? '🔊' : '🔇', {
       fontSize: '22px',
     });
@@ -267,6 +342,7 @@ class MenuScene extends Phaser.Scene {
     soundTxt.setInteractive({ useHandCursor: true });
     soundTxt.on('pointerdown', () => {
       soundOn = !soundOn;
+      soundManager.enabled = soundOn;
       soundTxt.setText(soundOn ? '🔊' : '🔇');
       const s = loadSave();
       s.soundOn = soundOn;
@@ -704,6 +780,208 @@ class LevelSelectScene extends Phaser.Scene {
   }
 }
 
+// ─── CHAR SELECT SCENE ────────────────────────────────────────────────────────
+class CharSelectScene extends Phaser.Scene {
+  constructor() { super({ key: 'CharSelectScene' }); }
+
+  create() {
+    this.drawBackground();
+    this.drawTitle();
+    this.drawCharGrid();
+    this.drawBackButton();
+  }
+
+  drawBackground() {
+    const g = this.add.graphics();
+    g.fillStyle(0xf5f0e0, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    g.lineStyle(1.5, 0xdd6666, 0.3);
+    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
+  }
+
+  drawTitle() {
+    const title = this.add.text(CONFIG.WIDTH / 2, 28, '👤 角色选择', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '28px',
+      color: '#333333',
+      stroke: '#888866',
+      strokeThickness: 3,
+    });
+    title.setOrigin(0.5);
+    title.setAngle(-1);
+  }
+
+  drawCharGrid() {
+    const save = loadSave();
+    const unlockedChars = save.unlockedChars || ['default'];
+    const selectedChar  = save.selectedChar  || 'default';
+    const levelStars    = save.levelStars    || {};
+    const highScore     = save.highScore     || 0;
+    const totalStars    = Object.values(levelStars).reduce((a, b) => a + b, 0);
+
+    const cardW = 120, cardH = 150, cols = 3, rows = 2;
+    const gapX = 20, gapY = 18;
+    const totalW = cols * cardW + (cols - 1) * gapX;
+    const startX = (CONFIG.WIDTH - totalW) / 2;
+    const startY = 60;
+
+    CONFIG.CHARACTERS.forEach((char, idx) => {
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const cx = startX + col * (cardW + gapX);
+      const cy = startY + row * (cardH + gapY);
+
+      // Check unlock
+      let isUnlocked = char.unlock === null || unlockedChars.indexOf(char.id) !== -1;
+      if (!isUnlocked && char.unlock) {
+        const u = char.unlock;
+        if (u.type === 'level') {
+          const maxLevel = Object.keys(levelStars).reduce((a, k) => {
+            return (levelStars[k] || 0) > 0 ? Math.max(a, parseInt(k)) : a;
+          }, 0);
+          isUnlocked = maxLevel >= u.value;
+        } else if (u.type === 'stars') {
+          isUnlocked = totalStars >= u.value;
+        } else if (u.type === 'score') {
+          isUnlocked = highScore >= u.value;
+        }
+        if (isUnlocked) {
+          unlockedChars.push(char.id);
+          save.unlockedChars = unlockedChars;
+          writeSave(save);
+        }
+      }
+
+      const isSelected = selectedChar === char.id;
+      const cardG = this.add.graphics();
+
+      // Card background
+      cardG.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.92);
+      cardG.fillRoundedRect(cx, cy, cardW, cardH, 12);
+      if (isSelected) {
+        cardG.lineStyle(3, 0xffcc00, 1);
+      } else {
+        cardG.lineStyle(2, isUnlocked ? 0xaaaaaa : 0xcccccc, 0.6);
+      }
+      cardG.strokeRoundedRect(cx, cy, cardW, cardH, 12);
+
+      if (!isUnlocked) {
+        // Locked card
+        this.add.text(cx + cardW / 2, cy + 45, '🔒', { fontSize: '32px' }).setOrigin(0.5);
+        this.add.text(cx + cardW / 2, cy + 82, char.name, {
+          fontFamily: "'Arial Black', sans-serif",
+          fontSize: '11px', color: '#aaaaaa',
+        }).setOrigin(0.5);
+
+        let condText = '';
+        if (char.unlock.type === 'level')  condText = '通关第' + char.unlock.value + '关';
+        if (char.unlock.type === 'stars')  condText = '获得' + char.unlock.value + '颗星';
+        if (char.unlock.type === 'score')  condText = '得分' + char.unlock.value;
+        this.add.text(cx + cardW / 2, cy + 98, condText, {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '9px', color: '#999988',
+        }).setOrigin(0.5);
+      } else {
+        // Draw mini character
+        this.drawMiniChar(cx + cardW / 2, cy + 48, char);
+
+        // Name
+        this.add.text(cx + cardW / 2, cy + 92, char.name, {
+          fontFamily: "'Arial Black', sans-serif",
+          fontSize: '13px', color: '#333333',
+          stroke: '#ffffff', strokeThickness: 2,
+        }).setOrigin(0.5);
+
+        // Skill desc
+        this.add.text(cx + cardW / 2, cy + 110, char.desc, {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '9px', color: '#666655',
+          wordWrap: { width: cardW - 8 },
+          align: 'center',
+        }).setOrigin(0.5);
+
+        // Selected marker
+        if (isSelected) {
+          this.add.text(cx + cardW / 2, cy + 132, '✔ 已选择', {
+            fontFamily: "'Arial Black', sans-serif",
+            fontSize: '10px', color: '#cc8800',
+          }).setOrigin(0.5);
+        }
+
+        // Click zone
+        const zone = this.add.zone(cx, cy, cardW, cardH).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+        zone.on('pointerdown', () => {
+          const sv = loadSave();
+          sv.selectedChar = char.id;
+          writeSave(sv);
+          this.scene.restart();
+        });
+        zone.on('pointerover', () => {
+          cardG.clear();
+          cardG.fillStyle(0xfffbe8, 0.95);
+          cardG.fillRoundedRect(cx, cy, cardW, cardH, 12);
+          cardG.lineStyle(3, isSelected ? 0xffcc00 : 0x888866, 1);
+          cardG.strokeRoundedRect(cx, cy, cardW, cardH, 12);
+        });
+        zone.on('pointerout', () => {
+          cardG.clear();
+          cardG.fillStyle(0xffffff, 0.92);
+          cardG.fillRoundedRect(cx, cy, cardW, cardH, 12);
+          cardG.lineStyle(isSelected ? 3 : 2, isSelected ? 0xffcc00 : 0xaaaaaa, isSelected ? 1 : 0.6);
+          cardG.strokeRoundedRect(cx, cy, cardW, cardH, 12);
+        });
+      }
+    });
+  }
+
+  drawMiniChar(cx, cy, char) {
+    const g = this.add.graphics();
+    const jerseyColor = Phaser.Display.Color.HexStringToColor(char.color).color;
+    const bandColor   = Phaser.Display.Color.HexStringToColor(char.headband).color;
+
+    // Body
+    g.fillStyle(jerseyColor, 1);
+    g.fillRect(cx - 10, cy - 14, 20, 18);
+    // Head
+    g.fillStyle(0xffcc99, 1);
+    g.fillCircle(cx, cy - 22, 9);
+    // Headband
+    g.lineStyle(4, bandColor, 1);
+    g.beginPath();
+    g.arc(cx, cy - 22, 9, -Math.PI * 0.8, -Math.PI * 0.1);
+    g.strokePath();
+    // Eyes
+    g.fillStyle(0x333333, 1);
+    g.fillCircle(cx - 3, cy - 24, 1.5);
+    g.fillCircle(cx + 3, cy - 24, 1.5);
+    // Legs
+    g.lineStyle(3, 0x333333, 1);
+    g.beginPath(); g.moveTo(cx - 4, cy + 4); g.lineTo(cx - 6, cy + 16); g.strokePath();
+    g.beginPath(); g.moveTo(cx + 4, cy + 4); g.lineTo(cx + 6, cy + 16); g.strokePath();
+    // Shoes
+    g.fillStyle(0x111111, 1);
+    g.fillEllipse(cx - 7, cy + 18, 10, 4);
+    g.fillEllipse(cx + 7, cy + 18, 10, 4);
+  }
+
+  drawBackButton() {
+    const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '13px', color: '#888877',
+      stroke: '#f5f0e0', strokeThickness: 2,
+    });
+    backTxt.setOrigin(0, 1);
+    backTxt.setInteractive({ useHandCursor: true });
+    backTxt.on('pointerover', () => backTxt.setColor('#444433'));
+    backTxt.on('pointerout',  () => backTxt.setColor('#888877'));
+    backTxt.on('pointerdown', () => { this.scene.start('MenuScene'); });
+  }
+}
+
 // ─── GAME SCENE ───────────────────────────────────────────────────────────────
 class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
@@ -772,6 +1050,19 @@ class GameScene extends Phaser.Scene {
 
     // Combo effect state
     this.comboEmitter   = null;
+
+    // Power-up state
+    this.activePowerUps  = {};
+    this.powerUpSprite   = null;
+    this.powerUpGlow     = null;
+    this.powerUpZone     = null;
+    this.powerUpBobTween = null;
+    this.nextPowerUpAt   = this.gameMode === 'level' ? 4 : Phaser.Math.Between(3, 6);
+    this.autoScore       = false;
+    this.powerUpHudItems = [];
+
+    // Character state
+    this.charConfig = null;
   }
 
   // ── Preload ───────────────────────────────────────────────────────────────
@@ -826,14 +1117,16 @@ class GameScene extends Phaser.Scene {
     this.initState();
     this.drawBackground();
     this.drawHoop();
-    this.drawPlayer();
     this.createPhysicsBodies();
+    this.loadCharacter();   // after physics bodies so bankBoost can apply
+    this.drawPlayer();
     this.createTextures();
     this.createBall();
     this.setupInput();
     this.createHUD();
     this.startTimer();
     this.setupWeather();
+    this.setupPowerUps();
   }
 
   // ── Background ────────────────────────────────────────────────────────────
@@ -1041,6 +1334,14 @@ class GameScene extends Phaser.Scene {
     const torsoB = py - 42;
     const legBot = py;
 
+    // Char colors
+    const char = this.charConfig || CONFIG.CHARACTERS[0];
+    const jerseyHex = Phaser.Display.Color.HexStringToColor(char.color).color;
+    const bandHex   = Phaser.Display.Color.HexStringToColor(char.headband).color;
+    // Darken jersey for outline: mix with black
+    const jerseyDark = Phaser.Display.Color.IntegerToColor(jerseyHex);
+    jerseyDark.darken(50);
+
     // Shadow
     g.fillStyle(0x000000, 0.15);
     g.fillEllipse(px, py, 44, 10);
@@ -1062,16 +1363,16 @@ class GameScene extends Phaser.Scene {
     g.fillEllipse(px + 4,  legBot + 2, 16, 6);
 
     // Jersey body
-    g.fillStyle(0x3366ff, 1);
+    g.fillStyle(jerseyHex, 1);
     g.fillRect(px - 14, torsoT, 28, torsoB - torsoT);
-    g.lineStyle(2, 0x1133aa, 1);
+    g.lineStyle(2, jerseyDark.color, 1);
     g.strokeRect(px - 14, torsoT, 28, torsoB - torsoT);
 
     // Jersey number "23"
     const numTxt = this.add.text(px, torsoT + (torsoB - torsoT) / 2, '23', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '13px', color: '#ffffff',
-      stroke: '#1133aa', strokeThickness: 2
+      stroke: '#000000', strokeThickness: 2
     });
     numTxt.setOrigin(0.5);
 
@@ -1123,8 +1424,8 @@ class GameScene extends Phaser.Scene {
     g.arc(px, headY + 8, 6, 0.2, Math.PI - 0.2);
     g.strokePath();
 
-    // Headband
-    g.lineStyle(5, 0xff66aa, 1);
+    // Headband (char color)
+    g.lineStyle(5, bandHex, 1);
     g.beginPath();
     g.arc(px, headY + 7, 14, -Math.PI * 0.75, -Math.PI * 0.1);
     g.strokePath();
@@ -1168,6 +1469,12 @@ class GameScene extends Phaser.Scene {
     sz.setVisible(false);
     sz.body.setSize(RIM_W - 12, 12);
     sz.refreshBody();
+    this.scoreZoneBody = sz;
+    this.defaultScoreZoneW = RIM_W - 12;
+
+    // Store backboard body ref for bankBoost
+    this.backboardBody = bb;
+    this.defaultBackboardW = BOARD_W + 2;
   }
 
   // ── Colliders ─────────────────────────────────────────────────────────────
@@ -1200,6 +1507,266 @@ class GameScene extends Phaser.Scene {
       }
     });
     this.ballColliders.push(sc);
+
+    // Power-up collection overlap (set up if powerUpZone exists)
+    this._setupPowerUpOverlap();
+  }
+
+  _setupPowerUpOverlap() {
+    if (!this.powerUpZone || !this.ball || !this.ball.active) return;
+    const pc = this.physics.add.overlap(this.ball, this.powerUpZone, () => {
+      if (!this.powerUpSprite) return;
+      const type = this.powerUpSprite.puType;
+      this.collectPowerUp(type);
+    });
+    this.ballColliders.push(pc);
+  }
+
+  // ── Character Loading ─────────────────────────────────────────────────────
+  loadCharacter() {
+    const save = loadSave();
+    const id = save.selectedChar || 'default';
+    this.charConfig = CONFIG.CHARACTERS.find(c => c.id === id) || CONFIG.CHARACTERS[0];
+
+    // Apply bankBoost: widen backboard
+    if (this.charConfig.skill === 'bankBoost' && this.backboardBody) {
+      this.backboardBody.body.setSize(this.defaultBackboardW * 1.5, this.backboardBody.body.height);
+      this.backboardBody.refreshBody();
+    }
+
+    // luckyDrop: reduce power-up gap
+    if (this.charConfig.skill === 'luckyDrop') {
+      this.nextPowerUpAt = Math.max(2, Math.floor(this.nextPowerUpAt * 0.7));
+    }
+  }
+
+  checkUnlocks() {
+    const save = loadSave();
+    const unlockedChars = save.unlockedChars || ['default'];
+    const levelStars    = save.levelStars    || {};
+    const highScore     = save.highScore     || 0;
+    const totalStars    = Object.values(levelStars).reduce((a, b) => a + b, 0);
+    let changed = false;
+
+    CONFIG.CHARACTERS.forEach(char => {
+      if (!char.unlock || unlockedChars.indexOf(char.id) !== -1) return;
+      const u = char.unlock;
+      let unlocked = false;
+      if (u.type === 'level') {
+        const maxLevel = Object.keys(levelStars).reduce((a, k) => {
+          return (levelStars[k] || 0) > 0 ? Math.max(a, parseInt(k)) : a;
+        }, 0);
+        unlocked = maxLevel >= u.value;
+      } else if (u.type === 'stars') {
+        unlocked = totalStars >= u.value;
+      } else if (u.type === 'score') {
+        unlocked = highScore >= u.value;
+      }
+      if (unlocked) { unlockedChars.push(char.id); changed = true; }
+    });
+
+    if (changed) {
+      save.unlockedChars = unlockedChars;
+      writeSave(save);
+    }
+  }
+
+  // ── Power-Up System ────────────────────────────────────────────────────────
+  setupPowerUps() {
+    // Nothing extra needed — state already init'd in initState
+  }
+
+  trySpawnPowerUp() {
+    if (this.powerUpSprite) return; // already one on screen
+    if (this.basketCount < this.nextPowerUpAt) return;
+
+    // Pick a random power-up type
+    const keys = Object.keys(CONFIG.POWERUPS);
+    const type = keys[Phaser.Math.Between(0, keys.length - 1)];
+    const cfg  = CONFIG.POWERUPS[type];
+
+    // Spawn position: mid-air area
+    const spawnX = Phaser.Math.Between(200, 500);
+    const spawnY = Phaser.Math.Between(100, 220);
+
+    // Glow circle behind
+    this.powerUpGlow = this.add.graphics().setDepth(12);
+    const glowColor = Phaser.Display.Color.HexStringToColor(cfg.color).color;
+    this.powerUpGlow.fillStyle(glowColor, 0.3);
+    this.powerUpGlow.fillCircle(0, 0, 26);
+    this.powerUpGlow.x = spawnX;
+    this.powerUpGlow.y = spawnY;
+
+    // Emoji sprite
+    this.powerUpSprite = this.add.text(spawnX, spawnY, cfg.icon, {
+      fontSize: '28px',
+    }).setOrigin(0.5).setDepth(13);
+
+    // Store type on sprite
+    this.powerUpSprite.puType = type;
+
+    // Bob animation
+    if (this.powerUpBobTween) this.powerUpBobTween.stop();
+    this.powerUpBobTween = this.tweens.add({
+      targets: [this.powerUpSprite, this.powerUpGlow],
+      y: '-=12',
+      duration: 600,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Physics zone for collection
+    this.powerUpZone = this.physics.add.staticGroup();
+    const puz = this.powerUpZone.create(spawnX, spawnY, null);
+    puz.setVisible(false);
+    puz.body.setSize(44, 44);
+    puz.refreshBody();
+
+    // Set next spawn
+    this.nextPowerUpAt = this.basketCount + Phaser.Math.Between(3, 6);
+    if (this.charConfig && this.charConfig.skill === 'luckyDrop') {
+      this.nextPowerUpAt = this.basketCount + Math.max(2, Math.floor(Phaser.Math.Between(3, 6) * 0.7));
+    }
+
+    // Wire ball overlap now that zone exists
+    if (this.ball && this.ball.active) {
+      const pc = this.physics.add.overlap(this.ball, this.powerUpZone, () => {
+        if (!this.powerUpSprite) return;
+        const type = this.powerUpSprite.puType;
+        this.collectPowerUp(type);
+      });
+      this.ballColliders.push(pc);
+    }
+  }
+
+  collectPowerUp(type) {
+    const cfg = CONFIG.POWERUPS[type];
+    soundManager.play('pickup');
+
+    // Destroy visuals
+    if (this.powerUpBobTween) { this.powerUpBobTween.stop(); this.powerUpBobTween = null; }
+    if (this.powerUpSprite) { this.powerUpSprite.destroy(); this.powerUpSprite = null; }
+    if (this.powerUpGlow)   { this.powerUpGlow.destroy();   this.powerUpGlow   = null; }
+    if (this.powerUpZone)   { this.powerUpZone.clear(true, true); this.powerUpZone = null; }
+
+    // Show pickup popup
+    const rimX = this.hoopGeom.RIM_CX;
+    const popup = this.add.text(rimX, 130, cfg.icon + ' ' + cfg.name + '!', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '22px',
+      color: cfg.color,
+      stroke: '#ffffff',
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(25);
+    this.tweens.add({
+      targets: popup,
+      y: 80, alpha: 0,
+      duration: 1200,
+      ease: 'Quad.easeOut',
+      onComplete: () => popup.destroy(),
+    });
+
+    // Apply effect
+    if (type === 'bigRim') {
+      this.activePowerUps.bigRim = { shotsLeft: cfg.duration };
+      if (this.scoreZoneBody) {
+        this.scoreZoneBody.body.setSize(this.defaultScoreZoneW * 1.5, 12);
+        this.scoreZoneBody.refreshBody();
+      }
+    } else if (type === 'magnet') {
+      this.activePowerUps.magnet = { shotsLeft: cfg.duration };
+    } else if (type === 'freeze') {
+      this.activePowerUps.freeze = { shotsLeft: 1 };
+      this.timerFrozen = true;
+      this.time.delayedCall(5000, () => {
+        this.timerFrozen = false;
+        delete this.activePowerUps.freeze;
+        this.updatePowerUpHUD();
+      });
+    } else if (type === 'doubleScore') {
+      this.activePowerUps.doubleScore = { shotsLeft: cfg.duration };
+    } else if (type === 'graffitiBomb') {
+      this.activePowerUps.graffitiBomb = { shotsLeft: 1 };
+      this.autoScore = true;
+    }
+
+    this.updatePowerUpHUD();
+  }
+
+  consumePowerUpShots() {
+    const toRemove = [];
+
+    if (this.activePowerUps.bigRim) {
+      this.activePowerUps.bigRim.shotsLeft--;
+      if (this.activePowerUps.bigRim.shotsLeft <= 0) {
+        toRemove.push('bigRim');
+        if (this.scoreZoneBody) {
+          this.scoreZoneBody.body.setSize(this.defaultScoreZoneW, 12);
+          this.scoreZoneBody.refreshBody();
+        }
+      }
+    }
+    if (this.activePowerUps.magnet) {
+      this.activePowerUps.magnet.shotsLeft--;
+      if (this.activePowerUps.magnet.shotsLeft <= 0) toRemove.push('magnet');
+    }
+    if (this.activePowerUps.doubleScore) {
+      this.activePowerUps.doubleScore.shotsLeft--;
+      if (this.activePowerUps.doubleScore.shotsLeft <= 0) toRemove.push('doubleScore');
+    }
+    if (this.activePowerUps.graffitiBomb) {
+      this.activePowerUps.graffitiBomb.shotsLeft--;
+      if (this.activePowerUps.graffitiBomb.shotsLeft <= 0) {
+        toRemove.push('graffitiBomb');
+        this.autoScore = false;
+      }
+    }
+
+    toRemove.forEach(k => delete this.activePowerUps[k]);
+    this.updatePowerUpHUD();
+  }
+
+  updatePowerUpHUD() {
+    // Destroy old HUD items
+    this.powerUpHudItems.forEach(item => item.destroy());
+    this.powerUpHudItems = [];
+
+    const active = Object.entries(this.activePowerUps);
+    if (active.length === 0) return;
+
+    const baseX = CONFIG.WIDTH - 12;
+    const baseY = CONFIG.HEIGHT - 55;
+    const lineH = 22;
+
+    active.forEach(([type, state], i) => {
+      const cfg = CONFIG.POWERUPS[type];
+      let label = cfg.icon;
+      if (type === 'freeze') {
+        label += ' ❄️';
+      } else {
+        label += ' x' + state.shotsLeft;
+      }
+      const t = this.add.text(baseX, baseY - i * lineH, label, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '14px',
+        color: cfg.color,
+        stroke: '#ffffff',
+        strokeThickness: 2,
+      }).setOrigin(1, 0.5).setDepth(25);
+      this.powerUpHudItems.push(t);
+    });
+  }
+
+  cleanupPowerUps() {
+    if (this.powerUpBobTween) { this.powerUpBobTween.stop(); this.powerUpBobTween = null; }
+    if (this.powerUpSprite)   { this.powerUpSprite.destroy(); this.powerUpSprite = null; }
+    if (this.powerUpGlow)     { this.powerUpGlow.destroy();   this.powerUpGlow   = null; }
+    if (this.powerUpZone)     { this.powerUpZone.clear(true, true); this.powerUpZone = null; }
+    this.powerUpHudItems.forEach(item => item.destroy());
+    this.powerUpHudItems = [];
+    this.activePowerUps = {};
+    this.autoScore = false;
   }
 
   // ── Ball ──────────────────────────────────────────────────────────────────
@@ -1303,6 +1870,26 @@ class GameScene extends Phaser.Scene {
   shootBall(dx, dy, dist, dt) {
     if (this.ballTween) { this.ballTween.stop(); this.ballTween = null; }
 
+    soundManager.play('shoot');
+
+    // autoScore (graffiti bomb): teleport ball to score zone
+    if (this.autoScore) {
+      this.autoScore = false;
+      const { RIM_CX, RIM_Y } = this.hoopGeom;
+      this.ball.body.setAllowGravity(true);
+      this.ball.setPosition(RIM_CX, RIM_Y + 6);
+      this.ball.body.setVelocity(0, 80);
+      this.isShooting   = true;
+      this.scored       = false;
+      this.hitBackboard = false;
+      this.shotZone     = 'near';
+      // Explosion effect
+      this.doScoreSplash(RIM_CX, RIM_Y);
+      this.cameras.main.shake(150, 0.005);
+      this.tweens.add({ targets: this.playerGfx, y: -16, duration: 130, yoyo: true, ease: 'Quad.easeOut' });
+      return;
+    }
+
     const speed = Math.min((dist / Math.max(dt, 50)) * 1200, 1400);
     const vx    = -(dx / dist) * speed;
     const vy    = -(dy / dist) * speed;
@@ -1340,6 +1927,10 @@ class GameScene extends Phaser.Scene {
     this.combo = Math.min(this.combo + 1, 10);
     if (this.combo > this.maxCombo) this.maxCombo = this.combo;
 
+    // Sound
+    soundManager.play(this.hitBackboard ? 'bank' : 'swish');
+    if (this.combo > 2) soundManager.play('combo');
+
     // Base points
     let pts = this.shotZone === 'far' ? 200 : this.shotZone === 'mid' ? 150 : 100;
     let bonusLabel = '';
@@ -1353,7 +1944,25 @@ class GameScene extends Phaser.Scene {
     }
 
     pts *= this.combo;
+
+    // doubleScore power-up
+    if (this.activePowerUps.doubleScore) {
+      pts *= 2;
+      bonusLabel += bonusLabel ? ' x2!' : 'x2!';
+    }
+
+    // scoreBoost character skill (+10%)
+    if (this.charConfig && this.charConfig.skill === 'scoreBoost') {
+      pts = Math.floor(pts * 1.1);
+    }
+
     this.score += pts;
+
+    // Consume shot-based power-ups
+    this.consumePowerUpShots();
+
+    // Try spawn new power-up
+    this.trySpawnPowerUp();
 
     const rimX = this.hoopGeom.RIM_CX;
     const rimY = this.hoopGeom.RIM_Y;
@@ -1472,6 +2081,7 @@ class GameScene extends Phaser.Scene {
   onMiss() {
     if (this.scored) return;
 
+    soundManager.play('miss');
     this.combo = 0;
     const missWords = ['MISS...', 'NOPE', 'AIR BALL', 'BRICK!', 'OH NO'];
     const word = missWords[Math.floor(Math.random() * missWords.length)];
@@ -1567,6 +2177,7 @@ class GameScene extends Phaser.Scene {
 
     if (this.timerEvent) this.timerEvent.remove();
     this.cleanupWeather();
+    this.cleanupPowerUps();
 
     // Save to localStorage
     const save = loadSave();
@@ -1574,6 +2185,7 @@ class GameScene extends Phaser.Scene {
     const isNewHigh = this.score > prevHigh;
     if (isNewHigh) save.highScore = this.score;
     writeSave(save);
+    this.checkUnlocks();
 
     // Brief flash before transition
     const overlay = this.add.graphics();
@@ -1623,6 +2235,8 @@ class GameScene extends Phaser.Scene {
     writeSave(save);
 
     this.cleanupWeather();
+    this.cleanupPowerUps();
+    this.checkUnlocks();
 
     const overlay = this.add.graphics();
     overlay.fillStyle(passed ? 0x00cc44 : 0xff0000, 0);
@@ -1814,7 +2428,11 @@ class GameScene extends Phaser.Scene {
 
     // Wind physics when ball is in flight
     if (this.isShooting && this.windForce > 0) {
-      this.ball.body.velocity.x += this.windDirection * this.windForce * 0.5;
+      // windResist character skill: halve wind
+      const wf = (this.charConfig && this.charConfig.skill === 'windResist')
+        ? this.windForce * 0.25
+        : this.windForce * 0.5;
+      this.ball.body.velocity.x += this.windDirection * wf;
     }
 
     // Rain wobble
@@ -1822,11 +2440,26 @@ class GameScene extends Phaser.Scene {
       this.ball.body.velocity.x += (Math.random() - 0.5) * 2;
     }
 
+    // Magnet power-up: nudge ball toward rim
+    if (this.isShooting && this.activePowerUps.magnet) {
+      const { RIM_CX, RIM_Y } = this.hoopGeom;
+      const dx = RIM_CX - this.ball.x;
+      const dy = RIM_Y  - this.ball.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 150 && dist > 1) {
+        this.ball.body.velocity.x += (dx / dist) * 3;
+        this.ball.body.velocity.y += (dy / dist) * 2;
+      }
+    }
+
     // Night: move ball glow to follow ball
     if (this.nightBallGlow && this.ball) {
       this.nightBallGlow.x = this.ball.x;
       this.nightBallGlow.y = this.ball.y;
     }
+
+    // Power-up glow follows sprite (both already use bob tween but keep glow synced)
+    // (tween handles it via targets array)
 
     if (!this.isShooting) return;
 
@@ -2058,13 +2691,14 @@ class GameScene extends Phaser.Scene {
       if (this.ball) this.ball.setTint(0x4488ff);
     } else if (c >= 4) {
       // Fire trail + screen shake
+      const fireQty = (this.charConfig && this.charConfig.skill === 'fireBoost') ? 8 : 4;
       if (this.ball && this.textures.exists('fireparticle')) {
         this.comboEmitter = this.add.particles(this.ball.x, this.ball.y, 'fireparticle', {
           follow: this.ball,
           speedX: { min: -30, max: 30 },
           speedY: { min: -30, max: 30 },
           lifespan: 400,
-          quantity: 4,
+          quantity: fireQty,
           frequency: 30,
           alpha: { start: 0.9, end: 0 },
           scale: { start: 1.2, end: 0.2 },
@@ -2093,6 +2727,8 @@ class GameScene extends Phaser.Scene {
   doBeastMode() {
     const cx = CONFIG.WIDTH / 2;
     const cy = CONFIG.HEIGHT / 2;
+
+    soundManager.play('beast');
 
     // Yellow screen flash
     const flash = this.add.graphics().setDepth(30);
@@ -2209,7 +2845,7 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [MenuScene, GameScene, ResultScene, LevelSelectScene]
+  scene: [MenuScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene]
 });
 </script>
 </body>
