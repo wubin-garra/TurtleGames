@@ -1418,7 +1418,7 @@ class GameScene extends Phaser.Scene {
     const g = this.add.graphics();
     const POLE_X   = 610;
     const RIM_Y    = 185;
-    const RIM_W    = 52;
+    const RIM_W    = 60;
     const RIM_CX   = POLE_X - 10;
     const BOARD_X  = POLE_X + 8;
     const BOARD_Y  = RIM_Y - 60;
@@ -2205,10 +2205,10 @@ class GameScene extends Phaser.Scene {
     const spawnY = CONFIG.GROUND_Y - 80;
 
     this.ball = this.physics.add.sprite(spawnX, spawnY, 'basketball');
-    this.ball.setDisplaySize(56, 56);
+    this.ball.setDisplaySize(30, 30);
     this.ball.body.setAllowGravity(false);
     this.ball.body.setBounce(0.4);
-    this.ball.body.setCircle(26, 2, 2);
+    this.ball.body.setCircle(14, 14, 14);
 
     this.isShooting   = false;
     this.scored       = false;
