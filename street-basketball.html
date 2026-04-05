@@ -3362,10 +3362,11 @@ class GameScene extends Phaser.Scene {
 
 // ─── PHASER CONFIG ────────────────────────────────────────────────────────────
 new Phaser.Game({
-  type: Phaser.CANVAS,
+  type: Phaser.AUTO,
   width:  CONFIG.WIDTH,
   height: CONFIG.HEIGHT,
   backgroundColor: CONFIG.COLORS.paper,
+  resolution: window.devicePixelRatio || 1,
   physics: {
     default: 'arcade',
     arcade: {
