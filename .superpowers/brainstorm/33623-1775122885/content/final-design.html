@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>游戏库首页 — 最终设计</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ===== FULL PAGE MOCKUP ===== */
+  .game-library {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #0a1628 0%, #060e1a 50%, #000 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Ambient particles */
+  .game-library::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(2px 2px at 15% 20%, rgba(0,112,216,0.25) 50%, transparent 50%),
+      radial-gradient(2px 2px at 35% 65%, rgba(0,180,216,0.15) 50%, transparent 50%),
+      radial-gradient(1.5px 1.5px at 55% 12%, rgba(255,255,255,0.15) 50%, transparent 50%),
+      radial-gradient(2px 2px at 75% 80%, rgba(0,112,216,0.2) 50%, transparent 50%),
+      radial-gradient(1.5px 1.5px at 90% 35%, rgba(255,255,255,0.1) 50%, transparent 50%),
+      radial-gradient(2px 2px at 25% 85%, rgba(0,180,216,0.15) 50%, transparent 50%),
+      radial-gradient(1px 1px at 65% 45%, rgba(255,255,255,0.12) 50%, transparent 50%);
+    animation: float 30s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes float {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-20px); }
+  }
+
+  /* ===== TOP BAR ===== */
+  .top-bar {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .top-bar-logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+  .top-bar-nav {
+    display: flex;
+    gap: 20px;
+  }
+  .top-bar-nav span {
+    font-size: 13px;
+    color: #556;
+    cursor: pointer;
+    transition: color 0.3s;
+    padding: 4px 0;
+  }
+  .top-bar-nav span.active {
+    color: #fff;
+    border-bottom: 2px solid #0070d8;
+  }
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .top-bar-time {
+    font-size: 13px;
+    color: #556;
+  }
+  .top-bar-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0070d8, #00b4d8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ===== HERO AREA ===== */
+  .hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    min-height: 0;
+    padding-bottom: 20px;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 400px;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    pointer-events: none;
+    transition: all 0.8s ease;
+  }
+  .hero-glow.blue { background: #0070d8; }
+  .hero-glow.green { background: #00b860; }
+
+  .hero-icon {
+    font-size: 80px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 30px rgba(0,112,216,0.3));
+    transition: all 0.5s ease;
+  }
+
+  .hero-title {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    z-index: 1;
+    transition: all 0.5s ease;
+  }
+
+  .hero-desc {
+    font-size: 15px;
+    color: #6688aa;
+    margin-bottom: 16px;
+    z-index: 1;
+    transition: all 0.5s ease;
+  }
+
+  .hero-tags {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 28px;
+    z-index: 1;
+    transition: all 0.5s ease;
+  }
+  .hero-tag {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(0,112,216,0.15);
+    color: #4499cc;
+    border: 1px solid rgba(0,112,216,0.2);
+  }
+
+  .play-btn {
+    padding: 14px 48px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    z-index: 1;
+    background: linear-gradient(135deg, #0070d8, #0090e8);
+    color: #fff;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 24px rgba(0,112,216,0.3);
+    transition: all 0.3s;
+  }
+  .play-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,112,216,0.4);
+  }
+
+  /* ===== BOTTOM SELECTOR BAR ===== */
+  .selector-bar {
+    height: 110px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 40px;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.9) 100%);
+    backdrop-filter: blur(20px);
+    z-index: 10;
+    position: relative;
+  }
+  .selector-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,112,216,0.2), transparent);
+  }
+
+  .game-thumb {
+    width: 76px;
+    height: 76px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .game-thumb .thumb-emoji { font-size: 28px; transition: all 0.3s; }
+  .game-thumb .thumb-name { font-size: 9px; color: #556; font-weight: 500; transition: all 0.3s; }
+
+  .game-thumb.active {
+    border-color: #fff;
+    transform: scale(1.15);
+    box-shadow: 0 0 24px rgba(0,112,216,0.25), 0 0 60px rgba(0,112,216,0.1);
+  }
+  .game-thumb.active .thumb-name { color: #fff; }
+
+  .game-thumb:not(.active):hover {
+    transform: scale(1.05);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .game-thumb:nth-child(1) { background: linear-gradient(135deg, #0a1a3a, #0d2550); }
+  .game-thumb:nth-child(2) { background: linear-gradient(135deg, #0a2a1a, #0d3520); }
+
+  /* ===== DESIGN NOTES OVERLAY ===== */
+  .design-notes {
+    position: fixed;
+    bottom: 130px;
+    right: 20px;
+    background: rgba(0,0,0,0.85);
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 16px 20px;
+    max-width: 280px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .design-notes h4 {
+    font-size: 12px;
+    color: #0070d8;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .design-notes ul {
+    list-style: none;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.8;
+  }
+  .design-notes li::before {
+    content: '✓ ';
+    color: #0070d8;
+  }
+</style>
+</head>
+<body>
+
+<div class="game-library" id="gameLibrary">
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="top-bar-logo">🎮 GARRA</div>
+      <div class="top-bar-nav">
+        <span class="active">游戏库</span>
+        <span>最近游玩</span>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <span class="top-bar-time" id="clock"></span>
+      <div class="top-bar-avatar">G</div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero" id="hero">
+    <div class="hero-glow blue" id="heroGlow"></div>
+    <div class="hero-icon" id="heroIcon">🏁</div>
+    <div class="hero-title" id="heroTitle">乌龟赛跑</div>
+    <div class="hero-desc" id="heroDesc">装备你的乌龟，征战排位赛，成为赛道之王</div>
+    <div class="hero-tags" id="heroTags">
+      <span class="hero-tag">🏁 竞速</span>
+      <span class="hero-tag">⚔️ 排位赛</span>
+      <span class="hero-tag">🛡️ 装备系统</span>
+    </div>
+    <button class="play-btn" id="playBtn">▶ 开始游戏</button>
+  </div>
+
+  <!-- Bottom selector -->
+  <div class="selector-bar">
+    <div class="game-thumb active" data-game="0" onclick="selectGame(0)">
+      <span class="thumb-emoji">🏁</span>
+      <span class="thumb-name">乌龟赛跑</span>
+    </div>
+    <div class="game-thumb" data-game="1" onclick="selectGame(1)">
+      <span class="thumb-emoji">🐢</span>
+      <span class="thumb-name">合成大乌龟</span>
+    </div>
+  </div>
+</div>
+
+<!-- Design notes -->
+<div class="design-notes">
+  <h4>设计要素</h4>
+  <ul>
+    <li>PS5 横向焦点布局</li>
+    <li>深蓝经典配色</li>
+    <li>顶栏：Logo + 导航 + 时间</li>
+    <li>英雄区：图标 + 名称 + 描述 + 标签</li>
+    <li>底部缩略图切换游戏</li>
+    <li>点击"开始游戏"跳转HTML</li>
+    <li>氛围粒子 + 辉光背景</li>
+  </ul>
+</div>
+
+<script>
+const games = [
+  {
+    icon: '🏁',
+    title: '乌龟赛跑',
+    desc: '装备你的乌龟，征战排位赛，成为赛道之王',
+    tags: ['🏁 竞速', '⚔️ 排位赛', '🛡️ 装备系统'],
+    glowClass: 'blue',
+    url: 'turtle-race.html'
+  },
+  {
+    icon: '🐢',
+    title: '合成大乌龟',
+    desc: '合成各种乌龟，解锁稀有品种，探索海洋世界',
+    tags: ['🧩 合成', '🌊 海洋主题', '🐢 收集'],
+    glowClass: 'green',
+    url: 'merge-turtle.html'
+  }
+];
+
+let currentGame = 0;
+
+function selectGame(index) {
+  if (index === currentGame) return;
+  currentGame = index;
+  const game = games[index];
+
+  // Update thumbs
+  document.querySelectorAll('.game-thumb').forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+
+  // Update hero with fade
+  const hero = document.getElementById('hero');
+  hero.style.opacity = '0';
+  hero.style.transform = 'translateY(10px)';
+
+  setTimeout(() => {
+    document.getElementById('heroIcon').textContent = game.icon;
+    document.getElementById('heroTitle').textContent = game.title;
+    document.getElementById('heroDesc').textContent = game.desc;
+    document.getElementById('heroTags').innerHTML = game.tags.map(t => `<span class="hero-tag">${t}</span>`).join('');
+
+    const glow = document.getElementById('heroGlow');
+    glow.className = 'hero-glow ' + game.glowClass;
+
+    hero.style.opacity = '1';
+    hero.style.transform = 'translateY(0)';
+  }, 250);
+}
+
+// Transition
+document.getElementById('hero').style.transition = 'opacity 0.3s, transform 0.3s';
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' +
+    now.getMinutes().toString().padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') selectGame(Math.max(0, currentGame - 1));
+  if (e.key === 'ArrowRight') selectGame(Math.min(games.length - 1, currentGame + 1));
+});
+</script>
+
+</body>
+</html>

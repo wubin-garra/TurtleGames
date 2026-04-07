@@ -6,7 +6,26 @@
       "Bash(node --check /tmp/turtle_check.js)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git:*)",
+      "Bash(awk NR>=5943 && NR<=6020:*)",
+      "Bash(awk NR>=4015,NR<=4035:*)",
+      "Bash(netlify status:*)",
+      "Bash(npx netlify-cli:*)",
+      "Bash(node:*)",
+      "Bash(netlify deploy:*)",
+      "Bash(netlify sites:list --json)",
+      "Bash(netlify sites:list)",
+      "Bash(netlify sites:create --name garra-game-library --account-slug wubin1987107s-team)",
+      "Bash(netlify sites:create --name garra-game-library)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "WebSearch",
+      "WebFetch(domain:gamma-api.polymarket.com)",
+      "WebFetch(domain:globe.gl)",
+      "Bash(lsof -ti:8000)",
+      "Bash(xargs kill:*)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

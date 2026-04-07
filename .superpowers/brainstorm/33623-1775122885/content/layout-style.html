@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>游戏库首页 — 布局风格</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+    padding: 40px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    color: #888;
+    font-size: 15px;
+    margin-bottom: 40px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1200px;
+  }
+
+  .option {
+    display: flex;
+    gap: 24px;
+    background: #111;
+    border: 2px solid #222;
+    border-radius: 16px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .option:hover {
+    border-color: #0070d8;
+    background: #0a0a1a;
+  }
+  .option.selected {
+    border-color: #0070d8;
+    background: #0a0a1a;
+    box-shadow: 0 0 30px rgba(0,112,216,0.15);
+  }
+
+  .option-letter {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #0070d8, #00b4d8);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 900;
+  }
+
+  .option-body { flex: 1; }
+  .option-body h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .option-body p {
+    color: #999;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .mockup-container {
+    background: #0a0a0a;
+    border: 1px solid #1a1a1a;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ===== OPTION A: PS5 横向大卡片 ===== */
+  .ps5-mockup {
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: linear-gradient(180deg, #0a1628 0%, #000 100%);
+  }
+  .ps5-hero {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .ps5-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(0,112,216,0.15) 0%, transparent 70%);
+  }
+  .ps5-hero-title {
+    font-size: 36px;
+    font-weight: 900;
+    text-align: center;
+    z-index: 1;
+  }
+  .ps5-hero-title .emoji { font-size: 48px; display: block; margin-bottom: 8px; }
+  .ps5-bottom {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+  }
+  .ps5-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+  }
+  .ps5-thumb.active {
+    border-color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  }
+  .ps5-thumb:nth-child(1) { background: linear-gradient(135deg, #0a2a4a, #0d3060); }
+  .ps5-thumb:nth-child(2) { background: linear-gradient(135deg, #1a3a0a, #2a5a1a); }
+
+  /* ===== OPTION B: 网格卡片 ===== */
+  .grid-mockup {
+    height: 320px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: linear-gradient(180deg, #0a0a14 0%, #000 100%);
+  }
+  .grid-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .grid-top-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ccc;
+  }
+  .grid-top-dots {
+    display: flex; gap: 6px;
+  }
+  .grid-top-dots span {
+    width: 8px; height: 8px; border-radius: 50%; background: #333;
+  }
+  .grid-top-dots span:first-child { background: #0070d8; }
+  .grid-cards {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .grid-card {
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid #1a1a2a;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .grid-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+  }
+  .grid-card:nth-child(1) { background: linear-gradient(135deg, #0a1a30, #0d2040); }
+  .grid-card:nth-child(1)::before { background: radial-gradient(circle at 30% 30%, #0070d8, transparent 70%); }
+  .grid-card:nth-child(2) { background: linear-gradient(135deg, #0a2a0a, #0d3010); }
+  .grid-card:nth-child(2)::before { background: radial-gradient(circle at 70% 30%, #00d850, transparent 70%); }
+  .grid-card .card-emoji { font-size: 40px; z-index: 1; }
+  .grid-card .card-name { font-size: 13px; font-weight: 600; z-index: 1; color: #ccc; }
+
+  /* ===== OPTION C: 沉浸式全屏 ===== */
+  .immersive-mockup {
+    height: 320px;
+    position: relative;
+    overflow: hidden;
+    background: #000;
+  }
+  .immersive-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0,112,216,0.25) 0%, rgba(0,30,60,0.4) 40%, #000 80%);
+  }
+  .immersive-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .immersive-emoji { font-size: 72px; }
+  .immersive-title {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 2px;
+  }
+  .immersive-meta {
+    color: #666;
+    font-size: 13px;
+    display: flex;
+    gap: 16px;
+  }
+  .immersive-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+  }
+  .immersive-dots span {
+    width: 32px;
+    height: 4px;
+    border-radius: 2px;
+    background: #333;
+  }
+  .immersive-dots span:first-child {
+    background: #fff;
+    width: 48px;
+  }
+  .immersive-nav-hint {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: #333;
+  }
+  .immersive-nav-hint.left { left: 16px; }
+  .immersive-nav-hint.right { right: 16px; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .tag-rec { background: #0070d8; color: #fff; }
+  .tag-simple { background: #333; color: #aaa; }
+</style>
+<script>
+function toggleSelect(el) {
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.toggle('selected');
+}
+</script>
+</head>
+<body>
+
+<h1>🎮 游戏库首页 — 布局风格选择</h1>
+<p class="subtitle">参考PS5界面风格，选择你更喜欢的整体布局方向</p>
+
+<div class="options">
+
+  <!-- Option A -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="option-letter">A</div>
+    <div class="option-body">
+      <h3>PS5 经典横向焦点 <span class="tag tag-rec">推荐</span></h3>
+      <p>大英雄区展示当前选中游戏，底部横向滚动缩略图选择。最接近PS5原版体验，聚焦感强。</p>
+      <div class="mockup-container">
+        <div class="ps5-mockup">
+          <div class="ps5-hero">
+            <div class="ps5-hero-title">
+              <span class="emoji">🐢</span>
+              乌龟赛跑
+            </div>
+          </div>
+          <div class="ps5-bottom">
+            <div class="ps5-thumb active">🏁</div>
+            <div class="ps5-thumb">🐢</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="option-letter">B</div>
+    <div class="option-body">
+      <h3>卡片网格布局 <span class="tag tag-simple">简洁</span></h3>
+      <p>等分网格展示所有游戏，每个游戏一张卡片。适合游戏数量增长后的扩展，一览无余。</p>
+      <div class="mockup-container">
+        <div class="grid-mockup">
+          <div class="grid-top">
+            <div class="grid-top-title">🎮 Garra 的游戏库</div>
+            <div class="grid-top-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="grid-cards">
+            <div class="grid-card">
+              <span class="card-emoji">🏁</span>
+              <span class="card-name">乌龟赛跑</span>
+            </div>
+            <div class="grid-card">
+              <span class="card-emoji">🐢</span>
+              <span class="card-name">合成大乌龟</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="option-letter">C</div>
+    <div class="option-body">
+      <h3>沉浸式全屏轮播</h3>
+      <p>全屏展示单个游戏，左右滑动切换。最沉浸、最有氛围感，像游戏主机开机画面。</p>
+      <div class="mockup-container">
+        <div class="immersive-mockup">
+          <div class="immersive-bg"></div>
+          <div class="immersive-content">
+            <div class="immersive-emoji">🐢</div>
+            <div class="immersive-title">乌龟赛跑</div>
+            <div class="immersive-meta">
+              <span>🏁 竞速</span>
+              <span>🎮 装备系统</span>
+              <span>⚔️ 排位赛</span>
+            </div>
+          </div>
+          <div class="immersive-nav-hint left">‹</div>
+          <div class="immersive-nav-hint right">›</div>
+          <div class="immersive-dots">
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
