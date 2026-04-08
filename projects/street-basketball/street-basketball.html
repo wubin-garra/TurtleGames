@@ -1439,31 +1439,34 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   drawBackground() {
-    // Dark base
     const g = this.add.graphics();
-    g.fillStyle(0x1a1a2e, 1);
+    // Paper fill
+    g.fillStyle(0xf5f0e0, 1);
     g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+    // Notebook lines
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    // Red margin line
+    g.lineStyle(1.5, 0xdd6666, 0.3);
+    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
 
-    // Background image (center-fill, semi-transparent)
+    // Photo on the right
     if (this.textures.exists('levelSelectBg')) {
       const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'levelSelectBg');
-      img.setOrigin(1, 1); // anchor bottom-right
+      img.setOrigin(1, 1);
       const scale = CONFIG.HEIGHT / img.height;
       img.setScale(scale).setAlpha(0.35).setDepth(0);
     }
-
-    // Dark overlay for readability
-    const overlay = this.add.graphics().setDepth(1);
-    overlay.fillStyle(0x000000, 0.3);
-    overlay.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
   }
 
   drawTitle() {
     this.add.text(CONFIG.WIDTH / 2, 24, '🏆 选择关卡', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '24px',
-      color: '#ffffff',
-      stroke: '#000000',
+      color: '#333333',
+      stroke: '#888866',
       strokeThickness: 3,
     }).setOrigin(0.5).setDepth(5);
   }
@@ -1483,7 +1486,7 @@ class LevelSelectScene extends Phaser.Scene {
       const tabTxt = this.add.text(tx + tabW / 2, tabY + tabH / 2, area.label, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '10px',
-        color: isActive ? '#ffffff' : '#aaaaaa',
+        color: isActive ? '#ffffff' : '#666655',
       }).setOrigin(0.5).setDepth(5);
 
       const drawTab = (active) => {
@@ -1493,11 +1496,11 @@ class LevelSelectScene extends Phaser.Scene {
           tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
           tabTxt.setColor('#ffffff');
         } else {
-          tabBg.fillStyle(0x222233, 0.7);
+          tabBg.fillStyle(0xddddcc, 0.6);
           tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
           tabBg.lineStyle(1, area.color, 0.4);
           tabBg.strokeRoundedRect(tx, tabY, tabW, tabH, 6);
-          tabTxt.setColor('#aaaaaa');
+          tabTxt.setColor('#666655');
         }
       };
       drawTab(isActive);
@@ -1538,7 +1541,7 @@ class LevelSelectScene extends Phaser.Scene {
     const maxStars = area.ids.length * 3;
     const progressTxt = this.add.text(CONFIG.WIDTH / 2, contentY - 6,
       '⭐ ' + totalAreaStars + ' / ' + maxStars, {
-      fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#ccccbb',
+      fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#888877',
     }).setOrigin(0.5).setDepth(5);
     this.contentItems.push(progressTxt);
 
@@ -1550,16 +1553,16 @@ class LevelSelectScene extends Phaser.Scene {
       const stars = levelStars[levelId] || 0;
 
       const bg = this.add.graphics().setDepth(5);
-      bg.fillStyle(isUnlocked ? 0x1a1a2e : 0x111122, 0.85);
+      bg.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.9);
       bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-      bg.lineStyle(2, isUnlocked ? area.color : 0x555555, isUnlocked ? 0.8 : 0.4);
+      bg.lineStyle(2, isUnlocked ? area.color : 0xaaaaaa, isUnlocked ? 0.8 : 0.4);
       bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
       this.contentItems.push(bg);
 
       if (!isUnlocked) {
         const lock = this.add.text(bx + boxW / 2, by + boxH / 2 - 6, '🔒', { fontSize: '22px' }).setOrigin(0.5).setDepth(5);
         const lockLabel = this.add.text(bx + boxW / 2, by + boxH / 2 + 14, 'LV.' + levelId, {
-          fontFamily: "'Arial Black', sans-serif", fontSize: '10px', color: '#777777',
+          fontFamily: "'Arial Black', sans-serif", fontSize: '10px', color: '#aaaaaa',
         }).setOrigin(0.5).setDepth(5);
         this.contentItems.push(lock, lockLabel);
       } else {
@@ -1567,16 +1570,16 @@ class LevelSelectScene extends Phaser.Scene {
         const hint = cfg.balls > 0 ? cfg.balls + '球' : cfg.timeLimit + '秒';
 
         const numTxt = this.add.text(bx + boxW / 2, by + 12, 'LV.' + levelId, {
-          fontFamily: "'Arial Black', sans-serif", fontSize: '12px', color: '#ffffff',
-          stroke: '#000000', strokeThickness: 2,
+          fontFamily: "'Arial Black', sans-serif", fontSize: '12px', color: '#333333',
+          stroke: '#ffffff', strokeThickness: 2,
         }).setOrigin(0.5).setDepth(5);
 
         const nameTxt = this.add.text(bx + boxW / 2, by + 28, cfg.name, {
-          fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#ccccbb',
+          fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#555544',
         }).setOrigin(0.5).setDepth(5);
 
         const hintTxt = this.add.text(bx + boxW / 2, by + 42, hint, {
-          fontFamily: 'Arial, sans-serif', fontSize: '9px', color: '#999999',
+          fontFamily: 'Arial, sans-serif', fontSize: '9px', color: '#999988',
         }).setOrigin(0.5).setDepth(5);
 
         const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
@@ -1587,14 +1590,14 @@ class LevelSelectScene extends Phaser.Scene {
         const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
         zone.on('pointerover', () => {
           bg.clear();
-          bg.fillStyle(area.color, 0.3);
+          bg.fillStyle(area.color, 0.2);
           bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
           bg.lineStyle(3, area.color, 1);
           bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
         });
         zone.on('pointerout', () => {
           bg.clear();
-          bg.fillStyle(0x1a1a2e, 0.85);
+          bg.fillStyle(0xffffff, 0.9);
           bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
           bg.lineStyle(2, area.color, 0.8);
           bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
@@ -1616,14 +1619,14 @@ class LevelSelectScene extends Phaser.Scene {
     };
     const desc = this.add.text(CONFIG.WIDTH / 2, contentY + 100,
       descMap[area.key] || '', {
-      fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#bbbbaa',
+      fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888877',
     }).setOrigin(0.5).setDepth(5);
     this.contentItems.push(desc);
 
     // Navigation arrows
     if (areaIdx > 0) {
       const leftArr = this.add.text(30, contentY + 45, '◀', {
-        fontSize: '28px', color: '#ccccbb',
+        fontSize: '28px', color: '#888877',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
       leftArr.on('pointerdown', () => {
         this.currentAreaIdx = areaIdx - 1;
@@ -1634,7 +1637,7 @@ class LevelSelectScene extends Phaser.Scene {
     }
     if (areaIdx < this.areas.length - 1) {
       const rightArr = this.add.text(CONFIG.WIDTH - 30, contentY + 45, '▶', {
-        fontSize: '28px', color: '#ccccbb',
+        fontSize: '28px', color: '#888877',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
       rightArr.on('pointerdown', () => {
         this.currentAreaIdx = areaIdx + 1;
@@ -1649,14 +1652,14 @@ class LevelSelectScene extends Phaser.Scene {
     const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '13px',
-      color: '#ccccbb',
-      stroke: '#000000',
+      color: '#888877',
+      stroke: '#f5f0e0',
       strokeThickness: 2,
     }).setDepth(5);
     backTxt.setOrigin(0, 1);
     backTxt.setInteractive({ useHandCursor: true });
-    backTxt.on('pointerover', () => backTxt.setColor('#ffffff'));
-    backTxt.on('pointerout',  () => backTxt.setColor('#ccccbb'));
+    backTxt.on('pointerover', () => backTxt.setColor('#444433'));
+    backTxt.on('pointerout',  () => backTxt.setColor('#888877'));
     backTxt.on('pointerdown', () => { this.scene.start('MenuScene'); });
   }
 }
@@ -1964,29 +1967,30 @@ class VenueSelectScene extends Phaser.Scene {
   }
 
   create() {
-    // Dark base
+    // Paper background
     const g = this.add.graphics();
-    g.fillStyle(0x1a1a2e, 1);
+    g.fillStyle(0xf5f0e0, 1);
     g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+    g.lineStyle(1, 0xaabbdd, 0.25);
+    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
+      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+    }
+    g.lineStyle(1.5, 0xdd6666, 0.3);
+    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
 
-    // Background image
+    // Photo on the right
     if (this.textures.exists('venueBg')) {
       const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'venueBg');
-      img.setOrigin(1, 1); // anchor bottom-right
+      img.setOrigin(1, 1);
       const scale = CONFIG.HEIGHT / img.height;
       img.setScale(scale).setAlpha(0.35).setDepth(0);
     }
 
-    // Dark overlay
-    const overlay = this.add.graphics().setDepth(1);
-    overlay.fillStyle(0x000000, 0.3);
-    overlay.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
-
     // Title
     this.add.text(CONFIG.WIDTH / 2, 28, '🏟️ 选择场地', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '24px', color: '#ffffff',
-      stroke: '#000000', strokeThickness: 3,
+      fontSize: '24px', color: '#333333',
+      stroke: '#888866', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(5);
 
     const venues = [
@@ -2012,7 +2016,7 @@ class VenueSelectScene extends Phaser.Scene {
       const by = startY + row * (boxH + gap);
 
       const bg = this.add.graphics().setDepth(5);
-      bg.fillStyle(0x1a1a2e, 0.85);
+      bg.fillStyle(0xffffff, 0.9);
       bg.fillRoundedRect(bx, by, boxW, boxH, 10);
       bg.lineStyle(2, v.color, 0.7);
       bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
@@ -2023,21 +2027,21 @@ class VenueSelectScene extends Phaser.Scene {
 
       this.add.text(bx + boxW / 2, by + 50, v.name, {
         fontFamily: "'Arial Black', sans-serif",
-        fontSize: '11px', color: '#ddddcc',
-        stroke: '#000000', strokeThickness: 1,
+        fontSize: '11px', color: '#444433',
+        stroke: '#ffffff', strokeThickness: 1,
       }).setOrigin(0.5).setDepth(5);
 
       const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
       zone.on('pointerover', () => {
         bg.clear();
-        bg.fillStyle(v.color, 0.35);
+        bg.fillStyle(v.color, 0.2);
         bg.fillRoundedRect(bx, by, boxW, boxH, 10);
         bg.lineStyle(3, v.color, 1);
         bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
       });
       zone.on('pointerout', () => {
         bg.clear();
-        bg.fillStyle(0x1a1a2e, 0.85);
+        bg.fillStyle(0xffffff, 0.9);
         bg.fillRoundedRect(bx, by, boxW, boxH, 10);
         bg.lineStyle(2, v.color, 0.7);
         bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
@@ -2050,14 +2054,14 @@ class VenueSelectScene extends Phaser.Scene {
     // Random button
     const rndY = startY + rows * (boxH + gap) + 10;
     const rndBg = this.add.graphics().setDepth(5);
-    rndBg.fillStyle(0x884488, 0.8);
+    rndBg.fillStyle(0xdd4444, 0.85);
     rndBg.fillRoundedRect(CONFIG.WIDTH / 2 - 80, rndY, 160, 36, 8);
-    rndBg.lineStyle(2, 0xbb66bb, 0.8);
+    rndBg.lineStyle(2, 0xff6666, 0.8);
     rndBg.strokeRoundedRect(CONFIG.WIDTH / 2 - 80, rndY, 160, 36, 8);
     this.add.text(CONFIG.WIDTH / 2, rndY + 18, '🎲 随机场地', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '14px', color: '#ffffff',
-      stroke: '#000000', strokeThickness: 2,
+      stroke: '#880000', strokeThickness: 2,
     }).setOrigin(0.5).setDepth(5);
     const rndZone = this.add.zone(CONFIG.WIDTH / 2 - 80, rndY, 160, 36).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
     rndZone.on('pointerdown', () => {
@@ -2067,11 +2071,11 @@ class VenueSelectScene extends Phaser.Scene {
     // Back button
     const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '13px', color: '#ccccbb',
-      stroke: '#000000', strokeThickness: 2,
+      fontSize: '13px', color: '#888877',
+      stroke: '#f5f0e0', strokeThickness: 2,
     }).setOrigin(0, 1).setDepth(5).setInteractive({ useHandCursor: true });
-    backTxt.on('pointerover', () => backTxt.setColor('#ffffff'));
-    backTxt.on('pointerout',  () => backTxt.setColor('#ccccbb'));
+    backTxt.on('pointerover', () => backTxt.setColor('#444433'));
+    backTxt.on('pointerout',  () => backTxt.setColor('#888877'));
     backTxt.on('pointerdown', () => { this.scene.start('MenuScene'); });
   }
 }
