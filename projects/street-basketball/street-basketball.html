@@ -236,7 +236,7 @@ CONFIG.POWERUPS = {
 };
 
 CONFIG.CHARACTERS = [
-  { id:'default', name:'樱木花道', color:'#ff2222', headband:'#ff3366', unlock:null, skill:'rebound',    title:'篮板王',   desc:'90%抢篮板 + 超远飞扣', jersey:'10', hair:'#ff2200', hairStyle:'spike' },
+  { id:'default', name:'樱木花道', color:'#ff2222', headband:'#ff3366', unlock:null, skill:'rebound',    title:'篮板王',   desc:'50%抢篮板 + 50%补扣', jersey:'10', hair:'#ff2200', hairStyle:'spike' },
   { id:'fire',    name:'流川枫',  color:'#ff2222', headband:'#ff2222', unlock:null, skill:'ace',         title:'得分天才', desc:'后仰跳投+突破扣篮+越投越准', jersey:'11', hair:'#222',  hairStyle:'long' },
   { id:'spring',  name:'赤木刚宪', color:'#ff2222', headband:'#ffffff', unlock:null, skill:'bigMan',      title:'支柱',     desc:'篮球变大 篮筐变大', jersey:'4',  hair:'#222',  hairStyle:'buzz' },
   { id:'wind',    name:'三井寿',  color:'#ff2222', headband:'#ffffff', unlock:null, skill:'threePoint',  title:'三分射手', desc:'远投300分 球变小 筐变大', jersey:'14', hair:'#222',  hairStyle:'short' },
@@ -598,6 +598,20 @@ class MenuScene extends Phaser.Scene {
     this.drawCharPreview();
     this.drawBottomBar();
     this.drawAnimations();
+
+    // Mobile: fullscreen/rotate button at top-right
+    const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (isMobile) {
+      const fsBtn = this.add.text(CONFIG.WIDTH - 12, 12, '🔄', {
+        fontSize: '22px', resolution: 2,
+      }).setOrigin(1, 0).setDepth(30).setAlpha(0.7);
+      fsBtn.setInteractive({ useHandCursor: true });
+      fsBtn.on('pointerover', () => fsBtn.setAlpha(1));
+      fsBtn.on('pointerout', () => fsBtn.setAlpha(0.7));
+      fsBtn.on('pointerdown', () => {
+        if (typeof enterFullscreenLandscape === 'function') enterFullscreenLandscape();
+      });
+    }
   }
 
   drawBackground() {
@@ -1639,7 +1653,7 @@ class CharSelectScene extends Phaser.Scene {
         // Skill desc
         this.add.text(cx + cardW / 2, cy + 122, char.desc, {
           fontFamily: "'Arial Black', sans-serif",
-          fontSize: '9px', color: '#aaaacc', resolution: 2,
+          fontSize: '10px', color: '#aaaacc', resolution: 3,
           wordWrap: { width: cardW - 8 },
           align: 'center',
         }).setOrigin(0.5);
@@ -5978,6 +5992,93 @@ class GameScene extends Phaser.Scene {
     });
   }
 
+  // 樱木补扣: grab ball mid-air → slam it into the hoop
+  _doFollowUpDunk() {
+    const ballX = this.ball ? this.ball.x : 400;
+    const ballY = this.ball ? this.ball.y : 250;
+    const rimX = this.hoopGeom ? this.hoopGeom.RIM_X : 480;
+    const rimY = this.hoopGeom ? this.hoopGeom.RIM_Y : 180;
+    const origX = this.playerGfx.x;
+    const origY = this.playerGfx.y;
+    const grabX = Phaser.Math.Clamp(ballX, 60, 700);
+    const grabY = Math.min(ballY - 20, 220);
+
+    // Freeze ball
+    if (this.ball) {
+      this.ball.body.setVelocity(0, 0);
+      this.ball.body.setAllowGravity(false);
+    }
+
+    // Phase 1: leap to ball
+    this.tweens.add({
+      targets: this.playerGfx,
+      x: grabX - this.playerX,
+      y: -(this.playerY - grabY + 20),
+      duration: 200,
+      ease: 'Quad.easeOut',
+      onUpdate: () => {
+        this.redrawPlayerDunkRise(this.playerX, this.playerY);
+      },
+      onComplete: () => {
+        if (this.ball) this.ball.setPosition(grabX, grabY - 40);
+
+        // "补扣!" text
+        const txt = this.add.text(grabX, grabY - 70, '补扣!', {
+          fontFamily: "'Arial Black', sans-serif",
+          fontSize: '36px', color: '#ff6600',
+          stroke: '#ffffff', strokeThickness: 5, resolution: 2,
+        });
+        txt.setOrigin(0.5).setAngle(Phaser.Math.Between(-10, -3));
+        this.tweens.add({ targets: txt, y: txt.y - 80, alpha: 0, scaleX: 1.5, scaleY: 1.5, duration: 1200, onComplete: () => txt.destroy() });
+
+        // Phase 2: fly to rim and dunk
+        this.time.delayedCall(200, () => {
+          this.tweens.add({
+            targets: this.playerGfx,
+            x: rimX - this.playerX,
+            y: -(this.playerY - rimY + 30),
+            duration: 250,
+            ease: 'Quad.easeIn',
+            onUpdate: () => {
+              this.redrawPlayerDunkRise(this.playerX, this.playerY);
+              if (this.ball) {
+                this.ball.setPosition(
+                  this.playerX + this.playerGfx.x,
+                  this.playerY + this.playerGfx.y - 40
+                );
+              }
+            },
+            onComplete: () => {
+              // Slam the ball down through the hoop
+              if (this.ball) {
+                this.ball.body.setAllowGravity(true);
+                this.ball.body.setVelocity(0, 600);
+                this.ball.setPosition(rimX, rimY + 10);
+              }
+              this.isShooting = true;
+              this.cameras.main.shake(300, 0.012);
+              soundManager.play('swish');
+
+              // Land
+              this.time.delayedCall(300, () => {
+                this.tweens.add({
+                  targets: this.playerGfx,
+                  x: origX,
+                  y: origY,
+                  duration: 400,
+                  ease: 'Bounce.easeOut',
+                  onComplete: () => {
+                    this.redrawPlayer(this.playerX, this.playerY, false);
+                  }
+                });
+              });
+            }
+          });
+        });
+      }
+    });
+  }
+
   applyEndlessDifficulty() {
     const bc = this.basketCount;
 
@@ -7038,15 +7139,22 @@ class GameScene extends Phaser.Scene {
 
     const b = this.ball;
 
-    // 樱木篮板王: grab ball mid-air before it hits ground
+    // 樱木篮板王: 50% grab rebound + 50% follow-up dunk
     if (!this.scored && this.charConfig && this.charConfig.skill === 'rebound' &&
         b.body.velocity.y > 50 && b.y > this.hoopGeom.RIM_Y + 60 && b.y < CONFIG.GROUND_Y - 30 &&
         !this.reboundTriggered) {
       this.reboundTriggered = true;
-      if (Math.random() < 0.9) {
+      if (Math.random() < 0.5) {
+        // 50%: grab rebound, respawn ball
         this.isShooting = false;
         soundManager.play('rebound');
         this._doMidAirRebound();
+        return;
+      } else {
+        // 50%: follow-up dunk (grab + slam it in)
+        this.isShooting = false;
+        soundManager.play('rebound');
+        this._doFollowUpDunk();
         return;
       }
     }
