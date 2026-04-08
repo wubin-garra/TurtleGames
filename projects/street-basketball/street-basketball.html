@@ -239,6 +239,34 @@ CONFIG.LEVELS = [
   { id:25, area:'sunset',  name:'全国制霸', balls:0, playerX:220, wind:5, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1200,2800,4500], timeLimit:45, rimShake:true },
 ];
 
+CONFIG.STORY = [
+  '樱木花道为了赤木晴子加入湘北篮球队，在街角球场第一次摸到篮球。"我是天才！"他大声宣告。',
+  '安西教练发现樱木的运动天赋惊人，开始教他基础运球和投篮姿势。两万次投篮训练从此开始。',
+  '樱木在流川的刺激下苦练投篮，即使面对强风也绝不退缩。"我要成为篮板王！"',
+  '三井寿回归篮球队，向安西教练流泪忏悔："教练，我想打篮球……"湘北阵容逐渐完整。',
+  '街角球场最后的对决！樱木用惊人的弹跳力完成了第一次扣篮，震惊所有人。',
+  '湘北校内对抗赛开始，樱木和流川的配合却漏洞百出。安西教练微笑着说："基础很重要。"',
+  '三井寿指导樱木练习远投，作为曾经的MVP，他的三分球依然精准无比。',
+  '宫城良田加入先发阵容，他的速度让对手防不胜防。湘北的快攻体系初具雏形。',
+  '安西教练亲自上场指导，他温和的笑容背后是一颗燃烧的篮球之心。"放弃的话，比赛就结束了。"',
+  '湘北五虎集结完毕！流川枫华丽的单打、三井的三分、宫城的速度、赤木的内线、樱木的篮板。',
+  '湘北远征陵南！面对仙道彰的微笑，樱木握紧拳头："我会让你见识什么叫天才。"',
+  '赤木刚宪对阵鱼住纯，两大中锋的对决震撼全场。赤木的眼神燃烧着不屈的斗志。',
+  '仙道彰展现全能球技，流川枫被彻底压制。但流川的眼中没有恐惧，只有更强的渴望。',
+  '比赛最后时刻，樱木抢下关键篮板，赤木完成绝杀！"我们要去全国大赛！"',
+  '陵南败北，仙道微笑着向湘北致意。田冈教练流下热泪——这是最好的陵南。',
+  '踏入海南大附属的球馆，空气都变得沉重。这里是神奈川17年不败的王者领地。',
+  '牧绅一的压迫性防守让宫城无法突破。"这就是全国级别的控卫。"安西教练眉头紧锁。',
+  '神宗一郎的三分球如同精密的机器。三井寿咬紧牙关——射手的对决，不能输！',
+  '湘北陷入绝境，比分差距越拉越大。但樱木的眼神突然变了——"现在才开始呢！"',
+  '惜败海南，樱木在更衣室痛哭。安西教练轻拍他的背："这份眼泪，全国大赛用得上。"',
+  '全国大赛前夕，樱木独自来到镰仓海岸练球。海风中，他想起了所有的艰苦训练。',
+  '赤木的膝伤恶化，但他拒绝退场。"这条腿还撑得住！只要能去全国大赛！"',
+  '暴风雨中的特训，全队在雨中奔跑。安西教练的话回荡在心中："你们很强。"',
+  '全国大赛 vs 山王工业！樱木背伤严重却坚持上场，用最后的力量跳起投篮——',
+  '球在空中旋转，时间仿佛静止。樱木与流川击掌——这是属于湘北的奇迹！全国制霸！',
+];
+
 CONFIG.POWERUPS = {
   giantHoop:    { name:'大篮筐',   icon:'🏀', duration:3, color:'#ffaa00', desc:'篮筐变大x1.5' },
   doubleScore:  { name:'双倍得分', icon:'💰', duration:3, color:'#ffd700', desc:'得分x2', scoreMult:2 },
@@ -1418,41 +1446,43 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   create() {
-    this.drawBackground();
-
-    const areas = [
-      { key: 'street',  label: '🏙 街角球场',  color: 0xff3333, ids: [1,2,3,4,5] },
-      { key: 'gym',     label: '🏫 湘北校园',  color: 0xcc4400, ids: [6,7,8,9,10] },
-      { key: 'ryonan',  label: '🏀 陵南体育馆', color: 0x22aa44, ids: [11,12,13,14,15] },
-      { key: 'kainan',  label: '👑 海南大附属', color: 0x2244cc, ids: [16,17,18,19,20] },
-      { key: 'sunset',  label: '🌅 镰仓夕阳',  color: 0xcc6622, ids: [21,22,23,24,25] },
+    this.FONT = "-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+    this.areas = [
+      { key: 'street',  name: '街角篇', color: 0xff3333, ids: [1,2,3,4,5] },
+      { key: 'gym',     name: '湘北篇', color: 0xcc4400, ids: [6,7,8,9,10] },
+      { key: 'ryonan',  name: '陵南篇', color: 0x22aa44, ids: [11,12,13,14,15] },
+      { key: 'kainan',  name: '海南篇', color: 0x2244cc, ids: [16,17,18,19,20] },
+      { key: 'sunset',  name: '镰仓篇', color: 0xcc6622, ids: [21,22,23,24,25] },
     ];
+    this.save = loadSave();
+    this.levelStars = this.save.levelStars || {};
+    this.selectedLevel = 1;
+    this.chapterNodes = {};
 
-    // Tab-based area selection
-    this.currentAreaIdx = 0;
-    this.areas = areas;
+    // Layout constants
+    this.LEFT = 70;
+    this.RIGHT = 385;
+    this.CX = (this.LEFT + this.RIGHT) / 2;
 
+    this.drawBackground();
     this.drawTitle();
-    this.drawTabs();
-    this.drawAreaContent(0);
+    this.drawChapterGrid();
+    this.drawStoryArea();
+    this.selectChapter(1);
     this.drawBackButton();
   }
 
   drawBackground() {
     const g = this.add.graphics();
-    // Paper fill
     g.fillStyle(0xf5f0e0, 1);
     g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
-    // Notebook lines
     g.lineStyle(1, 0xaabbdd, 0.25);
     for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
       g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
     }
-    // Red margin line
     g.lineStyle(1.5, 0xdd6666, 0.3);
     g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
 
-    // Photo on the right
     if (this.textures.exists('levelSelectBg')) {
       const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'levelSelectBg');
       img.setOrigin(1, 1);
@@ -1462,207 +1492,224 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   drawTitle() {
-    // Notebook layout: red margin at x=60, content right of it, photo on far right
-    // Content area: x=70 to x=390 (before photo), center ~230
-    const LEFT = 70;   // right of red margin line
-    const RIGHT = 385; // left edge of photo area
-    this.contentLeft = LEFT;
-    this.contentRight = RIGHT;
-    this.contentCX = (LEFT + RIGHT) / 2;
-
-    // Title in the margin area (like a chapter heading)
-    this.add.text(LEFT + 4, 14, '🏆 选择关卡', {
-      fontFamily: "-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-      fontSize: '20px',
-      fontStyle: 'bold',
-      color: '#333333',
+    this.add.text(this.LEFT + 4, 10, '🏀 灌篮高手 — 剧情模式', {
+      fontFamily: this.FONT, fontSize: '16px', fontStyle: 'bold', color: '#333333',
     }).setOrigin(0, 0).setDepth(5);
+
+    // Total stars
+    let total = 0;
+    for (let i = 1; i <= 25; i++) total += (this.levelStars[i] || 0);
+    this.add.text(this.RIGHT - 4, 12, '⭐ ' + total + '/75', {
+      fontFamily: this.FONT, fontSize: '11px', color: '#777766',
+    }).setOrigin(1, 0).setDepth(5);
   }
 
-  drawTabs() {
-    // Vertical tabs in left margin (like chapter bookmarks)
-    const tabX = 3;
-    const tabW = 54;
-    const tabH = 48;
-    const gap = 4;
-    const startY = 46;
+  drawChapterGrid() {
+    const LEFT = this.LEFT;
+    const nodeW = 56, nodeH = 36, gapX = 5, gapY = 4;
+    const rowH = nodeH + gapY;
+    const headerH = 14;
+    const gridStartY = 34;
 
-    this.tabItems = [];
-    this.areas.forEach((area, idx) => {
-      const ty = startY + idx * (tabH + gap);
-      const isActive = idx === this.currentAreaIdx;
+    this.areas.forEach((area, areaIdx) => {
+      const rowY = gridStartY + areaIdx * (headerH + rowH);
 
-      const tabBg = this.add.graphics().setDepth(5);
-      // Icon
-      const iconTxt = this.add.text(tabX + tabW / 2, ty + 16, area.label.charAt(0), {
-        fontSize: '16px',
-      }).setOrigin(0.5).setDepth(5);
-      // Short label (remove emoji prefix)
-      const shortLabel = area.label.replace(/^.\s*/, '');
-      const tabTxt = this.add.text(tabX + tabW / 2, ty + 36, shortLabel, {
-        fontFamily: "-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-        fontSize: '8px',
-        fontStyle: 'bold',
-        color: isActive ? '#ffffff' : '#777766',
-      }).setOrigin(0.5).setDepth(5);
+      // Area header — small colored label
+      const dotG = this.add.graphics().setDepth(5);
+      dotG.fillStyle(area.color, 0.8);
+      dotG.fillCircle(LEFT + 4, rowY + 7, 4);
+      this.add.text(LEFT + 12, rowY, area.name, {
+        fontFamily: this.FONT, fontSize: '9px', fontStyle: 'bold',
+        color: '#' + area.color.toString(16).padStart(6, '0'),
+      }).setOrigin(0, 0).setDepth(5);
 
-      const drawTab = (active) => {
-        tabBg.clear();
-        if (active) {
-          tabBg.fillStyle(area.color, 0.85);
-          tabBg.fillRoundedRect(tabX, ty, tabW, tabH, 5);
-          tabTxt.setColor('#ffffff');
+      const nodesY = rowY + headerH;
+
+      area.ids.forEach((levelId, i) => {
+        const nx = LEFT + i * (nodeW + gapX);
+        const ny = nodesY;
+        const cfg = CONFIG.LEVELS[levelId - 1];
+        const isUnlocked = levelId === 1 || (this.levelStars[levelId - 1] || 0) > 0;
+        const stars = this.levelStars[levelId] || 0;
+
+        const bg = this.add.graphics().setDepth(5);
+        const node = { bg, levelId, x: nx, y: ny, w: nodeW, h: nodeH, area, isUnlocked, stars };
+        this.chapterNodes[levelId] = node;
+
+        this._drawNodeNormal(node);
+
+        if (!isUnlocked) {
+          this.add.text(nx + nodeW / 2, ny + nodeH / 2 - 2, '🔒', {
+            fontSize: '14px',
+          }).setOrigin(0.5).setDepth(5);
+          this.add.text(nx + nodeW / 2, ny + nodeH / 2 + 12, levelId, {
+            fontFamily: this.FONT, fontSize: '8px', color: '#999999',
+          }).setOrigin(0.5).setDepth(5);
         } else {
-          tabTxt.setColor('#777766');
-        }
-      };
-      drawTab(isActive);
+          // Compact: "3.追风" + stars
+          const label = levelId + '.' + cfg.name;
+          this.add.text(nx + nodeW / 2, ny + 11, label, {
+            fontFamily: this.FONT, fontSize: '9px', fontStyle: 'bold', color: '#444433',
+          }).setOrigin(0.5).setDepth(6);
 
-      const zone = this.add.zone(tabX, ty, tabW, tabH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
-      zone.on('pointerover', () => {
-        if (idx !== this.currentAreaIdx) {
-          tabBg.clear();
-          tabBg.fillStyle(area.color, 0.3);
-          tabBg.fillRoundedRect(tabX, ty, tabW, tabH, 5);
-        }
-      });
-      zone.on('pointerout', () => {
-        if (idx !== this.currentAreaIdx) {
-          tabBg.clear();
-        }
-      });
-      zone.on('pointerdown', () => {
-        if (this.currentAreaIdx === idx) return;
-        this.currentAreaIdx = idx;
-        this.tabItems.forEach((t, ti) => t.draw(ti === idx));
-        this.drawAreaContent(idx);
-      });
+          const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
+          this.add.text(nx + nodeW / 2, ny + 26, starStr, {
+            fontSize: '8px',
+          }).setOrigin(0.5).setDepth(6);
 
-      this.tabItems.push({ draw: drawTab, bg: tabBg, txt: tabTxt, icon: iconTxt });
+          const zone = this.add.zone(nx, ny, nodeW, nodeH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(7);
+          zone.on('pointerover', () => {
+            if (this.selectedLevel !== levelId) this._drawNodeHover(node);
+          });
+          zone.on('pointerout', () => {
+            if (this.selectedLevel !== levelId) this._drawNodeNormal(node);
+          });
+          zone.on('pointerdown', () => {
+            this.selectChapter(levelId);
+          });
+        }
+      });
     });
   }
 
-  drawAreaContent(areaIdx) {
-    // Clear previous content
-    if (this.contentItems) {
-      this.contentItems.forEach(item => { if (item && item.destroy) item.destroy(); });
-    }
-    this.contentItems = [];
+  _drawNodeNormal(node) {
+    const { bg, x, y, w, h, area, isUnlocked } = node;
+    bg.clear();
+    bg.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.85);
+    bg.fillRoundedRect(x, y, w, h, 5);
+    bg.lineStyle(1.5, isUnlocked ? area.color : 0xaaaaaa, isUnlocked ? 0.5 : 0.3);
+    bg.strokeRoundedRect(x, y, w, h, 5);
+  }
 
-    const area = this.areas[areaIdx];
-    const save = loadSave();
-    const levelStars = save.levelStars || {};
+  _drawNodeHover(node) {
+    const { bg, x, y, w, h, area } = node;
+    bg.clear();
+    bg.fillStyle(area.color, 0.15);
+    bg.fillRoundedRect(x, y, w, h, 5);
+    bg.lineStyle(2, area.color, 0.8);
+    bg.strokeRoundedRect(x, y, w, h, 5);
+  }
 
-    const LEFT = this.contentLeft;
-    const RIGHT = this.contentRight;
-    const CX = this.contentCX;
-    const contentY = 46;
-    const boxGap = 6;
-    const availW = RIGHT - LEFT;
-    const boxW = Math.floor((availW - (area.ids.length - 1) * boxGap) / area.ids.length);
-    const boxH = 80, boxR = 8;
-    const totalW = area.ids.length * boxW + (area.ids.length - 1) * boxGap;
-    const startX = LEFT;
+  _drawNodeSelected(node) {
+    const { bg, x, y, w, h, area } = node;
+    bg.clear();
+    bg.fillStyle(area.color, 0.25);
+    bg.fillRoundedRect(x, y, w, h, 5);
+    bg.lineStyle(2.5, area.color, 1);
+    bg.strokeRoundedRect(x, y, w, h, 5);
+  }
 
-    // Area total stars
-    let totalAreaStars = 0;
-    area.ids.forEach(id => { totalAreaStars += (levelStars[id] || 0); });
-    const maxStars = area.ids.length * 3;
-    const progressTxt = this.add.text(CX, contentY - 4,
-      '⭐ ' + totalAreaStars + ' / ' + maxStars, {
-      fontFamily: "-apple-system, 'PingFang SC', sans-serif", fontSize: '12px', color: '#777766',
-    }).setOrigin(0.5).setDepth(5);
-    this.contentItems.push(progressTxt);
+  selectChapter(levelId) {
+    // Deselect previous
+    const prevNode = this.chapterNodes[this.selectedLevel];
+    if (prevNode && prevNode.isUnlocked) this._drawNodeNormal(prevNode);
 
-    area.ids.forEach((levelId, i) => {
-      const bx = startX + i * (boxW + boxGap);
-      const by = contentY + 10;
+    this.selectedLevel = levelId;
 
-      const isUnlocked = levelId === 1 || (levelStars[levelId - 1] || 0) > 0;
-      const stars = levelStars[levelId] || 0;
+    // Select new
+    const node = this.chapterNodes[levelId];
+    if (node && node.isUnlocked) this._drawNodeSelected(node);
 
-      const bg = this.add.graphics().setDepth(5);
-      bg.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.9);
-      bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-      bg.lineStyle(2, isUnlocked ? area.color : 0xaaaaaa, isUnlocked ? 0.8 : 0.4);
-      bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
-      this.contentItems.push(bg);
+    // Update story area
+    this._updateStoryContent(levelId);
+  }
 
-      if (!isUnlocked) {
-        const lock = this.add.text(bx + boxW / 2, by + boxH / 2 - 6, '🔒', { fontSize: '22px' }).setOrigin(0.5).setDepth(5);
-        const lockLabel = this.add.text(bx + boxW / 2, by + boxH / 2 + 14, 'LV.' + levelId, {
-          fontFamily: "-apple-system, 'PingFang SC', sans-serif", fontSize: '11px', fontStyle: 'bold', color: '#999999',
-        }).setOrigin(0.5).setDepth(5);
-        this.contentItems.push(lock, lockLabel);
-      } else {
-        const cfg = CONFIG.LEVELS[levelId - 1];
-        const hint = cfg.balls > 0 ? cfg.balls + '球' : cfg.timeLimit + '秒';
+  drawStoryArea() {
+    // Story panel background
+    const panelY = 298;
+    const panelH = 125;
+    this.storyPanelY = panelY;
+    this.storyPanelH = panelH;
 
-        const numTxt = this.add.text(bx + boxW / 2, by + 12, 'LV.' + levelId, {
-          fontFamily: "-apple-system, 'PingFang SC', sans-serif", fontSize: '13px', fontStyle: 'bold', color: '#333333',
-        }).setOrigin(0.5).setDepth(5);
+    this.storyBg = this.add.graphics().setDepth(4);
+    this.storyBg.fillStyle(0xffffff, 0.65);
+    this.storyBg.fillRoundedRect(this.LEFT, panelY, this.RIGHT - this.LEFT, panelH, 8);
+    this.storyBg.lineStyle(1, 0xddccaa, 0.5);
+    this.storyBg.strokeRoundedRect(this.LEFT, panelY, this.RIGHT - this.LEFT, panelH, 8);
 
-        const nameTxt = this.add.text(bx + boxW / 2, by + 28, cfg.name, {
-          fontFamily: "-apple-system, 'PingFang SC', sans-serif", fontSize: '11px', fontStyle: 'bold', color: '#555544',
-        }).setOrigin(0.5).setDepth(5);
+    // Placeholder texts (will be updated by selectChapter)
+    this.storyTitle = this.add.text(this.LEFT + 10, panelY + 10, '', {
+      fontFamily: this.FONT, fontSize: '14px', fontStyle: 'bold', color: '#333333',
+    }).setOrigin(0, 0).setDepth(5);
 
-        const hintTxt = this.add.text(bx + boxW / 2, by + 42, hint, {
-          fontFamily: "-apple-system, 'PingFang SC', sans-serif", fontSize: '10px', color: '#888877',
-        }).setOrigin(0.5).setDepth(5);
+    this.storyText = this.add.text(this.LEFT + 10, panelY + 30, '', {
+      fontFamily: this.FONT, fontSize: '11px', color: '#555544', lineSpacing: 4,
+      wordWrap: { width: this.RIGHT - this.LEFT - 24 },
+    }).setOrigin(0, 0).setDepth(5);
 
-        const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
-        const starTxt = this.add.text(bx + boxW / 2, by + 58, starStr, { fontSize: '13px' }).setOrigin(0.5).setDepth(5);
+    this.storyInfo = this.add.text(this.LEFT + 10, panelY + panelH - 32, '', {
+      fontFamily: this.FONT, fontSize: '10px', color: '#888877',
+    }).setOrigin(0, 0).setDepth(5);
 
-        this.contentItems.push(numTxt, nameTxt, hintTxt, starTxt);
+    // Play button
+    this.playBtnBg = this.add.graphics().setDepth(5);
+    this.playBtnTxt = this.add.text(this.RIGHT - 16, panelY + panelH - 24, '▶ 开始挑战', {
+      fontFamily: this.FONT, fontSize: '12px', fontStyle: 'bold', color: '#ffffff',
+    }).setOrigin(1, 0.5).setDepth(6);
 
-        const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
-        zone.on('pointerover', () => {
-          bg.clear();
-          bg.fillStyle(area.color, 0.2);
-          bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-          bg.lineStyle(3, area.color, 1);
-          bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
-        });
-        zone.on('pointerout', () => {
-          bg.clear();
-          bg.fillStyle(0xffffff, 0.9);
-          bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-          bg.lineStyle(2, area.color, 0.8);
-          bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
-        });
-        zone.on('pointerdown', () => {
-          this.scene.start('GameScene', { mode: 'level', level: levelId });
-        });
-        this.contentItems.push(zone);
+    this.playBtnZone = this.add.zone(this.RIGHT - 100, panelY + panelH - 36, 90, 26)
+      .setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(7);
+    this.playBtnZone.on('pointerdown', () => {
+      const isUnlocked = this.selectedLevel === 1 || (this.levelStars[this.selectedLevel - 1] || 0) > 0;
+      if (isUnlocked) {
+        this.scene.start('GameScene', { mode: 'level', level: this.selectedLevel });
       }
     });
+  }
 
-    // Area description below boxes
-    const descMap = {
-      street: '放学后的街头，基础训练开始！',
-      gym:    '湘北体育馆，安西教练在看着你',
-      ryonan: '客场作战，击败陵南！',
-      kainan: '挑战神奈川王者海南大附属',
-      sunset: '镰仓的夕阳下，向全国制霸进发',
-    };
-    const desc = this.add.text(LEFT + 4, contentY + 100,
-      descMap[area.key] || '', {
-      fontFamily: "-apple-system, 'PingFang SC', sans-serif", fontSize: '13px', color: '#777766',
-    }).setOrigin(0, 0.5).setDepth(5);
-    this.contentItems.push(desc);
+  _updateStoryContent(levelId) {
+    const cfg = CONFIG.LEVELS[levelId - 1];
+    const story = CONFIG.STORY[levelId - 1] || '';
+    const isUnlocked = levelId === 1 || (this.levelStars[levelId - 1] || 0) > 0;
+    const stars = this.levelStars[levelId] || 0;
+    const area = this.areas.find(a => a.ids.includes(levelId));
+    const areaColor = area ? area.color : 0x666666;
 
-    // Navigation via tabs above — no arrows needed
+    this.storyTitle.setText('第' + levelId + '章: ' + cfg.name);
+
+    if (isUnlocked) {
+      this.storyText.setText(story);
+      const hint = cfg.balls > 0 ? '限 ' + cfg.balls + ' 球' : '限时 ' + cfg.timeLimit + ' 秒';
+      const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
+      const passTarget = '通关: ' + cfg.stars[0] + '分';
+      const extras = [];
+      if (cfg.wind > 0) extras.push('🌬风力' + cfg.wind);
+      if (cfg.rimMove) extras.push('🎯移动篮筐');
+      if (cfg.obstacles) extras.push('🐦障碍');
+      const extraStr = extras.length > 0 ? '  ' + extras.join(' ') : '';
+      this.storyInfo.setText(starStr + '  ' + hint + '  ' + passTarget + extraStr);
+      this.storyInfo.setVisible(true);
+    } else {
+      this.storyText.setText('🔒 完成前一关解锁本章剧情...');
+      this.storyInfo.setVisible(false);
+    }
+
+    // Update play button
+    this.playBtnBg.clear();
+    if (isUnlocked) {
+      const bx = this.RIGHT - 104, by = this.storyPanelY + this.storyPanelH - 36;
+      this.playBtnBg.fillStyle(areaColor, 0.85);
+      this.playBtnBg.fillRoundedRect(bx, by, 92, 26, 6);
+      this.playBtnTxt.setVisible(true);
+      this.playBtnZone.setInteractive({ useHandCursor: true });
+    } else {
+      this.playBtnTxt.setVisible(false);
+      this.playBtnZone.disableInteractive();
+    }
+
+    // Redraw story panel border with area color
+    this.storyBg.clear();
+    this.storyBg.fillStyle(0xffffff, 0.65);
+    this.storyBg.fillRoundedRect(this.LEFT, this.storyPanelY, this.RIGHT - this.LEFT, this.storyPanelH, 8);
+    this.storyBg.lineStyle(2, areaColor, 0.6);
+    this.storyBg.strokeRoundedRect(this.LEFT, this.storyPanelY, this.RIGHT - this.LEFT, this.storyPanelH, 8);
   }
 
   drawBackButton() {
     const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
-      fontFamily: "'Arial Black', sans-serif",
-      fontSize: '13px',
-      color: '#888877',
-      stroke: '#f5f0e0',
-      strokeThickness: 2,
-    }).setDepth(5);
-    backTxt.setOrigin(0, 1);
+      fontFamily: this.FONT, fontSize: '13px', color: '#888877',
+      stroke: '#f5f0e0', strokeThickness: 2,
+    }).setDepth(5).setOrigin(0, 1);
     backTxt.setInteractive({ useHandCursor: true });
     backTxt.on('pointerover', () => backTxt.setColor('#444433'));
     backTxt.on('pointerout',  () => backTxt.setColor('#888877'));
