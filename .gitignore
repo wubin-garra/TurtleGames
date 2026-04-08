@@ -1,2 +1,6 @@
 # Local Netlify folder
 .netlify
+
+# Private docs - plans, specs, dev docs (keep local only)
+docs/superpowers/
+projects/**/*.md
