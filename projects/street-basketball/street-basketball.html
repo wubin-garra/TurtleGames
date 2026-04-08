@@ -8,11 +8,15 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
-  width: 100%; height: 100%;
+  width: 100%; height: 100dvh; height: 100%;
   overflow: hidden;
   background: #222;
   display: flex; justify-content: center; align-items: center;
   touch-action: none; user-select: none; -webkit-user-select: none;
+}
+/* Use dynamic viewport height to avoid mobile browser toolbar overlap */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
 }
 /* Portrait rotation overlay */
 #rotate-hint {
@@ -7743,9 +7747,20 @@ window.__phaserGame = new Phaser.Game({
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    parent: document.body,
   },
   scene: [MenuScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene, LeaderboardScene],
 });
+// Force Phaser to re-fit when mobile browser toolbar shows/hides
+window.addEventListener('resize', function() {
+  if (window.__phaserGame) window.__phaserGame.scale.refresh();
+});
+// Also use visualViewport resize for better mobile support
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', function() {
+    if (window.__phaserGame) window.__phaserGame.scale.refresh();
+  });
+}
 </script>
 </body>
 </html>
