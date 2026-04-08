@@ -8,15 +8,15 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
-  width: 100%; height: 100dvh; height: 100%;
+  width: 100%; height: 100%;
   overflow: hidden;
   background: #222;
   display: flex; justify-content: center; align-items: center;
   touch-action: none; user-select: none; -webkit-user-select: none;
 }
-/* Use dynamic viewport height to avoid mobile browser toolbar overlap */
-@supports (height: 100dvh) {
-  html, body { height: 100dvh; }
+/* Use small viewport height to guarantee content fits within visible area (excludes toolbar) */
+@supports (height: 100svh) {
+  html, body { height: 100svh; }
 }
 /* Portrait rotation overlay */
 #rotate-hint {
@@ -3723,11 +3723,15 @@ class GameScene extends Phaser.Scene {
     });
 
     // ── RIGHT: S button — DOM overlay for 100% reliable touch on mobile ──
+    // Position to match joystick center height (70px from bottom in game coords = 19.4% from bottom)
     const canvas = this.game.canvas;
     const sBtn = document.createElement('div');
     sBtn.id = 'mobile-shoot-btn';
     sBtn.innerHTML = '🏀<br><span style="font-size:9px;letter-spacing:1px">SHOOT</span>';
-    sBtn.style.cssText = 'position:absolute;bottom:8%;right:4%;width:80px;height:80px;' +
+    const sBtnSize = 80;
+    const joyBottomPct = (70 / CONFIG.HEIGHT * 100).toFixed(1); // match joystick Y
+    sBtn.style.cssText = 'position:absolute;bottom:calc(' + joyBottomPct + '% - ' + (sBtnSize/2) + 'px);right:4%;' +
+      'width:' + sBtnSize + 'px;height:' + sBtnSize + 'px;' +
       'border-radius:50%;background:rgba(0,0,0,0.4);border:3px solid rgba(255,255,255,0.5);' +
       'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
       'font-size:30px;color:#fff;font-family:"Arial Black",sans-serif;' +
@@ -3783,8 +3787,8 @@ class GameScene extends Phaser.Scene {
     else if (dx > deadZone) { this.virtualRight = true; this.virtualLeft = false; }
     else { this.virtualLeft = false; this.virtualRight = false; }
 
-    // Vertical: up = jump (only trigger once per push)
-    if (dy < -deadZone * 1.5) {
+    // Vertical: up = jump (need strong upward push — 2.5x deadzone)
+    if (dy < -deadZone * 2.5) {
       if (!this.virtualJump) { this.virtualJump = true; this.virtualJumpJustPressed = true; }
     } else {
       this.virtualJump = false;
@@ -7752,14 +7756,19 @@ window.__phaserGame = new Phaser.Game({
   scene: [MenuScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene, LeaderboardScene],
 });
 // Force Phaser to re-fit when mobile browser toolbar shows/hides
-window.addEventListener('resize', function() {
+function refreshGameSize() {
+  // Use visualViewport for accurate mobile dimensions (excludes browser chrome)
+  if (window.visualViewport) {
+    document.body.style.height = window.visualViewport.height + 'px';
+    document.body.style.width = window.visualViewport.width + 'px';
+  }
   if (window.__phaserGame) window.__phaserGame.scale.refresh();
-});
-// Also use visualViewport resize for better mobile support
+}
+window.addEventListener('resize', refreshGameSize);
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', function() {
-    if (window.__phaserGame) window.__phaserGame.scale.refresh();
-  });
+  window.visualViewport.addEventListener('resize', refreshGameSize);
+  // Initial call to set correct size
+  refreshGameSize();
 }
 </script>
 </body>
