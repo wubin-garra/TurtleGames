@@ -8409,11 +8409,11 @@ class LeaderboardScene extends Phaser.Scene {
 }
 
 // Global: all text defaults to resolution 4 for crisp rendering
-const _origTextInit = Phaser.GameObjects.Text.prototype.initRTL || null;
-const _origSetStyle = Phaser.GameObjects.Text.prototype.setStyle;
-Phaser.GameObjects.Text.prototype.setStyle = function(style) {
-  if (style && !style.resolution) style.resolution = 4;
-  return _origSetStyle.call(this, style);
+const _origAddText = Phaser.GameObjects.GameObjectFactory.prototype.text;
+Phaser.GameObjects.GameObjectFactory.prototype.text = function(x, y, text, style) {
+  if (style && typeof style === 'object' && !style.resolution) style.resolution = 4;
+  else if (!style) style = { resolution: 4 };
+  return _origAddText.call(this, x, y, text, style);
 };
 
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
