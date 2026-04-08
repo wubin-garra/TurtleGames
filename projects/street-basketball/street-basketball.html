@@ -909,7 +909,7 @@ class MenuScene extends Phaser.Scene {
 
     // ── Click handlers ──
     endlessZone.on('pointerdown', () => {
-      this.scene.start('GameScene', { mode: 'endless', level: 1 });
+      this.scene.start('VenueSelectScene');
     });
     levelZone.on('pointerdown', () => {
       this.scene.start('LevelSelectScene');
@@ -1119,8 +1119,11 @@ class ResultScene extends Phaser.Scene {
   constructor() { super({ key: 'ResultScene' }); }
 
   preload() {
-    if (!this.textures.exists('haruko')) {
-      this.load.image('haruko', '50.webp');
+    if (!this.textures.exists('resultBg')) {
+      this.load.image('resultBg', 'FotoJet39.jpg');
+    }
+    if (!this.textures.exists('resultSuccessBg')) {
+      this.load.image('resultSuccessBg', 'jizhang2.webp');
     }
   }
 
@@ -1153,14 +1156,16 @@ class ResultScene extends Phaser.Scene {
     g.fillStyle(0xf5f0e0, 1);
     g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
 
-    // Haruko background image (right side)
-    if (this.textures.exists('haruko')) {
-      const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'haruko');
-      img.setOrigin(1, 1);
-      // Scale to fill height while maintaining aspect ratio
-      const scale = CONFIG.HEIGHT / img.height * 1.1;
+    // Background image (fills screen) — use success bg for passed levels
+    const bgKey = (this.resultPassed && this.textures.exists('resultSuccessBg')) ? 'resultSuccessBg' : 'resultBg';
+    if (this.textures.exists(bgKey)) {
+      const img = this.add.image(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, bgKey);
+      img.setOrigin(0.5, 0.5);
+      const scaleX = CONFIG.WIDTH / img.width;
+      const scaleY = CONFIG.HEIGHT / img.height;
+      const scale = Math.max(scaleX, scaleY);
       img.setScale(scale);
-      img.setAlpha(0.35);
+      img.setAlpha(0.3);
       img.setDepth(0);
     }
 
@@ -1406,6 +1411,12 @@ class ResultScene extends Phaser.Scene {
 class LevelSelectScene extends Phaser.Scene {
   constructor() { super({ key: 'LevelSelectScene' }); }
 
+  preload() {
+    if (!this.textures.exists('levelSelectBg')) {
+      this.load.image('levelSelectBg', 'qinzi2.jpeg');
+    }
+  }
+
   create() {
     this.drawBackground();
 
@@ -1428,25 +1439,34 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   drawBackground() {
+    // Dark base
     const g = this.add.graphics();
-    g.fillStyle(0xf5f0e0, 1);
+    g.fillStyle(0x1a1a2e, 1);
     g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
-    g.lineStyle(1, 0xaabbdd, 0.25);
-    for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
-      g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();
+
+    // Background image (center-fill, semi-transparent)
+    if (this.textures.exists('levelSelectBg')) {
+      const img = this.add.image(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, 'levelSelectBg');
+      const scaleX = CONFIG.WIDTH / img.width;
+      const scaleY = CONFIG.HEIGHT / img.height;
+      const scale = Math.max(scaleX, scaleY);
+      img.setScale(scale).setAlpha(0.3).setDepth(0);
     }
-    g.lineStyle(1.5, 0xdd6666, 0.3);
-    g.beginPath(); g.moveTo(60, 0); g.lineTo(60, CONFIG.HEIGHT); g.strokePath();
+
+    // Dark overlay for readability
+    const overlay = this.add.graphics().setDepth(1);
+    overlay.fillStyle(0x000000, 0.3);
+    overlay.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
   }
 
   drawTitle() {
     this.add.text(CONFIG.WIDTH / 2, 24, '🏆 选择关卡', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '24px',
-      color: '#333333',
-      stroke: '#888866',
+      color: '#ffffff',
+      stroke: '#000000',
       strokeThickness: 3,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(5);
   }
 
   drawTabs() {
@@ -1460,12 +1480,12 @@ class LevelSelectScene extends Phaser.Scene {
       const tx = startX + idx * (tabW + gap);
       const isActive = idx === this.currentAreaIdx;
 
-      const tabBg = this.add.graphics();
+      const tabBg = this.add.graphics().setDepth(5);
       const tabTxt = this.add.text(tx + tabW / 2, tabY + tabH / 2, area.label, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '10px',
-        color: isActive ? '#ffffff' : '#666655',
-      }).setOrigin(0.5).setDepth(2);
+        color: isActive ? '#ffffff' : '#aaaaaa',
+      }).setOrigin(0.5).setDepth(5);
 
       const drawTab = (active) => {
         tabBg.clear();
@@ -1474,11 +1494,11 @@ class LevelSelectScene extends Phaser.Scene {
           tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
           tabTxt.setColor('#ffffff');
         } else {
-          tabBg.fillStyle(0xddddcc, 0.6);
+          tabBg.fillStyle(0x222233, 0.7);
           tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
           tabBg.lineStyle(1, area.color, 0.4);
           tabBg.strokeRoundedRect(tx, tabY, tabW, tabH, 6);
-          tabTxt.setColor('#666655');
+          tabTxt.setColor('#aaaaaa');
         }
       };
       drawTab(isActive);
@@ -1519,8 +1539,8 @@ class LevelSelectScene extends Phaser.Scene {
     const maxStars = area.ids.length * 3;
     const progressTxt = this.add.text(CONFIG.WIDTH / 2, contentY - 6,
       '⭐ ' + totalAreaStars + ' / ' + maxStars, {
-      fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#888877',
-    }).setOrigin(0.5);
+      fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#ccccbb',
+    }).setOrigin(0.5).setDepth(5);
     this.contentItems.push(progressTxt);
 
     area.ids.forEach((levelId, i) => {
@@ -1530,52 +1550,52 @@ class LevelSelectScene extends Phaser.Scene {
       const isUnlocked = levelId === 1 || (levelStars[levelId - 1] || 0) > 0;
       const stars = levelStars[levelId] || 0;
 
-      const bg = this.add.graphics();
-      bg.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.9);
+      const bg = this.add.graphics().setDepth(5);
+      bg.fillStyle(isUnlocked ? 0x1a1a2e : 0x111122, 0.85);
       bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-      bg.lineStyle(2, isUnlocked ? area.color : 0xaaaaaa, isUnlocked ? 0.8 : 0.4);
+      bg.lineStyle(2, isUnlocked ? area.color : 0x555555, isUnlocked ? 0.8 : 0.4);
       bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
       this.contentItems.push(bg);
 
       if (!isUnlocked) {
-        const lock = this.add.text(bx + boxW / 2, by + boxH / 2 - 6, '🔒', { fontSize: '22px' }).setOrigin(0.5);
+        const lock = this.add.text(bx + boxW / 2, by + boxH / 2 - 6, '🔒', { fontSize: '22px' }).setOrigin(0.5).setDepth(5);
         const lockLabel = this.add.text(bx + boxW / 2, by + boxH / 2 + 14, 'LV.' + levelId, {
-          fontFamily: "'Arial Black', sans-serif", fontSize: '10px', color: '#aaaaaa',
-        }).setOrigin(0.5);
+          fontFamily: "'Arial Black', sans-serif", fontSize: '10px', color: '#777777',
+        }).setOrigin(0.5).setDepth(5);
         this.contentItems.push(lock, lockLabel);
       } else {
         const cfg = CONFIG.LEVELS[levelId - 1];
         const hint = cfg.balls > 0 ? cfg.balls + '球' : cfg.timeLimit + '秒';
 
         const numTxt = this.add.text(bx + boxW / 2, by + 12, 'LV.' + levelId, {
-          fontFamily: "'Arial Black', sans-serif", fontSize: '12px', color: '#333333',
-          stroke: '#ffffff', strokeThickness: 2,
-        }).setOrigin(0.5);
+          fontFamily: "'Arial Black', sans-serif", fontSize: '12px', color: '#ffffff',
+          stroke: '#000000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(5);
 
         const nameTxt = this.add.text(bx + boxW / 2, by + 28, cfg.name, {
-          fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#555544',
-        }).setOrigin(0.5);
+          fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#ccccbb',
+        }).setOrigin(0.5).setDepth(5);
 
         const hintTxt = this.add.text(bx + boxW / 2, by + 42, hint, {
-          fontFamily: 'Arial, sans-serif', fontSize: '9px', color: '#999988',
-        }).setOrigin(0.5);
+          fontFamily: 'Arial, sans-serif', fontSize: '9px', color: '#999999',
+        }).setOrigin(0.5).setDepth(5);
 
         const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
-        const starTxt = this.add.text(bx + boxW / 2, by + 58, starStr, { fontSize: '13px' }).setOrigin(0.5);
+        const starTxt = this.add.text(bx + boxW / 2, by + 58, starStr, { fontSize: '13px' }).setOrigin(0.5).setDepth(5);
 
         this.contentItems.push(numTxt, nameTxt, hintTxt, starTxt);
 
-        const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+        const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
         zone.on('pointerover', () => {
           bg.clear();
-          bg.fillStyle(area.color, 0.2);
+          bg.fillStyle(area.color, 0.3);
           bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
           bg.lineStyle(3, area.color, 1);
           bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
         });
         zone.on('pointerout', () => {
           bg.clear();
-          bg.fillStyle(0xffffff, 0.9);
+          bg.fillStyle(0x1a1a2e, 0.85);
           bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
           bg.lineStyle(2, area.color, 0.8);
           bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
@@ -1597,14 +1617,14 @@ class LevelSelectScene extends Phaser.Scene {
     };
     const desc = this.add.text(CONFIG.WIDTH / 2, contentY + 100,
       descMap[area.key] || '', {
-      fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888877',
-    }).setOrigin(0.5);
+      fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#bbbbaa',
+    }).setOrigin(0.5).setDepth(5);
     this.contentItems.push(desc);
 
     // Navigation arrows
     if (areaIdx > 0) {
       const leftArr = this.add.text(30, contentY + 45, '◀', {
-        fontSize: '28px', color: '#888877',
+        fontSize: '28px', color: '#ccccbb',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
       leftArr.on('pointerdown', () => {
         this.currentAreaIdx = areaIdx - 1;
@@ -1615,7 +1635,7 @@ class LevelSelectScene extends Phaser.Scene {
     }
     if (areaIdx < this.areas.length - 1) {
       const rightArr = this.add.text(CONFIG.WIDTH - 30, contentY + 45, '▶', {
-        fontSize: '28px', color: '#888877',
+        fontSize: '28px', color: '#ccccbb',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
       rightArr.on('pointerdown', () => {
         this.currentAreaIdx = areaIdx + 1;
@@ -1630,14 +1650,14 @@ class LevelSelectScene extends Phaser.Scene {
     const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '13px',
-      color: '#888877',
-      stroke: '#f5f0e0',
+      color: '#ccccbb',
+      stroke: '#000000',
       strokeThickness: 2,
-    });
+    }).setDepth(5);
     backTxt.setOrigin(0, 1);
     backTxt.setInteractive({ useHandCursor: true });
-    backTxt.on('pointerover', () => backTxt.setColor('#444433'));
-    backTxt.on('pointerout',  () => backTxt.setColor('#888877'));
+    backTxt.on('pointerover', () => backTxt.setColor('#ffffff'));
+    backTxt.on('pointerout',  () => backTxt.setColor('#ccccbb'));
     backTxt.on('pointerdown', () => { this.scene.start('MenuScene'); });
   }
 }
@@ -1794,12 +1814,22 @@ class CharSelectScene extends Phaser.Scene {
           }).setOrigin(0.5);
         }
 
-        // Click zone
+        // Click zone — single click to select, double click to select + go back
         const zone = this.add.zone(cx, cy, cardW, cardH).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+        zone._lastClickTime = 0;
         zone.on('pointerdown', () => {
+          const now = Date.now();
+          const wasAlreadySelected = (loadSave().selectedChar || 'default') === char.id;
           const sv = loadSave();
           sv.selectedChar = char.id;
           writeSave(sv);
+
+          if (wasAlreadySelected || (now - zone._lastClickTime < 400)) {
+            // Double click or click on already-selected → go back to menu
+            this.scene.start('MenuScene');
+            return;
+          }
+          zone._lastClickTime = now;
           this.scene.restart();
         });
         zone.on('pointerover', () => {
@@ -1889,22 +1919,159 @@ class CharSelectScene extends Phaser.Scene {
   }
 
   drawBackButton() {
-    const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
+    // Back button background for better visibility
+    const btnX = 8, btnY = CONFIG.HEIGHT - 36, btnW = 110, btnH = 30;
+    const btnBg = this.add.graphics().setDepth(9);
+    btnBg.fillStyle(0x222233, 0.85);
+    btnBg.fillRoundedRect(btnX, btnY, btnW, btnH, 8);
+    btnBg.lineStyle(2, 0x8888bb, 0.6);
+    btnBg.strokeRoundedRect(btnX, btnY, btnW, btnH, 8);
+
+    const backTxt = this.add.text(btnX + btnW / 2, btnY + btnH / 2, '← 返回菜单', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '14px', color: '#999999',
+      fontSize: '14px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 2,
       resolution: 2,
+    }).setOrigin(0.5).setDepth(10);
+    const backZone = this.add.zone(btnX, btnY, btnW, btnH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(10);
+    backZone.on('pointerover', () => {
+      btnBg.clear();
+      btnBg.fillStyle(0x444466, 0.9);
+      btnBg.fillRoundedRect(btnX, btnY, btnW, btnH, 8);
+      btnBg.lineStyle(2, 0xbbbbff, 0.8);
+      btnBg.strokeRoundedRect(btnX, btnY, btnW, btnH, 8);
+      backTxt.setColor('#ffcc00');
     });
-    backTxt.setOrigin(0, 1);
-    backTxt.setInteractive({ useHandCursor: true });
-    backTxt.on('pointerover', () => {
+    backZone.on('pointerout', () => {
+      btnBg.clear();
+      btnBg.fillStyle(0x222233, 0.85);
+      btnBg.fillRoundedRect(btnX, btnY, btnW, btnH, 8);
+      btnBg.lineStyle(2, 0x8888bb, 0.6);
+      btnBg.strokeRoundedRect(btnX, btnY, btnW, btnH, 8);
       backTxt.setColor('#ffffff');
-      this.tweens.add({ targets: backTxt, x: 18, duration: 150, ease: 'Quad.easeOut' });
     });
-    backTxt.on('pointerout', () => {
-      backTxt.setColor('#999999');
-      this.tweens.add({ targets: backTxt, x: 14, duration: 120 });
+    backZone.on('pointerdown', () => { this.scene.start('MenuScene'); });
+  }
+}
+
+// ─── VENUE SELECT SCENE (Endless Mode) ──────────────────────────────────────
+class VenueSelectScene extends Phaser.Scene {
+  constructor() { super({ key: 'VenueSelectScene' }); }
+
+  preload() {
+    if (!this.textures.exists('venueBg')) {
+      this.load.image('venueBg', 'qinzi1.webp');
+    }
+  }
+
+  create() {
+    // Dark base
+    const g = this.add.graphics();
+    g.fillStyle(0x1a1a2e, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    // Background image
+    if (this.textures.exists('venueBg')) {
+      const img = this.add.image(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, 'venueBg');
+      const scale = Math.max(CONFIG.WIDTH / img.width, CONFIG.HEIGHT / img.height);
+      img.setScale(scale).setAlpha(0.3).setDepth(0);
+    }
+
+    // Dark overlay
+    const overlay = this.add.graphics().setDepth(1);
+    overlay.fillStyle(0x000000, 0.3);
+    overlay.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    // Title
+    this.add.text(CONFIG.WIDTH / 2, 28, '🏟️ 选择场地', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '24px', color: '#ffffff',
+      stroke: '#000000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(5);
+
+    const venues = [
+      { key: 'street',  icon: '🏙',  name: '街角球场', color: 0xff3333 },
+      { key: 'park',    icon: '🌳', name: '公园球场', color: 0x33aa33 },
+      { key: 'rooftop', icon: '🌆', name: '天台球场', color: 0x6677cc },
+      { key: 'beach',   icon: '🏖',  name: '沙滩球场', color: 0xddaa33 },
+      { key: 'gym',     icon: '🏫', name: '湘北体育馆', color: 0xcc4400 },
+      { key: 'ryonan',  icon: '🏀', name: '陵南体育馆', color: 0x22aa44 },
+      { key: 'kainan',  icon: '👑', name: '海南大附属', color: 0x2244cc },
+      { key: 'sunset',  icon: '🌅', name: '镰仓夕阳',  color: 0xcc6622 },
+    ];
+
+    const cols = 4, rows = 2;
+    const boxW = 120, boxH = 70, gap = 14;
+    const totalW = cols * boxW + (cols - 1) * gap;
+    const startX = (CONFIG.WIDTH - totalW) / 2;
+    const startY = 65;
+
+    venues.forEach((v, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const bx = startX + col * (boxW + gap);
+      const by = startY + row * (boxH + gap);
+
+      const bg = this.add.graphics().setDepth(5);
+      bg.fillStyle(0x1a1a2e, 0.85);
+      bg.fillRoundedRect(bx, by, boxW, boxH, 10);
+      bg.lineStyle(2, v.color, 0.7);
+      bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
+
+      this.add.text(bx + boxW / 2, by + 22, v.icon, {
+        fontSize: '28px',
+      }).setOrigin(0.5).setDepth(5);
+
+      this.add.text(bx + boxW / 2, by + 50, v.name, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '11px', color: '#ddddcc',
+        stroke: '#000000', strokeThickness: 1,
+      }).setOrigin(0.5).setDepth(5);
+
+      const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
+      zone.on('pointerover', () => {
+        bg.clear();
+        bg.fillStyle(v.color, 0.35);
+        bg.fillRoundedRect(bx, by, boxW, boxH, 10);
+        bg.lineStyle(3, v.color, 1);
+        bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
+      });
+      zone.on('pointerout', () => {
+        bg.clear();
+        bg.fillStyle(0x1a1a2e, 0.85);
+        bg.fillRoundedRect(bx, by, boxW, boxH, 10);
+        bg.lineStyle(2, v.color, 0.7);
+        bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
+      });
+      zone.on('pointerdown', () => {
+        this.scene.start('GameScene', { mode: 'endless', level: 1, area: v.key });
+      });
     });
+
+    // Random button
+    const rndY = startY + rows * (boxH + gap) + 10;
+    const rndBg = this.add.graphics().setDepth(5);
+    rndBg.fillStyle(0x884488, 0.8);
+    rndBg.fillRoundedRect(CONFIG.WIDTH / 2 - 80, rndY, 160, 36, 8);
+    rndBg.lineStyle(2, 0xbb66bb, 0.8);
+    rndBg.strokeRoundedRect(CONFIG.WIDTH / 2 - 80, rndY, 160, 36, 8);
+    this.add.text(CONFIG.WIDTH / 2, rndY + 18, '🎲 随机场地', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '14px', color: '#ffffff',
+      stroke: '#000000', strokeThickness: 2,
+    }).setOrigin(0.5).setDepth(5);
+    const rndZone = this.add.zone(CONFIG.WIDTH / 2 - 80, rndY, 160, 36).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
+    rndZone.on('pointerdown', () => {
+      this.scene.start('GameScene', { mode: 'endless', level: 1 }); // no area = random
+    });
+
+    // Back button
+    const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回菜单', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '13px', color: '#ccccbb',
+      stroke: '#000000', strokeThickness: 2,
+    }).setOrigin(0, 1).setDepth(5).setInteractive({ useHandCursor: true });
+    backTxt.on('pointerover', () => backTxt.setColor('#ffffff'));
+    backTxt.on('pointerout',  () => backTxt.setColor('#ccccbb'));
     backTxt.on('pointerdown', () => { this.scene.start('MenuScene'); });
   }
 }
@@ -1922,6 +2089,7 @@ class GameScene extends Phaser.Scene {
   init(data) {
     this.gameMode     = data?.mode  || 'endless';
     this.currentLevel = data?.level || 1;
+    this.selectedArea = data?.area  || null; // venue chosen by player (endless mode)
 
     // Load level config if in level mode
     if (this.gameMode === 'level') {
@@ -2114,8 +2282,12 @@ class GameScene extends Phaser.Scene {
     if (this.gameMode === 'level' && this.levelConfig) {
       area = this.levelConfig.area || 'street';
     } else if (this.gameMode === 'endless') {
-      const areas = ['street', 'park', 'rooftop', 'beach', 'gym', 'sunset', 'ryonan', 'kainan'];
-      area = areas[Math.floor(Math.random() * areas.length)];
+      if (this.selectedArea) {
+        area = this.selectedArea;
+      } else {
+        const areas = ['street', 'park', 'rooftop', 'beach', 'gym', 'sunset', 'ryonan', 'kainan'];
+        area = areas[Math.floor(Math.random() * areas.length)];
+      }
     }
     this.currentArea = area;
 
@@ -6288,12 +6460,14 @@ class GameScene extends Phaser.Scene {
   _doFollowUpDunk() {
     const ballX = this.ball ? this.ball.x : 400;
     const ballY = this.ball ? this.ball.y : 250;
-    const rimX = this.hoopGeom ? this.hoopGeom.RIM_X : 480;
-    const rimY = this.hoopGeom ? this.hoopGeom.RIM_Y : 180;
+    const { RIM_CX, RIM_Y } = this.hoopGeom || { RIM_CX: 480, RIM_Y: 180 };
     const origX = this.playerGfx.x;
     const origY = this.playerGfx.y;
     const grabX = Phaser.Math.Clamp(ballX, 60, 700);
     const grabY = Math.min(ballY - 20, 220);
+
+    // Ball position relative to player: hands are at py - 106 in local graphics coords
+    const BALL_OFFSET_Y = -106;
 
     // Freeze ball
     if (this.ball) {
@@ -6301,7 +6475,7 @@ class GameScene extends Phaser.Scene {
       this.ball.body.setAllowGravity(false);
     }
 
-    // Phase 1: leap to ball
+    // Phase 1: leap to ball position
     this.tweens.add({
       targets: this.playerGfx,
       x: grabX - this.playerX,
@@ -6310,12 +6484,19 @@ class GameScene extends Phaser.Scene {
       ease: 'Quad.easeOut',
       onUpdate: () => {
         this.redrawPlayerDunkRise(this.playerX, this.playerY);
+        // Ball tracks with player's hands during leap
+        if (this.ball) {
+          this.ball.setPosition(
+            this.playerX + this.playerGfx.x,
+            this.playerY + this.playerGfx.y + BALL_OFFSET_Y
+          );
+        }
       },
       onComplete: () => {
-        if (this.ball) this.ball.setPosition(grabX, grabY - 40);
-
         // "补扣!" text
-        const txt = this.add.text(grabX, grabY - 70, '补扣!', {
+        const txtX = this.playerX + this.playerGfx.x;
+        const txtY = this.playerY + this.playerGfx.y + BALL_OFFSET_Y - 30;
+        const txt = this.add.text(txtX, txtY, '补扣!', {
           fontFamily: "'Arial Black', sans-serif",
           fontSize: '36px', color: '#ff6600',
           stroke: '#ffffff', strokeThickness: 5, resolution: 2,
@@ -6323,40 +6504,62 @@ class GameScene extends Phaser.Scene {
         txt.setOrigin(0.5).setAngle(Phaser.Math.Between(-10, -3));
         this.tweens.add({ targets: txt, y: txt.y - 80, alpha: 0, scaleX: 1.5, scaleY: 1.5, duration: 1200, onComplete: () => txt.destroy() });
 
-        // Phase 2: fly to rim and dunk
-        this.time.delayedCall(200, () => {
+        // Phase 2: fly to rim and slam
+        this.time.delayedCall(150, () => {
           this.tweens.add({
             targets: this.playerGfx,
-            x: rimX - this.playerX,
-            y: -(this.playerY - rimY + 30),
+            x: RIM_CX - 20 - this.playerX,
+            y: -(this.playerY - RIM_Y + 30),
             duration: 250,
             ease: 'Quad.easeIn',
             onUpdate: () => {
               this.redrawPlayerDunkRise(this.playerX, this.playerY);
+              // Ball stays above player's head
               if (this.ball) {
                 this.ball.setPosition(
                   this.playerX + this.playerGfx.x,
-                  this.playerY + this.playerGfx.y - 40
+                  this.playerY + this.playerGfx.y + BALL_OFFSET_Y
                 );
               }
             },
             onComplete: () => {
-              // Slam the ball down through the hoop
+              // Slam ball through the hoop — same as doDunkSlam
               if (this.ball) {
+                this.ball.setPosition(RIM_CX, RIM_Y + 35);
                 this.ball.body.setAllowGravity(true);
-                this.ball.body.setVelocity(0, 600);
-                this.ball.setPosition(rimX, rimY + 10);
+                this.ball.body.setVelocity(Phaser.Math.Between(-30, 30), 650);
+                this.ball.body.setBounce(0.6);
+                this.ball.body.setAngularVelocity(200);
               }
-              this.isShooting = true;
-              this.cameras.main.shake(300, 0.012);
-              soundManager.play('swish');
+              this.hoopCollisionCooldown = 60;
 
-              // Land
+              // Score directly like doDunkSlam
+              this.isShooting = true;
+              this.scored = false;
+              this.hitBackboard = true;
+              this.isDunkScore = true;
+              this.wasJumpShot = true;
+              this.shotZone = 'near';
+              soundManager.play('bank');
+              this.cameras.main.shake(300, 0.012);
+              this.onScore();
+
+              // Hoop shakes on slam
+              const hoopTarget = this.hoopGraphics || this.staticHoopGfx;
+              if (hoopTarget) {
+                this.tweens.add({
+                  targets: hoopTarget,
+                  x: { from: -4, to: 4 }, y: { from: -2, to: 2 },
+                  duration: 80, yoyo: true, repeat: 4, ease: 'Sine.easeInOut',
+                  onComplete: () => { hoopTarget.x = 0; hoopTarget.y = 0; }
+                });
+              }
+
+              // Land back to ground
               this.time.delayedCall(300, () => {
                 this.tweens.add({
                   targets: this.playerGfx,
-                  x: origX,
-                  y: origY,
+                  x: origX, y: origY,
                   duration: 400,
                   ease: 'Bounce.easeOut',
                   onComplete: () => {
@@ -8198,7 +8401,7 @@ window.__phaserGame = new Phaser.Game({
     autoCenter: Phaser.Scale.CENTER_BOTH,
     parent: 'game-container',
   },
-  scene: [MenuScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene, LeaderboardScene],
+  scene: [MenuScene, VenueSelectScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene, LeaderboardScene],
 });
 // Force Phaser to re-fit when mobile browser toolbar shows/hides
 function refreshGameSize() {

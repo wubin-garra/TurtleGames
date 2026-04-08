@@ -7,6 +7,9 @@ on:
       - 'deploy-game-library/**'
       - 'projects/**/*.html'
       - 'projects/**/*.mp3'
+      - 'projects/**/*.jpg'
+      - 'projects/**/*.jpeg'
+      - 'projects/**/*.webp'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -35,7 +38,10 @@ jobs:
           cp projects/portfolio/index.html deploy-game-library/index.html
           # Copy street-basketball assets (music + images)
           cp projects/street-basketball/*.mp3 deploy-game-library/
-          cp projects/street-basketball/50.webp deploy-game-library/
+          cp projects/street-basketball/FotoJet39.jpg deploy-game-library/
+          cp projects/street-basketball/qinzi1.webp deploy-game-library/
+          cp projects/street-basketball/qinzi2.jpeg deploy-game-library/
+          cp projects/street-basketball/jizhang2.webp deploy-game-library/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
