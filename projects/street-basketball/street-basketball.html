@@ -207,24 +207,36 @@ CONFIG.ENDLESS = {
 };
 
 CONFIG.LEVELS = [
-  // Area 1: Street Corner (1-5)
-  { id:1,  area:'street',  name:'初试身手', target:4,  balls:10, playerX:480, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[4,12,20] },
-  { id:2,  area:'street',  name:'左右开弓', target:4,  balls:10, playerX:0,   wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[4,14,22], randomPos:true },
-  { id:3,  area:'street',  name:'移动目标', target:4,  balls:12, playerX:420, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[4,14,24] },
-  { id:4,  area:'street',  name:'逆风投篮', target:6,  balls:12, playerX:380, wind:2, weather:'windy', rimMove:false, obstacles:false, stars:[6,16,28] },
-  { id:5,  area:'street',  name:'街角之王', target:6,  balls:0,  playerX:400, wind:1, weather:'clear', rimMove:false, obstacles:false, stars:[6,20,40], timeLimit:30 },
-  // Area 2: City Park (6-10)
-  { id:6,  area:'park',    name:'远距离',   target:8,   balls:10, playerX:340, wind:1, weather:'clear', rimMove:false, obstacles:false, stars:[8,18,30] },
-  { id:7,  area:'park',    name:'雨中作战', target:8,   balls:12, playerX:370, wind:0, weather:'rain',  rimMove:false, obstacles:false, stars:[8,20,32] },
-  { id:8,  area:'park',    name:'夜幕降临', target:8,   balls:12, playerX:360, wind:1, weather:'night', rimMove:false, obstacles:false, stars:[8,22,36] },
-  { id:9,  area:'park',    name:'风雨交加', target:10,  balls:12, playerX:320, wind:3, weather:'rain',  rimMove:true,  obstacles:false, stars:[10,24,40] },
-  { id:10, area:'park',    name:'公园霸主', target:10,  balls:0,  playerX:300, wind:3, weather:'rain',  rimMove:true,  obstacles:false, stars:[10,28,50], timeLimit:30 },
-  // Area 3: Rooftop (11-15)
-  { id:11, area:'rooftop', name:'天台初探', target:10,  balls:12, playerX:300, wind:2, weather:'windy', rimMove:false, obstacles:true,  stars:[10,26,44] },
-  { id:12, area:'rooftop', name:'摇晃篮筐', target:10,  balls:12, playerX:280, wind:2, weather:'clear', rimMove:true,  obstacles:true,  stars:[10,28,48], rimShake:true },
-  { id:13, area:'rooftop', name:'暴风之夜', target:12,  balls:12, playerX:260, wind:4, weather:'night', rimMove:false, obstacles:true,  stars:[12,30,50] },
-  { id:14, area:'rooftop', name:'极限挑战', target:12,  balls:14, playerX:240, wind:3, weather:'rain',  rimMove:true,  obstacles:true,  stars:[12,32,56], rimShake:true },
-  { id:15, area:'rooftop', name:'街球传奇', target:14,  balls:0,  playerX:220, wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[14,40,66], timeLimit:35, rimShake:true },
+  // Area 1: 街角 Street Corner (1-5) — 放学后的街头
+  { id:1,  area:'street',  name:'热身赛',   balls:8, playerX:460, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[300,600,1000] },
+  { id:2,  area:'street',  name:'左右开弓', balls:8, playerX:0,   wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[400,800,1200], randomPos:true },
+  { id:3,  area:'street',  name:'追风少年', balls:7, playerX:400, wind:2, weather:'windy', rimMove:false, obstacles:false, stars:[400,900,1400] },
+  { id:4,  area:'street',  name:'移动靶心', balls:7, playerX:420, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[500,1000,1600] },
+  { id:5,  area:'street',  name:'街角王者', balls:0, playerX:400, wind:1, weather:'clear', rimMove:false, obstacles:false, stars:[600,1200,2000], timeLimit:40 },
+  // Area 2: 校园 Shohoku Campus (6-10) — 湘北体育馆
+  { id:6,  area:'gym',     name:'校内对抗', balls:7, playerX:420, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[500,1000,1600] },
+  { id:7,  area:'gym',     name:'远投特训', balls:7, playerX:280, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[500,1100,1800] },
+  { id:8,  area:'gym',     name:'移动防守', balls:6, playerX:380, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[600,1200,2000] },
+  { id:9,  area:'gym',     name:'安西教练', balls:6, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[700,1400,2400], randomPos:true },
+  { id:10, area:'gym',     name:'湘北王牌', balls:0, playerX:360, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[800,1600,2800], timeLimit:40 },
+  // Area 3: 陵南 Ryonan (11-15) — 陵南体育馆
+  { id:11, area:'ryonan',  name:'客场作战', balls:6, playerX:360, wind:0, weather:'clear', rimMove:false, obstacles:true,  stars:[600,1300,2200] },
+  { id:12, area:'ryonan',  name:'鱼住威压', balls:6, playerX:300, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[700,1500,2500] },
+  { id:13, area:'ryonan',  name:'仙道对决', balls:5, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[800,1700,2800], randomPos:true },
+  { id:14, area:'ryonan',  name:'逆转陵南', balls:5, playerX:280, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[900,1900,3200], rimShake:true },
+  { id:15, area:'ryonan',  name:'陵南之战', balls:0, playerX:300, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[1000,2000,3500], timeLimit:40, rimShake:true },
+  // Area 4: 海南 Kainan (16-20) — 神奈川王者
+  { id:16, area:'kainan',  name:'王者球馆', balls:5, playerX:340, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[700,1500,2500] },
+  { id:17, area:'kainan',  name:'牧绅一',   balls:5, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[800,1700,2800], randomPos:true },
+  { id:18, area:'kainan',  name:'神宗一郎', balls:5, playerX:240, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[900,1900,3200], rimShake:true },
+  { id:19, area:'kainan',  name:'绝境反击', balls:4, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[900,2100,3600], rimShake:true, randomPos:true },
+  { id:20, area:'kainan',  name:'挑战海南', balls:0, playerX:260, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[1100,2300,3800], timeLimit:40, rimShake:true },
+  // Area 5: 镰仓 Kamakura (21-25) — 最后的夕阳
+  { id:21, area:'sunset',  name:'镰仓海岸', balls:5, playerX:320, wind:2, weather:'windy', rimMove:true,  obstacles:false, stars:[800,1700,2800] },
+  { id:22, area:'sunset',  name:'海风挑战', balls:5, playerX:280, wind:3, weather:'windy', rimMove:true,  obstacles:true,  stars:[900,1900,3200] },
+  { id:23, area:'sunset',  name:'夕阳暴风', balls:4, playerX:0,   wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[900,2100,3600], randomPos:true },
+  { id:24, area:'sunset',  name:'最后一投', balls:4, playerX:240, wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1000,2300,4000], rimShake:true, randomPos:true },
+  { id:25, area:'sunset',  name:'全国制霸', balls:0, playerX:220, wind:5, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1200,2800,4500], timeLimit:45, rimShake:true },
 ];
 
 CONFIG.POWERUPS = {
@@ -236,7 +248,7 @@ CONFIG.POWERUPS = {
 };
 
 CONFIG.CHARACTERS = [
-  { id:'default', name:'樱木花道', color:'#ff2222', headband:'#ff3366', unlock:null, skill:'rebound',    title:'篮板王',   desc:'50%抢篮板 + 50%补扣', jersey:'10', hair:'#ff2200', hairStyle:'spike' },
+  { id:'default', name:'樱木花道', color:'#ff2222', headband:'#ff3366', unlock:null, skill:'rebound',    title:'篮板王',   desc:'90%篮板 碰框补扣', jersey:'10', hair:'#ff2200', hairStyle:'spike' },
   { id:'fire',    name:'流川枫',  color:'#ff2222', headband:'#ff2222', unlock:null, skill:'ace',         title:'得分天才', desc:'后仰跳投+突破扣篮+越投越准', jersey:'11', hair:'#222',  hairStyle:'long' },
   { id:'spring',  name:'赤木刚宪', color:'#ff2222', headband:'#ffffff', unlock:null, skill:'bigMan',      title:'支柱',     desc:'篮球变大 篮筐变大', jersey:'4',  hair:'#222',  hairStyle:'buzz' },
   { id:'wind',    name:'三井寿',  color:'#ff2222', headband:'#ffffff', unlock:null, skill:'threePoint',  title:'三分射手', desc:'远投300分 球变小 筐变大', jersey:'14', hair:'#222',  hairStyle:'short' },
@@ -855,7 +867,7 @@ class MenuScene extends Phaser.Scene {
 
     const levelZone = this.add.zone(centerX, btnY2, btnW, btnH).setInteractive({ useHandCursor: true });
 
-    const levelSub = this.add.text(centerX, btnY2 + 16, '15关挑战 · 3大区域', {
+    const levelSub = this.add.text(centerX, btnY2 + 16, '25关挑战 · 5大场景', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '12px',
       color: '#ccddff',
@@ -1326,7 +1338,7 @@ class ResultScene extends Phaser.Scene {
     });
 
     // Next level button (level mode, passed, not last level)
-    if (this.resultMode === 'level' && this.resultPassed && this.resultLevel < 15) {
+    if (this.resultMode === 'level' && this.resultPassed && this.resultLevel < CONFIG.LEVELS.length) {
       const nextBtnW = 170, nextBtnH = 50, nextBtnR = 12;
       const nextY = y + 60;
       const nextX = cx - nextBtnW / 2;
@@ -1379,9 +1391,10 @@ class ResultScene extends Phaser.Scene {
 
     // Target score info
     if (cfg) {
-      const targetTxt = this.add.text(cx, 310, '目标: ' + cfg.stars[0] + ' / ' + cfg.stars[1] + ' / ' + cfg.stars[2], {
+      const targetTxt = this.add.text(cx, 310,
+        '⭐' + cfg.stars[0] + '  ⭐⭐' + cfg.stars[1] + '  ⭐⭐⭐' + cfg.stars[2], {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '12px',
+        fontSize: '11px',
         color: '#888877',
       });
       targetTxt.setOrigin(0.5);
@@ -1395,8 +1408,22 @@ class LevelSelectScene extends Phaser.Scene {
 
   create() {
     this.drawBackground();
+
+    const areas = [
+      { key: 'street',  label: '🏙 街角球场',  color: 0xff3333, ids: [1,2,3,4,5] },
+      { key: 'gym',     label: '🏫 湘北校园',  color: 0xcc4400, ids: [6,7,8,9,10] },
+      { key: 'ryonan',  label: '🏀 陵南体育馆', color: 0x22aa44, ids: [11,12,13,14,15] },
+      { key: 'kainan',  label: '👑 海南大附属', color: 0x2244cc, ids: [16,17,18,19,20] },
+      { key: 'sunset',  label: '🌅 镰仓夕阳',  color: 0xcc6622, ids: [21,22,23,24,25] },
+    ];
+
+    // Tab-based area selection
+    this.currentAreaIdx = 0;
+    this.areas = areas;
+
     this.drawTitle();
-    this.drawAreas();
+    this.drawTabs();
+    this.drawAreaContent(0);
     this.drawBackButton();
   }
 
@@ -1413,109 +1440,190 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   drawTitle() {
-    const title = this.add.text(CONFIG.WIDTH / 2, 30, '🏆 选择关卡', {
+    this.add.text(CONFIG.WIDTH / 2, 24, '🏆 选择关卡', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '30px',
+      fontSize: '24px',
       color: '#333333',
       stroke: '#888866',
       strokeThickness: 3,
-    });
-    title.setOrigin(0.5);
-    title.setAngle(-1);
+    }).setOrigin(0.5);
   }
 
-  drawAreas() {
+  drawTabs() {
+    const tabY = 50;
+    const tabW = 108, tabH = 28, gap = 6;
+    const totalW = this.areas.length * tabW + (this.areas.length - 1) * gap;
+    const startX = (CONFIG.WIDTH - totalW) / 2;
+
+    this.tabItems = [];
+    this.areas.forEach((area, idx) => {
+      const tx = startX + idx * (tabW + gap);
+      const isActive = idx === this.currentAreaIdx;
+
+      const tabBg = this.add.graphics();
+      const tabTxt = this.add.text(tx + tabW / 2, tabY + tabH / 2, area.label, {
+        fontFamily: "'Arial Black', sans-serif",
+        fontSize: '10px',
+        color: isActive ? '#ffffff' : '#666655',
+      }).setOrigin(0.5).setDepth(2);
+
+      const drawTab = (active) => {
+        tabBg.clear();
+        if (active) {
+          tabBg.fillStyle(area.color, 0.85);
+          tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
+          tabTxt.setColor('#ffffff');
+        } else {
+          tabBg.fillStyle(0xddddcc, 0.6);
+          tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
+          tabBg.lineStyle(1, area.color, 0.4);
+          tabBg.strokeRoundedRect(tx, tabY, tabW, tabH, 6);
+          tabTxt.setColor('#666655');
+        }
+      };
+      drawTab(isActive);
+
+      const zone = this.add.zone(tx, tabY, tabW, tabH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(3);
+      zone.on('pointerdown', () => {
+        if (this.currentAreaIdx === idx) return;
+        this.currentAreaIdx = idx;
+        // Redraw all tabs
+        this.tabItems.forEach((t, ti) => t.draw(ti === idx));
+        // Redraw content
+        this.drawAreaContent(idx);
+      });
+
+      this.tabItems.push({ draw: drawTab, bg: tabBg, txt: tabTxt });
+    });
+  }
+
+  drawAreaContent(areaIdx) {
+    // Clear previous content
+    if (this.contentItems) {
+      this.contentItems.forEach(item => { if (item && item.destroy) item.destroy(); });
+    }
+    this.contentItems = [];
+
+    const area = this.areas[areaIdx];
     const save = loadSave();
     const levelStars = save.levelStars || {};
 
-    const areas = [
-      { key: 'street',  label: '🏙 街角球场', color: 0xff3333, ids: [1,2,3,4,5],    y: 90  },
-      { key: 'park',    label: '🌳 城市公园', color: 0x44aa44, ids: [6,7,8,9,10],   y: 220 },
-      { key: 'rooftop', label: '🏢 天台球场', color: 0x3366ff, ids: [11,12,13,14,15], y: 350 },
-    ];
+    const boxW = 100, boxH = 80, boxR = 10;
+    const contentY = 90;
+    const totalW = area.ids.length * boxW + (area.ids.length - 1) * 14;
+    const startX = (CONFIG.WIDTH - totalW) / 2;
 
-    areas.forEach(area => {
-      // Area header
-      const hg = this.add.graphics();
-      hg.fillStyle(area.color, 0.15);
-      hg.fillRoundedRect(80, area.y, 640, 28, 8);
-      hg.lineStyle(2, area.color, 0.7);
-      hg.strokeRoundedRect(80, area.y, 640, 28, 8);
+    // Area total stars
+    let totalAreaStars = 0;
+    area.ids.forEach(id => { totalAreaStars += (levelStars[id] || 0); });
+    const maxStars = area.ids.length * 3;
+    const progressTxt = this.add.text(CONFIG.WIDTH / 2, contentY - 6,
+      '⭐ ' + totalAreaStars + ' / ' + maxStars, {
+      fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#888877',
+    }).setOrigin(0.5);
+    this.contentItems.push(progressTxt);
 
-      this.add.text(CONFIG.WIDTH / 2, area.y + 14, area.label, {
-        fontFamily: "'Arial Black', sans-serif",
-        fontSize: '14px',
-        color: '#333333',
-      }).setOrigin(0.5);
+    area.ids.forEach((levelId, i) => {
+      const bx = startX + i * (boxW + 14);
+      const by = contentY + 10;
 
-      // Level boxes
-      const boxW = 96, boxH = 90, boxR = 10;
-      const totalW = area.ids.length * boxW + (area.ids.length - 1) * 16;
-      const startX = (CONFIG.WIDTH - totalW) / 2;
+      const isUnlocked = levelId === 1 || (levelStars[levelId - 1] || 0) > 0;
+      const stars = levelStars[levelId] || 0;
 
-      area.ids.forEach((levelId, i) => {
-        const bx = startX + i * (boxW + 16);
-        const by = area.y + 35;
+      const bg = this.add.graphics();
+      bg.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.9);
+      bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
+      bg.lineStyle(2, isUnlocked ? area.color : 0xaaaaaa, isUnlocked ? 0.8 : 0.4);
+      bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
+      this.contentItems.push(bg);
 
-        // Check lock state: level 1 always unlocked, others need prev level stars > 0
-        const isUnlocked = levelId === 1 || (levelStars[levelId - 1] || 0) > 0;
-        const stars = levelStars[levelId] || 0;
+      if (!isUnlocked) {
+        const lock = this.add.text(bx + boxW / 2, by + boxH / 2 - 6, '🔒', { fontSize: '22px' }).setOrigin(0.5);
+        const lockLabel = this.add.text(bx + boxW / 2, by + boxH / 2 + 14, 'LV.' + levelId, {
+          fontFamily: "'Arial Black', sans-serif", fontSize: '10px', color: '#aaaaaa',
+        }).setOrigin(0.5);
+        this.contentItems.push(lock, lockLabel);
+      } else {
+        const cfg = CONFIG.LEVELS[levelId - 1];
+        const hint = cfg.balls > 0 ? cfg.balls + '球' : cfg.timeLimit + '秒';
 
-        const bg = this.add.graphics();
-        bg.fillStyle(isUnlocked ? 0xffffff : 0xddddcc, 0.9);
-        bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-        bg.lineStyle(2, isUnlocked ? area.color : 0xaaaaaa, isUnlocked ? 0.8 : 0.4);
-        bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
+        const numTxt = this.add.text(bx + boxW / 2, by + 12, 'LV.' + levelId, {
+          fontFamily: "'Arial Black', sans-serif", fontSize: '12px', color: '#333333',
+          stroke: '#ffffff', strokeThickness: 2,
+        }).setOrigin(0.5);
 
-        if (!isUnlocked) {
-          this.add.text(bx + boxW / 2, by + boxH / 2 - 6, '🔒', { fontSize: '24px' }).setOrigin(0.5);
-          this.add.text(bx + boxW / 2, by + boxH / 2 + 16, 'LV.' + levelId, {
-            fontFamily: "'Arial Black', sans-serif",
-            fontSize: '11px', color: '#aaaaaa',
-          }).setOrigin(0.5);
-        } else {
-          // Level number
-          this.add.text(bx + boxW / 2, by + 14, 'LV.' + levelId, {
-            fontFamily: "'Arial Black', sans-serif",
-            fontSize: '13px', color: '#333333',
-            stroke: '#ffffff', strokeThickness: 2,
-          }).setOrigin(0.5);
+        const nameTxt = this.add.text(bx + boxW / 2, by + 28, cfg.name, {
+          fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#555544',
+        }).setOrigin(0.5);
 
-          // Level name
-          const cfg = CONFIG.LEVELS[levelId - 1];
-          this.add.text(bx + boxW / 2, by + 32, cfg.name, {
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '10px', color: '#555544',
-          }).setOrigin(0.5);
+        const hintTxt = this.add.text(bx + boxW / 2, by + 42, hint, {
+          fontFamily: 'Arial, sans-serif', fontSize: '9px', color: '#999988',
+        }).setOrigin(0.5);
 
-          // Star display
-          const starStr = ['⭐','⭐','⭐'].map((s, si) => si < stars ? '⭐' : '☆').join('');
-          this.add.text(bx + boxW / 2, by + 54, starStr, {
-            fontSize: '14px',
-          }).setOrigin(0.5);
+        const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
+        const starTxt = this.add.text(bx + boxW / 2, by + 58, starStr, { fontSize: '13px' }).setOrigin(0.5);
 
-          // Click zone
-          const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true });
-          zone.on('pointerover', () => {
-            bg.clear();
-            bg.fillStyle(area.color, 0.2);
-            bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-            bg.lineStyle(3, area.color, 1);
-            bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
-          });
-          zone.on('pointerout', () => {
-            bg.clear();
-            bg.fillStyle(0xffffff, 0.9);
-            bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
-            bg.lineStyle(2, area.color, 0.8);
-            bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
-          });
-          zone.on('pointerdown', () => {
-            this.scene.start('GameScene', { mode: 'level', level: levelId });
-          });
-        }
-      });
+        this.contentItems.push(numTxt, nameTxt, hintTxt, starTxt);
+
+        const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+        zone.on('pointerover', () => {
+          bg.clear();
+          bg.fillStyle(area.color, 0.2);
+          bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
+          bg.lineStyle(3, area.color, 1);
+          bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
+        });
+        zone.on('pointerout', () => {
+          bg.clear();
+          bg.fillStyle(0xffffff, 0.9);
+          bg.fillRoundedRect(bx, by, boxW, boxH, boxR);
+          bg.lineStyle(2, area.color, 0.8);
+          bg.strokeRoundedRect(bx, by, boxW, boxH, boxR);
+        });
+        zone.on('pointerdown', () => {
+          this.scene.start('GameScene', { mode: 'level', level: levelId });
+        });
+        this.contentItems.push(zone);
+      }
     });
+
+    // Area description below boxes
+    const descMap = {
+      street: '放学后的街头，基础训练开始！',
+      gym:    '湘北体育馆，安西教练在看着你',
+      ryonan: '客场作战，击败陵南！',
+      kainan: '挑战神奈川王者海南大附属',
+      sunset: '镰仓的夕阳下，向全国制霸进发',
+    };
+    const desc = this.add.text(CONFIG.WIDTH / 2, contentY + 100,
+      descMap[area.key] || '', {
+      fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888877',
+    }).setOrigin(0.5);
+    this.contentItems.push(desc);
+
+    // Navigation arrows
+    if (areaIdx > 0) {
+      const leftArr = this.add.text(30, contentY + 45, '◀', {
+        fontSize: '28px', color: '#888877',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
+      leftArr.on('pointerdown', () => {
+        this.currentAreaIdx = areaIdx - 1;
+        this.tabItems.forEach((t, ti) => t.draw(ti === this.currentAreaIdx));
+        this.drawAreaContent(this.currentAreaIdx);
+      });
+      this.contentItems.push(leftArr);
+    }
+    if (areaIdx < this.areas.length - 1) {
+      const rightArr = this.add.text(CONFIG.WIDTH - 30, contentY + 45, '▶', {
+        fontSize: '28px', color: '#888877',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
+      rightArr.on('pointerdown', () => {
+        this.currentAreaIdx = areaIdx + 1;
+        this.tabItems.forEach((t, ti) => t.draw(ti === this.currentAreaIdx));
+        this.drawAreaContent(this.currentAreaIdx);
+      });
+      this.contentItems.push(rightArr);
+    }
   }
 
   drawBackButton() {
@@ -2006,7 +2114,7 @@ class GameScene extends Phaser.Scene {
     if (this.gameMode === 'level' && this.levelConfig) {
       area = this.levelConfig.area || 'street';
     } else if (this.gameMode === 'endless') {
-      const areas = ['street', 'park', 'rooftop', 'beach', 'gym', 'sunset'];
+      const areas = ['street', 'park', 'rooftop', 'beach', 'gym', 'sunset', 'ryonan', 'kainan'];
       area = areas[Math.floor(Math.random() * areas.length)];
     }
     this.currentArea = area;
@@ -2039,6 +2147,10 @@ class GameScene extends Phaser.Scene {
       this._drawGymBackground(g);
     } else if (area === 'sunset') {
       this._drawSunsetBackground(g);
+    } else if (area === 'ryonan') {
+      this._drawRyonanBackground(g);
+    } else if (area === 'kainan') {
+      this._drawKainanBackground(g);
     }
 
     // Ground (shared)
@@ -2418,6 +2530,94 @@ class GameScene extends Phaser.Scene {
     });
     graffiti.setOrigin(0.5);
     graffiti.setAngle(-6);
+  }
+
+  _drawRyonanBackground(g) {
+    // Indoor gym — 陵南体育馆 (green theme)
+    const wallH = CONFIG.HEIGHT * 0.6;
+    g.fillStyle(0x3a5a3a, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, wallH);
+
+    // Wall panels
+    g.lineStyle(1, 0x2d4a2d, 0.4);
+    for (let x = 0; x < CONFIG.WIDTH; x += 40) {
+      g.beginPath(); g.moveTo(x, 0); g.lineTo(x, wallH); g.strokePath();
+    }
+    g.fillStyle(0x2a4a2a, 1);
+    g.fillRect(0, wallH * 0.45, CONFIG.WIDTH, 4);
+
+    // Banner "陵南"
+    g.fillStyle(0x006633, 0.9);
+    g.fillRect(240, 25, 200, 55);
+    g.lineStyle(3, 0x00aa44, 1);
+    g.strokeRect(240, 25, 200, 55);
+    this.add.text(340, 52, '陵   南   高   中', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '16px', color: '#ffffff'
+    }).setOrigin(0.5);
+
+    // Scoreboard
+    g.fillStyle(0x222222, 0.9);
+    g.fillRect(80, 20, 100, 40);
+    g.lineStyle(1, 0x00ff44, 0.6);
+    g.strokeRect(80, 20, 100, 40);
+    this.add.text(130, 40, 'HOME  AWAY', {
+      fontFamily: 'monospace', fontSize: '8px', color: '#00ff44'
+    }).setOrigin(0.5);
+
+    // Gym floor
+    g.fillStyle(0xdeb887, 1);
+    g.fillRect(0, wallH, CONFIG.WIDTH, CONFIG.GROUND_Y - wallH);
+    g.lineStyle(1, 0xc4a060, 0.4);
+    for (let x = 0; x < CONFIG.WIDTH; x += 20) {
+      g.beginPath(); g.moveTo(x, wallH); g.lineTo(x, CONFIG.GROUND_Y); g.strokePath();
+    }
+  }
+
+  _drawKainanBackground(g) {
+    // Indoor gym — 海南体育馆 (blue/gold theme, prestigious)
+    const wallH = CONFIG.HEIGHT * 0.6;
+    g.fillStyle(0x1a2a5a, 1);
+    g.fillRect(0, 0, CONFIG.WIDTH, wallH);
+
+    // Wall panels
+    g.lineStyle(1, 0x142044, 0.4);
+    for (let x = 0; x < CONFIG.WIDTH; x += 40) {
+      g.beginPath(); g.moveTo(x, 0); g.lineTo(x, wallH); g.strokePath();
+    }
+    // Gold trim
+    g.fillStyle(0xccaa00, 1);
+    g.fillRect(0, wallH * 0.45, CONFIG.WIDTH, 5);
+
+    // Banner "海南" — gold on navy
+    g.fillStyle(0x0a1a4a, 0.95);
+    g.fillRect(230, 20, 220, 60);
+    g.lineStyle(3, 0xccaa00, 1);
+    g.strokeRect(230, 20, 220, 60);
+    this.add.text(340, 38, '海 南 大 附 属', {
+      fontFamily: "'Arial Black', sans-serif",
+      fontSize: '14px', color: '#ccaa00'
+    }).setOrigin(0.5);
+    this.add.text(340, 58, '神奈川17连霸', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '10px', color: '#8888aa'
+    }).setOrigin(0.5);
+
+    // Championship banners (small)
+    for (let i = 0; i < 4; i++) {
+      g.fillStyle(0xccaa00, 0.3);
+      g.fillRect(500 + i * 30, 25, 22, 35);
+      g.lineStyle(1, 0xccaa00, 0.5);
+      g.strokeRect(500 + i * 30, 25, 22, 35);
+    }
+
+    // Gym floor (polished, premium)
+    g.fillStyle(0xe8c87a, 1);
+    g.fillRect(0, wallH, CONFIG.WIDTH, CONFIG.GROUND_Y - wallH);
+    g.lineStyle(1, 0xd4b060, 0.3);
+    for (let x = 0; x < CONFIG.WIDTH; x += 18) {
+      g.beginPath(); g.moveTo(x, wallH); g.lineTo(x, CONFIG.GROUND_Y); g.strokePath();
+    }
   }
 
   // ── Hoop ──────────────────────────────────────────────────────────────────
@@ -3382,13 +3582,21 @@ class GameScene extends Phaser.Scene {
 
     // --- Apply power-up effect ---
     if (type === 'giantHoop') {
-      this.activePowerUps.giantHoop = { shotsLeft: cfg.duration };
+      if (this.activePowerUps.giantHoop) {
+        this.activePowerUps.giantHoop.shotsLeft += cfg.duration;
+      } else {
+        this.activePowerUps.giantHoop = { shotsLeft: cfg.duration };
+      }
       if (this.scoreZoneBody) {
         this.scoreZoneBody.body.setSize(this.defaultScoreZoneW * 1.5, 14);
         this.scoreZoneBody.refreshBody();
       }
     } else if (type === 'doubleScore') {
-      this.activePowerUps.doubleScore = { shotsLeft: cfg.duration };
+      if (this.activePowerUps.doubleScore) {
+        this.activePowerUps.doubleScore.shotsLeft += cfg.duration;
+      } else {
+        this.activePowerUps.doubleScore = { shotsLeft: cfg.duration };
+      }
       // Gold shimmer particles
       this.goldRainParts = [];
       this.goldRainGfx = this.add.graphics().setDepth(8);
@@ -3419,7 +3627,11 @@ class GameScene extends Phaser.Scene {
         }
       });
     } else if (type === 'comboShield') {
-      this.activePowerUps.comboShield = { shotsLeft: cfg.duration };
+      if (this.activePowerUps.comboShield) {
+        this.activePowerUps.comboShield.shotsLeft += cfg.duration;
+      } else {
+        this.activePowerUps.comboShield = { shotsLeft: cfg.duration };
+      }
     } else if (type === 'extraTime') {
       // Instant effect: add 15 seconds
       if (this.timeLeft != null) {
@@ -3444,28 +3656,83 @@ class GameScene extends Phaser.Scene {
       });
     } else if (type === 'graffitiBomb') {
       // Instant effect: +500 points + graffiti explosion
+      const oldScore = this.score;
       this.score += cfg.scoreBonus;
-      this.scoreText.setText(this.score);
-      // Spectacular explosion text
-      const bombTxt = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2 - 10, '💥 +500!', {
+
+      // Score count-up animation: rapidly tick from old to new score
+      const countDuration = 800;
+      const countStart = this.time.now;
+      const countTimer = this.time.addEvent({
+        delay: 16, loop: true,
+        callback: () => {
+          const t = Math.min((this.time.now - countStart) / countDuration, 1);
+          const eased = 1 - Math.pow(1 - t, 3); // ease out cubic
+          const displayScore = Math.round(oldScore + (cfg.scoreBonus) * eased);
+          if (this.scoreTxt) this.scoreTxt.setText('' + displayScore);
+          if (t >= 1) countTimer.remove();
+        }
+      });
+
+      // Score HUD pulse: scale up + gold flash
+      if (this.scoreTxt) {
+        this.scoreTxt.setColor('#ffdd00');
+        this.tweens.add({
+          targets: this.scoreTxt, scaleX: 1.5, scaleY: 1.5, duration: 200, yoyo: true,
+          ease: 'Back.easeOut',
+          onComplete: () => {
+            if (this.scoreTxt) { this.scoreTxt.setScale(1); this.scoreTxt.setColor('#ffffff'); }
+          }
+        });
+      }
+      if (this.scoreBg) {
+        const origAlpha = this.scoreBg.alpha;
+        this.tweens.add({
+          targets: this.scoreBg, alpha: 0.3, duration: 100, yoyo: true, repeat: 3,
+          onComplete: () => { if (this.scoreBg) this.scoreBg.setAlpha(origAlpha); }
+        });
+      }
+
+      // Big "+500!" text, explodes from collection point
+      const bombTxt = this.add.text(collectX, collectY, '💥 +500!', {
         fontFamily: "'Arial Black', sans-serif", fontSize: '52px',
-        color: '#ff44ff', stroke: '#000000', strokeThickness: 5,
+        color: '#ffdd00', stroke: '#000000', strokeThickness: 5,
       }).setOrigin(0.5).setDepth(30).setAlpha(0).setScale(0.3);
       this.tweens.add({
-        targets: bombTxt, alpha: 1, scaleX: 1, scaleY: 1, duration: 300, ease: 'Back.easeOut',
+        targets: bombTxt, alpha: 1, scaleX: 1.2, scaleY: 1.2, y: collectY - 40,
+        duration: 400, ease: 'Back.easeOut',
         onComplete: () => this.tweens.add({
-          targets: bombTxt, alpha: 0, scaleX: 1.5, scaleY: 1.5, duration: 700, delay: 600,
+          targets: bombTxt, alpha: 0, scaleX: 1.8, scaleY: 1.8, y: bombTxt.y - 30,
+          duration: 600, delay: 500,
           onComplete: () => bombTxt.destroy(),
         }),
       });
-      // Color splash particles from center
+
+      // Flying score numbers: several "+100" fly from explosion to score HUD
+      const hudX = 80, hudY = 27;
+      for (let i = 0; i < 5; i++) {
+        const flyTxt = this.add.text(collectX + (Math.random() - 0.5) * 60,
+          collectY + (Math.random() - 0.5) * 40, '+100', {
+          fontFamily: "'Arial Black', sans-serif", fontSize: '18px',
+          color: '#ffdd00', stroke: '#000000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(29).setAlpha(0);
+        this.tweens.add({
+          targets: flyTxt, alpha: 1, duration: 100, delay: i * 80,
+          onComplete: () => this.tweens.add({
+            targets: flyTxt, x: hudX, y: hudY, alpha: 0, scaleX: 0.5, scaleY: 0.5,
+            duration: 400, ease: 'Quad.easeIn',
+            onComplete: () => flyTxt.destroy(),
+          }),
+        });
+      }
+
+      // Color splash particles from collection point
       const splashGfx = this.add.graphics().setDepth(28);
       const splashParts = [];
       const colors = [0xff44ff, 0xff4444, 0x44ff44, 0xffff00, 0x44ccff];
       for (let i = 0; i < 20; i++) {
         const angle = (i / 20) * Math.PI * 2 + Math.random() * 0.3;
         splashParts.push({
-          x: CONFIG.WIDTH / 2, y: CONFIG.HEIGHT / 2,
+          x: collectX, y: collectY,
           vx: Math.cos(angle) * (4 + Math.random() * 6),
           vy: Math.sin(angle) * (4 + Math.random() * 6),
           alpha: 1, size: 6 + Math.random() * 8,
@@ -3488,7 +3755,8 @@ class GameScene extends Phaser.Scene {
           if (!alive) { splashTimer.remove(); splashGfx.destroy(); }
         }
       });
-      this.cameras.main.shake(300, 0.01);
+      this.cameras.main.flash(150, 255, 220, 0);
+      this.cameras.main.shake(300, 0.012);
     }
 
     this.updatePowerUpHUD();
@@ -4359,6 +4627,7 @@ class GameScene extends Phaser.Scene {
     this.isJumping = true;
     this.isDunk = true;
     this.isSuperDunk = true;
+    this.wasSuperDunk = true;
     this.superDunkDiving = false;
     this.jumpOffset = 0;
     this.jumpPhase = 'up';
@@ -5496,6 +5765,7 @@ class GameScene extends Phaser.Scene {
     this.groundBounceCount = 0;
     this.ballPassedRimTop  = false;
     this.reboundTriggered  = false;
+    this.wasSuperDunk      = false;
 
     const rimX = this.hoopGeom.RIM_CX;
     const dToRim = Math.abs(this.playerX - rimX);
@@ -7167,24 +7437,23 @@ class GameScene extends Phaser.Scene {
 
     const b = this.ball;
 
-    // 樱木篮板王: 50% grab rebound + 50% follow-up dunk
+    // 樱木篮板王: 90% rebound trigger; dunk if ball hit rim/board or is above hoop, else grab
+    // Skip if this shot was a super dunk attempt (飞扣 miss shouldn't trigger rebound)
     if (!this.scored && this.charConfig && this.charConfig.skill === 'rebound' &&
-        b.body.velocity.y > 50 && b.y > this.hoopGeom.RIM_Y + 60 && b.y < CONFIG.GROUND_Y - 30 &&
-        !this.reboundTriggered) {
+        !this.wasSuperDunk &&
+        b.body.velocity.y > 50 && b.y > this.hoopGeom.RIM_Y + 30 && b.y < CONFIG.GROUND_Y - 30 &&
+        !this.reboundTriggered && Math.random() < 0.9) {
       this.reboundTriggered = true;
-      if (Math.random() < 0.5) {
-        // 50%: grab rebound, respawn ball
-        this.isShooting = false;
-        soundManager.play('rebound');
-        this._doMidAirRebound();
-        return;
-      } else {
-        // 50%: follow-up dunk (grab + slam it in)
-        this.isShooting = false;
-        soundManager.play('rebound');
+      this.isShooting = false;
+      soundManager.play('rebound');
+      // Ball hit backboard/rim or still near hoop top → follow-up dunk
+      if (this.hitBackboard || b.y < this.hoopGeom.RIM_Y + 80) {
         this._doFollowUpDunk();
-        return;
+      } else {
+        // Ball falling below hoop without contact → grab rebound
+        this._doMidAirRebound();
       }
+      return;
     }
 
     if (
