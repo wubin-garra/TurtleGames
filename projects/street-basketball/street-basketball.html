@@ -32,12 +32,28 @@ html, body {
 #rotate-hint .hint-sub {
   font-size: 14px; margin-top: 10px; color: #888;
 }
+#rotate-hint .rotate-btn {
+  margin-top: 30px; padding: 16px 40px;
+  font-size: 20px; font-family: 'Arial Black', sans-serif;
+  color: #1a1a2e; background: linear-gradient(135deg, #ffcc00, #ff8800);
+  border: none; border-radius: 50px; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,200,0,0.4);
+  animation: btnPulse 2s ease-in-out infinite;
+}
+#rotate-hint .rotate-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 10px rgba(255,200,0,0.3);
+}
 @keyframes rotatePhone {
   0%, 100% { transform: rotate(0deg); }
   25%, 75% { transform: rotate(90deg); }
 }
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(255,200,0,0.4); }
+  50% { box-shadow: 0 4px 30px rgba(255,200,0,0.7), 0 0 60px rgba(255,136,0,0.3); }
+}
 @media screen and (orientation: portrait) and (max-width: 900px) {
-  #rotate-hint { display: flex !important; }
+  #rotate-hint:not(.dismissed) { display: flex !important; }
 }
 canvas { display: block; }
 </style>
@@ -48,14 +64,40 @@ canvas { display: block; }
   <div class="phone-icon">📱</div>
   <div class="hint-text">请横屏游玩</div>
   <div class="hint-sub">Please rotate your device</div>
+  <button class="rotate-btn" onclick="enterFullscreenLandscape()">🔄 点击横屏</button>
 </div>
 <script>
-// Try to lock orientation to landscape
-try {
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('landscape').catch(() => {});
+function tryLandscapeLock() {
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(function(){});
+    }
+  } catch(e) {}
+}
+function goFullscreen() {
+  var el = document.documentElement;
+  var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if (rfs) {
+    rfs.call(el).then(function() {
+      tryLandscapeLock();
+    }).catch(function() {
+      tryLandscapeLock();
+    });
   }
-} catch(e) {}
+}
+function enterFullscreenLandscape() {
+  goFullscreen();
+  // Mark as dismissed so CSS media query won't re-show it
+  document.getElementById('rotate-hint').classList.add('dismissed');
+}
+// Auto-lock on load
+tryLandscapeLock();
+// Re-enter fullscreen on any touch if not already fullscreen (handles browser exit)
+document.addEventListener('touchstart', function autoFS() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    goFullscreen();
+  }
+}, { once: true });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
@@ -283,7 +325,7 @@ class SoundManager {
 
   // ── BGM: 多首灌篮高手主题曲循环播放 ──
   startBGM() {
-    if (!this.bgmTracks) { this.bgmTracks = ['bgm.mp3', 'bgm2.mp3', 'bgm3.mp3', 'BAAD - ENDLESS CHAIN (CINE VERSION).mp3', 'LordHeeDictator - 君が好きだと叫びたい（好想大声说爱你）TV动画《灌篮高手》OP1.mp3', 'WANDS - 世界が終るまでは…~TV Version~.mp3', 'ZYYG - ぜったいに誰にも (TV VERSION).mp3', '徳永暁人 - ライバル対決~仙道VS流川~.mp3']; }
+    if (!this.bgmTracks) { this.bgmTracks = ['WANDS - 世界が終るまでは…~TV Version~.mp3', 'LordHeeDictator - 君が好きだと叫びたい（好想大声说爱你）TV动画《灌篮高手》OP1.mp3', '核桃 - あなただけ見つめてる（只凝视着你）.mp3', 'BAAD - ENDLESS CHAIN (CINE VERSION).mp3', 'ZYYG - ぜったいに誰にも (TV VERSION).mp3', '徳永暁人 - ライバル対決~仙道VS流川~.mp3']; }
     if (!this.bgmEnabled || this.bgmPlaying) return;
     this.bgmPlaying = true;
     // 每次开始随机选一首
@@ -300,12 +342,7 @@ class SoundManager {
     }
     const track = this.bgmTracks[this.bgmTrackIndex % this.bgmTracks.length];
     // Extract display name from filename
-    const nameMap = {
-      'bgm.mp3': '君が好きだと叫びたい (Inst.)',
-      'bgm2.mp3': '世界が終るまでは… (Inst.)',
-      'bgm3.mp3': 'マイフレンド (Inst.)',
-    };
-    this.currentTrackName = nameMap[track] || track.replace(/\.mp3$/i, '').replace(/^.*? - /, '');
+    this.currentTrackName = track.replace(/\.mp3$/i, '').replace(/^.*? - /, '');
     this.bgmAudio = new Audio(track);
     this.bgmAudio.volume = 0.35;
     this._onTrackEnd = () => {
