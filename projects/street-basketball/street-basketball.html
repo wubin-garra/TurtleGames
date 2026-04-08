@@ -55,6 +55,15 @@ html, body {
 @media screen and (orientation: portrait) and (max-width: 900px) {
   #rotate-hint:not(.dismissed) { display: flex !important; }
 }
+/* CSS forced landscape: rotate game when in portrait (WeChat fallback) */
+body.css-landscape {
+  width: 100vh !important; height: 100vw !important;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  position: absolute;
+  top: 0; left: 100vw;
+  overflow: hidden;
+}
 canvas { display: block; }
 </style>
 </head>
@@ -64,9 +73,12 @@ canvas { display: block; }
   <div class="phone-icon">📱</div>
   <div class="hint-text">请横屏游玩</div>
   <div class="hint-sub">Please rotate your device</div>
-  <button class="rotate-btn" onclick="enterFullscreenLandscape()">🔄 点击横屏</button>
+  <button class="rotate-btn" onclick="enterFullscreenLandscape()">🔄 点击开始游戏</button>
 </div>
 <script>
+var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+var isPortrait = function() { return window.innerHeight > window.innerWidth; };
+
 function tryLandscapeLock() {
   try {
     if (screen.orientation && screen.orientation.lock) {
@@ -81,23 +93,57 @@ function goFullscreen() {
     rfs.call(el).then(function() {
       tryLandscapeLock();
     }).catch(function() {
-      tryLandscapeLock();
+      // Fullscreen failed (WeChat etc.) — use CSS rotation
+      applyCSSLandscape();
     });
+  } else {
+    // No fullscreen API — use CSS rotation
+    applyCSSLandscape();
+  }
+}
+function applyCSSLandscape() {
+  if (isPortrait()) {
+    document.body.classList.add('css-landscape');
+    // Trigger Phaser resize so it fills the rotated viewport
+    if (window.__phaserGame) {
+      window.__phaserGame.scale.resize(window.innerHeight, window.innerWidth);
+      window.__phaserGame.scale.refresh();
+    }
+  }
+}
+function removeCSSLandscape() {
+  document.body.classList.remove('css-landscape');
+  if (window.__phaserGame) {
+    window.__phaserGame.scale.refresh();
   }
 }
 function enterFullscreenLandscape() {
-  goFullscreen();
-  // Mark as dismissed so CSS media query won't re-show it
-  document.getElementById('rotate-hint').classList.add('dismissed');
-}
-// Auto-lock on load
-tryLandscapeLock();
-// Re-enter fullscreen on any touch if not already fullscreen (handles browser exit)
-document.addEventListener('touchstart', function autoFS() {
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+  if (isWeChat || !document.documentElement.requestFullscreen) {
+    // WeChat or no fullscreen: use CSS rotation directly
+    applyCSSLandscape();
+  } else {
     goFullscreen();
   }
-}, { once: true });
+  document.getElementById('rotate-hint').classList.add('dismissed');
+}
+// Monitor orientation changes — remove CSS rotation when actually landscape
+window.addEventListener('orientationchange', function() {
+  setTimeout(function() {
+    if (!isPortrait()) {
+      removeCSSLandscape();
+    }
+  }, 300);
+});
+// Auto-lock on load
+tryLandscapeLock();
+// Re-enter fullscreen on first touch (non-WeChat only)
+if (!isWeChat) {
+  document.addEventListener('touchstart', function autoFS() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      goFullscreen();
+    }
+  }, { once: true });
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
@@ -7680,7 +7726,7 @@ class LeaderboardScene extends Phaser.Scene {
 }
 
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
-new Phaser.Game({
+window.__phaserGame = new Phaser.Game({
   type: Phaser.CANVAS,
   width:  CONFIG.WIDTH,
   height: CONFIG.HEIGHT,
