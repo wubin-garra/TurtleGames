@@ -1462,24 +1462,34 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   drawTitle() {
-    // Content area = left side, avoiding photo on right
-    const CX = 195; // center of content area (~390px wide)
-    this.contentCX = CX;
-    this.add.text(CX, 24, '🏆 选择关卡', {
+    // Notebook layout: red margin at x=60, content right of it, photo on far right
+    // Content area: x=70 to x=390 (before photo), center ~230
+    const LEFT = 70;   // right of red margin line
+    const RIGHT = 385; // left edge of photo area
+    this.contentLeft = LEFT;
+    this.contentRight = RIGHT;
+    this.contentCX = (LEFT + RIGHT) / 2;
+
+    // Title in the margin area (like a chapter heading)
+    this.add.text(30, 18, '🏆', { fontSize: '22px' }).setOrigin(0.5).setDepth(5);
+    this.add.text(LEFT + 4, 16, '选择关卡', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '24px',
+      fontSize: '20px',
       color: '#333333',
-      stroke: '#888866',
-      strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(5);
+      stroke: '#f5f0e0',
+      strokeThickness: 2,
+    }).setOrigin(0, 0).setDepth(5);
   }
 
   drawTabs() {
-    const CX = this.contentCX;
-    const tabY = 50;
-    const tabW = 72, tabH = 26, gap = 4;
-    const totalW = this.areas.length * tabW + (this.areas.length - 1) * gap;
-    const startX = CX - totalW / 2;
+    const LEFT = this.contentLeft;
+    const RIGHT = this.contentRight;
+    const tabY = 46;
+    const availW = RIGHT - LEFT;
+    const gap = 4;
+    const tabW = Math.floor((availW - (this.areas.length - 1) * gap) / this.areas.length);
+    const tabH = 24;
+    const startX = LEFT;
 
     this.tabItems = [];
     this.areas.forEach((area, idx) => {
@@ -1534,18 +1544,22 @@ class LevelSelectScene extends Phaser.Scene {
     const save = loadSave();
     const levelStars = save.levelStars || {};
 
+    const LEFT = this.contentLeft;
+    const RIGHT = this.contentRight;
     const CX = this.contentCX;
-    const boxW = 68, boxH = 78, boxR = 8;
-    const contentY = 86;
-    const boxGap = 8;
+    const contentY = 80;
+    const boxGap = 6;
+    const availW = RIGHT - LEFT;
+    const boxW = Math.floor((availW - (area.ids.length - 1) * boxGap) / area.ids.length);
+    const boxH = 80, boxR = 8;
     const totalW = area.ids.length * boxW + (area.ids.length - 1) * boxGap;
-    const startX = CX - totalW / 2;
+    const startX = LEFT;
 
     // Area total stars
     let totalAreaStars = 0;
     area.ids.forEach(id => { totalAreaStars += (levelStars[id] || 0); });
     const maxStars = area.ids.length * 3;
-    const progressTxt = this.add.text(CX, contentY - 6,
+    const progressTxt = this.add.text(CX, contentY - 4,
       '⭐ ' + totalAreaStars + ' / ' + maxStars, {
       fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#888877',
     }).setOrigin(0.5).setDepth(5);
@@ -1623,35 +1637,13 @@ class LevelSelectScene extends Phaser.Scene {
       kainan: '挑战神奈川王者海南大附属',
       sunset: '镰仓的夕阳下，向全国制霸进发',
     };
-    const desc = this.add.text(CX, contentY + 100,
+    const desc = this.add.text(LEFT + 4, contentY + 100,
       descMap[area.key] || '', {
       fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888877',
-    }).setOrigin(0.5).setDepth(5);
+    }).setOrigin(0, 0.5).setDepth(5);
     this.contentItems.push(desc);
 
-    // Navigation arrows
-    if (areaIdx > 0) {
-      const leftArr = this.add.text(CX - totalW / 2 - 20, contentY + 45, '◀', {
-        fontSize: '28px', color: '#888877',
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
-      leftArr.on('pointerdown', () => {
-        this.currentAreaIdx = areaIdx - 1;
-        this.tabItems.forEach((t, ti) => t.draw(ti === this.currentAreaIdx));
-        this.drawAreaContent(this.currentAreaIdx);
-      });
-      this.contentItems.push(leftArr);
-    }
-    if (areaIdx < this.areas.length - 1) {
-      const rightArr = this.add.text(CX + totalW / 2 + 20, contentY + 45, '▶', {
-        fontSize: '28px', color: '#888877',
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
-      rightArr.on('pointerdown', () => {
-        this.currentAreaIdx = areaIdx + 1;
-        this.tabItems.forEach((t, ti) => t.draw(ti === this.currentAreaIdx));
-        this.drawAreaContent(this.currentAreaIdx);
-      });
-      this.contentItems.push(rightArr);
-    }
+    // Navigation via tabs above — no arrows needed
   }
 
   drawBackButton() {
@@ -1992,15 +1984,17 @@ class VenueSelectScene extends Phaser.Scene {
       img.setScale(scale).setAlpha(0.55).setDepth(0);
     }
 
-    // Content area center — left of photo (qinzi1 ~240px wide on right)
-    const CX = 175;
+    // Notebook layout: content right of red margin (x=60), left of photo
+    const LEFT = 70;
+    const RIGHT = 350; // qinzi1 is ~240px wide
 
-    // Title
-    this.add.text(CX, 28, '🏟️ 选择场地', {
+    // Title in margin
+    this.add.text(30, 18, '🏟️', { fontSize: '22px' }).setOrigin(0.5).setDepth(5);
+    this.add.text(LEFT + 4, 16, '选择场地', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '24px', color: '#333333',
-      stroke: '#888866', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(5);
+      fontSize: '20px', color: '#333333',
+      stroke: '#f5f0e0', strokeThickness: 2,
+    }).setOrigin(0, 0).setDepth(5);
 
     const venues = [
       { key: 'street',  icon: '🏙',  name: '街角球场', color: 0xff3333 },
@@ -2014,10 +2008,12 @@ class VenueSelectScene extends Phaser.Scene {
     ];
 
     const cols = 2, rows = 4;
-    const boxW = 150, boxH = 50, gap = 8;
-    const totalW = cols * boxW + (cols - 1) * gap;
-    const startX = CX - totalW / 2;
-    const startY = 58;
+    const availW = RIGHT - LEFT;
+    const gap = 8;
+    const boxW = Math.floor((availW - gap) / cols);
+    const boxH = 50;
+    const startX = LEFT;
+    const startY = 50;
 
     venues.forEach((v, i) => {
       const col = i % cols, row = Math.floor(i / cols);
@@ -2061,18 +2057,19 @@ class VenueSelectScene extends Phaser.Scene {
     });
 
     // Random button
+    const CX = (LEFT + RIGHT) / 2;
     const rndY = startY + rows * (boxH + gap) + 4;
     const rndBg = this.add.graphics().setDepth(5);
     rndBg.fillStyle(0xdd4444, 0.85);
-    rndBg.fillRoundedRect(CX - 75, rndY, 150, 32, 8);
+    rndBg.fillRoundedRect(CX - 70, rndY, 140, 30, 8);
     rndBg.lineStyle(2, 0xff6666, 0.8);
-    rndBg.strokeRoundedRect(CX - 75, rndY, 150, 32, 8);
-    this.add.text(CX, rndY + 16, '🎲 随机场地', {
+    rndBg.strokeRoundedRect(CX - 70, rndY, 140, 30, 8);
+    this.add.text(CX, rndY + 15, '🎲 随机场地', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '13px', color: '#ffffff',
       stroke: '#880000', strokeThickness: 2,
     }).setOrigin(0.5).setDepth(5);
-    const rndZone = this.add.zone(CX - 75, rndY, 150, 32).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
+    const rndZone = this.add.zone(CX - 70, rndY, 140, 30).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
     rndZone.on('pointerdown', () => {
       this.scene.start('GameScene', { mode: 'endless', level: 1 }); // no area = random
     });
