@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="screen-orientation" content="landscape">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Street Basketball</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -93,34 +96,39 @@ function tryLandscapeLock() {
     }
   } catch(e) {}
 }
-function goFullscreen() {
-  var el = document.documentElement;
+function tryFullscreen(el) {
   var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-  if (rfs) {
-    rfs.call(el).then(function() {
+  if (!rfs) return Promise.reject('no API');
+  return rfs.call(el);
+}
+function goFullscreen() {
+  // Try fullscreen on game-container first (better mobile support), then documentElement
+  var gc = document.getElementById('game-container');
+  tryFullscreen(gc).then(function() {
+    tryLandscapeLock();
+  }).catch(function() {
+    // Container fullscreen failed, try documentElement
+    tryFullscreen(document.documentElement).then(function() {
       tryLandscapeLock();
     }).catch(function() {
-      // Fullscreen failed (WeChat etc.) — use CSS rotation
+      // All fullscreen attempts failed — CSS rotation fallback
       applyCSSLandscape();
     });
-  } else {
-    // No fullscreen API — use CSS rotation
-    applyCSSLandscape();
-  }
+  });
 }
 function applyCSSLandscape() {
   if (isPortrait()) {
-    var vw = window.innerWidth;   // portrait narrow (e.g. 390)
-    var vh = window.innerHeight;  // portrait tall (e.g. 780, excludes nav bar)
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
     var gc = document.getElementById('game-container');
-    // Container CSS dimensions: width=vh (landscape width), height=vw (landscape height)
     gc.style.width = vh + 'px';
     gc.style.height = vw + 'px';
     gc.classList.add('css-landscape');
-    // Phaser sees container as vh x vw (landscape) → fits game nicely
     if (window.__phaserGame) {
       window.__phaserGame.scale.refresh();
     }
+    // Try to minimize browser toolbar by scrolling (iOS trick)
+    setTimeout(function() { window.scrollTo(0, 1); }, 100);
   }
 }
 function removeCSSLandscape() {
@@ -133,14 +141,21 @@ function removeCSSLandscape() {
   }
 }
 function enterFullscreenLandscape() {
-  if (isWeChat || !document.documentElement.requestFullscreen) {
-    // WeChat or no fullscreen: use CSS rotation directly
-    applyCSSLandscape();
-  } else {
-    goFullscreen();
-  }
+  // Always try fullscreen first (even WeChat — some versions may support it)
+  goFullscreen();
   document.getElementById('rotate-hint').classList.add('dismissed');
 }
+// When entering/exiting fullscreen, refresh Phaser layout
+document.addEventListener('fullscreenchange', function() {
+  setTimeout(function() {
+    if (window.__phaserGame) window.__phaserGame.scale.refresh();
+  }, 200);
+});
+document.addEventListener('webkitfullscreenchange', function() {
+  setTimeout(function() {
+    if (window.__phaserGame) window.__phaserGame.scale.refresh();
+  }, 200);
+});
 // Monitor orientation changes — remove CSS rotation when actually landscape
 window.addEventListener('orientationchange', function() {
   setTimeout(function() {
