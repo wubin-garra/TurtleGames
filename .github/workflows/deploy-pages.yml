@@ -33,8 +33,9 @@ jobs:
           cp projects/merge-turtle/merge-turtle.html deploy-game-library/merge-turtle.html
           cp projects/street-basketball/street-basketball.html deploy-game-library/street-basketball.html
           cp projects/portfolio/index.html deploy-game-library/index.html
-          # Copy street-basketball music files
+          # Copy street-basketball assets (music + images)
           cp projects/street-basketball/*.mp3 deploy-game-library/
+          cp projects/street-basketball/50.webp deploy-game-library/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

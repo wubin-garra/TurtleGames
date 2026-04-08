@@ -602,8 +602,11 @@ class MenuScene extends Phaser.Scene {
     // Mobile: fullscreen/rotate button at top-right
     const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
     if (isMobile) {
-      const fsBtn = this.add.text(CONFIG.WIDTH - 12, 12, '🔄', {
-        fontSize: '22px', resolution: 2,
+      const fsBtn = this.add.text(CONFIG.WIDTH - 12, 12, '[ ]全屏', {
+        fontSize: '14px', resolution: 2,
+        fontFamily: "'Arial Black', sans-serif",
+        color: '#ffffff',
+        stroke: '#000000', strokeThickness: 2,
       }).setOrigin(1, 0).setDepth(30).setAlpha(0.7);
       fsBtn.setInteractive({ useHandCursor: true });
       fsBtn.on('pointerover', () => fsBtn.setAlpha(1));
@@ -1103,6 +1106,12 @@ class MenuScene extends Phaser.Scene {
 class ResultScene extends Phaser.Scene {
   constructor() { super({ key: 'ResultScene' }); }
 
+  preload() {
+    if (!this.textures.exists('haruko')) {
+      this.load.image('haruko', '50.webp');
+    }
+  }
+
   init(data) {
     this.resultScore = data?.score   || 0;
     this.resultCombo = data?.combo   || 0;
@@ -1131,6 +1140,17 @@ class ResultScene extends Phaser.Scene {
     // Paper fill
     g.fillStyle(0xf5f0e0, 1);
     g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    // Haruko background image (right side)
+    if (this.textures.exists('haruko')) {
+      const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'haruko');
+      img.setOrigin(1, 1);
+      // Scale to fill height while maintaining aspect ratio
+      const scale = CONFIG.HEIGHT / img.height * 1.1;
+      img.setScale(scale);
+      img.setAlpha(0.35);
+      img.setDepth(0);
+    }
 
     // Notebook lines
     g.lineStyle(1, 0xaabbdd, 0.25);
@@ -3655,8 +3675,10 @@ class GameScene extends Phaser.Scene {
     this.virtualJump = false;
     this.virtualJumpJustPressed = false;
 
-    // Detect touch device
-    this.isTouchDevice = !!(('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+    // Detect mobile device (not just touch-capable — excludes laptops with touchscreens)
+    const isMobileUA = /Android|iPhone|iPad|iPod|Mobile|MicroMessenger/i.test(navigator.userAgent);
+    const isSmallScreen = Math.min(window.innerWidth, window.innerHeight) < 600;
+    this.isTouchDevice = isMobileUA || (isSmallScreen && !!(('ontouchstart' in window) || navigator.maxTouchPoints > 0));
     if (this.isTouchDevice) this._createMobileControls();
 
     this.input.on('pointerdown', (ptr) => {
@@ -6722,6 +6744,7 @@ class GameScene extends Phaser.Scene {
         const rimX = this.hoopGeom ? this.hoopGeom.RIM_CX : 600;
         const distToRim = Math.abs(this.playerX - rimX);
         if (distToRim > 60) {
+          this.virtualSJustPressed = false; // consume so charge doesn't also trigger
           this.doSpinMove(rimX);
         }
       }
@@ -6888,19 +6911,24 @@ class GameScene extends Phaser.Scene {
     }
 
     // S = hold to charge shot height, release to shoot
-    if (this.cursors && !this.isShooting && !this.isLayup && !this.isDunk && !this.isFadeaway) {
-      if ((Phaser.Input.Keyboard.JustDown(this.keyS) || this.virtualSJustPressed)) {
-        // Start charging
+    if (this.cursors && !this.isShooting && !this.isLayup && !this.isDunk && !this.isFadeaway && !this.isSpinning) {
+      const sJustDown = Phaser.Input.Keyboard.JustDown(this.keyS) || this.virtualSJustPressed;
+      const sHeld = this.keyS.isDown || this.virtualS;
+      const sJustUp = Phaser.Input.Keyboard.JustUp(this.keyS) || this.virtualSJustReleased;
+
+      // Start charging
+      if (!this.sCharging && sJustDown) {
         this.sChargeStart = this.time.now;
         this.sCharging = true;
+        this.sChargeFrame = 0; // prevent same-frame release
         if (!this.gameStarted && this.gameMode === 'endless') this.gameStarted = true;
-        // Show charge indicator
         if (!this.chargeBar) {
           this.chargeBar = this.add.graphics().setDepth(20);
         }
       }
-      // Draw charge bar while holding
-      if (this.sCharging && (this.keyS.isDown || this.virtualS)) {
+      // Draw charge bar while charging (don't require button held — handles touchcancel)
+      if (this.sCharging) {
+        this.sChargeFrame = (this.sChargeFrame || 0) + 1;
         const elapsed = Math.min(this.time.now - this.sChargeStart, 1000);
         const pct = elapsed / 1000; // 0~1 over 1 second
         const bx = this.ball.x, by = this.ball.y;
@@ -6909,12 +6937,12 @@ class GameScene extends Phaser.Scene {
         this.chargeBar.fillStyle(0x333333, 0.6);
         this.chargeBar.fillRoundedRect(bx - 20, by - 30, 40, 6, 3);
         // Fill: green→yellow→red
-        const r = Math.floor(255 * pct), g = Math.floor(255 * (1 - pct * 0.5));
-        this.chargeBar.fillStyle((r << 16) | (g << 8) | 0, 0.9);
+        const r = Math.floor(255 * pct), g2 = Math.floor(255 * (1 - pct * 0.5));
+        this.chargeBar.fillStyle((r << 16) | (g2 << 8) | 0, 0.9);
         this.chargeBar.fillRoundedRect(bx - 20, by - 30, 40 * pct, 6, 3);
       }
-      // Release = shoot
-      if (this.sCharging && (Phaser.Input.Keyboard.JustUp(this.keyS) || this.virtualSJustReleased)) {
+      // Release = shoot (must be at least 1 frame after start to avoid touchcancel instant-fire)
+      if (this.sCharging && this.sChargeFrame > 1 && (sJustUp || (!sHeld && !sJustDown))) {
         this.sCharging = false;
         if (this.chargeBar) { this.chargeBar.clear(); }
         const elapsed = Math.min(this.time.now - this.sChargeStart, 1000);
