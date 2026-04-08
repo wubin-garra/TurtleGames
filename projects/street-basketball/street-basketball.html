@@ -3604,6 +3604,7 @@ class GameScene extends Phaser.Scene {
     const joyHitR = joyOuterR + 20;
     joyHit.fillStyle(0x000000, 0.001); // nearly invisible
     joyHit.fillCircle(joyX, joyY, joyHitR);
+    joyHit.setDepth(55); // above all other interactive elements
     joyHit.setInteractive(new Phaser.Geom.Circle(joyX, joyY, joyHitR), Phaser.Geom.Circle.Contains);
     this.mobileControlItems.push(joyHit);
 
@@ -3657,6 +3658,7 @@ class GameScene extends Phaser.Scene {
     const sHit = this.add.graphics().setDepth(49);
     sHit.fillStyle(0x000000, 0.001);
     sHit.fillCircle(sBtnX, sBtnY, sHitR);
+    sHit.setDepth(55); // above all other interactive elements
     sHit.setInteractive(new Phaser.Geom.Circle(sBtnX, sBtnY, sHitR), Phaser.Geom.Circle.Contains);
     this.mobileControlItems.push(sHit);
 
@@ -6130,13 +6132,15 @@ class GameScene extends Phaser.Scene {
     });
     this.instrTxt.setOrigin(0.5);
 
-    // BGM toggle (bottom-right) — only controls music, not sound effects
+    // BGM toggle — mobile: top-right (avoid S button), PC: bottom-right
     const save = loadSave();
     this.bgmOn = save.bgmOn !== false;
-    this.bgmTxt = this.add.text(CONFIG.WIDTH - 14, CONFIG.HEIGHT - 14, this.bgmOn ? '🎵' : '🎵off', {
+    const bgmX = this.isTouchDevice ? CONFIG.WIDTH - 14 : CONFIG.WIDTH - 14;
+    const bgmY = this.isTouchDevice ? 56 : CONFIG.HEIGHT - 14;
+    this.bgmTxt = this.add.text(bgmX, bgmY, this.bgmOn ? '🎵' : '🎵off', {
       fontSize: '18px', color: this.bgmOn ? '#333333' : '#bbbbaa',
     });
-    this.bgmTxt.setOrigin(1, 1);
+    this.bgmTxt.setOrigin(1, this.isTouchDevice ? 0.5 : 1);
     this.bgmTxt.setDepth(25);
     this.bgmTxt.setInteractive({ useHandCursor: true });
     this.bgmTxt.on('pointerdown', () => {
@@ -6149,14 +6153,16 @@ class GameScene extends Phaser.Scene {
       const s = loadSave(); s.bgmOn = this.bgmOn; writeSave(s);
     });
 
-    // Song name display (bottom-right, next to BGM toggle)
-    this.songNameTxt = this.add.text(CONFIG.WIDTH - 34, CONFIG.HEIGHT - 14, '', {
+    // Song name display
+    const songX = this.isTouchDevice ? CONFIG.WIDTH - 34 : CONFIG.WIDTH - 34;
+    const songY = this.isTouchDevice ? 56 : CONFIG.HEIGHT - 14;
+    this.songNameTxt = this.add.text(songX, songY, '', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '10px',
       color: '#888877',
       resolution: 2,
     });
-    this.songNameTxt.setOrigin(1, 1).setDepth(25).setAlpha(0.7);
+    this.songNameTxt.setOrigin(1, this.isTouchDevice ? 0.5 : 1).setDepth(25).setAlpha(0.7);
     this._updateSongName();
 
     // ── Move List (街霸风出招表) ──
