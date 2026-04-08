@@ -1059,11 +1059,11 @@ class MenuScene extends Phaser.Scene {
 
   drawAnimations() {
     // Bouncing basketball near hoop
-    const ball = this.add.text(570, 260, '🏀', { fontSize: '32px' });
+    const ball = this.add.text(540, 260, '🏀', { fontSize: '32px' });
     ball.setOrigin(0.5);
     this.tweens.add({
       targets: ball,
-      x: 630, y: 200,
+      x: 570, y: 200,
       duration: 800,
       ease: 'Sine.easeOut',
       yoyo: true,
