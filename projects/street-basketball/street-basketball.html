@@ -867,7 +867,7 @@ class MenuScene extends Phaser.Scene {
       backTxt.setColor('#aaaaaa');
       this.tweens.add({ targets: backTxt, x: 14, duration: 120 });
     });
-    backTxt.on('pointerdown', () => { window.location.href = '../index.html'; });
+    backTxt.on('pointerdown', () => { window.location.href = 'index.html'; });
 
     // Leaderboard link
     const lbTxt = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT - 17, '🏀 排行榜', {
