@@ -1493,41 +1493,39 @@ class LevelSelectScene extends Phaser.Scene {
 
   drawTitle() {
     this.add.text(this.LEFT + 4, 10, '🏀 灌篮高手 — 剧情模式', {
-      fontFamily: this.FONT, fontSize: '16px', fontStyle: 'bold', color: '#333333',
+      fontFamily: this.FONT, fontSize: '17px', fontStyle: 'bold', color: '#333333',
     }).setOrigin(0, 0).setDepth(5);
 
     // Total stars
     let total = 0;
     for (let i = 1; i <= 25; i++) total += (this.levelStars[i] || 0);
-    this.add.text(this.RIGHT - 4, 12, '⭐ ' + total + '/75', {
-      fontFamily: this.FONT, fontSize: '11px', color: '#777766',
+    this.add.text(this.RIGHT - 4, 13, '⭐ ' + total + '/75', {
+      fontFamily: this.FONT, fontSize: '12px', color: '#777766',
     }).setOrigin(1, 0).setDepth(5);
   }
 
   drawChapterGrid() {
-    const LEFT = this.LEFT;
-    const nodeW = 56, nodeH = 36, gapX = 5, gapY = 4;
-    const rowH = nodeH + gapY;
-    const headerH = 14;
+    const LEFT = this.LEFT;   // 70, right of red margin
+    const nodeW = 60, nodeH = 44, gapX = 4, gapY = 6;
     const gridStartY = 34;
+    const rowH = nodeH + gapY; // 50px per row
 
     this.areas.forEach((area, areaIdx) => {
-      const rowY = gridStartY + areaIdx * (headerH + rowH);
+      const rowY = gridStartY + areaIdx * rowH;
+      const colorHex = '#' + area.color.toString(16).padStart(6, '0');
 
-      // Area header — small colored label
-      const dotG = this.add.graphics().setDepth(5);
-      dotG.fillStyle(area.color, 0.8);
-      dotG.fillCircle(LEFT + 4, rowY + 7, 4);
-      this.add.text(LEFT + 12, rowY, area.name, {
-        fontFamily: this.FONT, fontSize: '9px', fontStyle: 'bold',
-        color: '#' + area.color.toString(16).padStart(6, '0'),
-      }).setOrigin(0, 0).setDepth(5);
+      // Area label in LEFT MARGIN (x < 60), vertically centered with nodes
+      const labelBg = this.add.graphics().setDepth(5);
+      labelBg.fillStyle(area.color, 0.15);
+      labelBg.fillRoundedRect(2, rowY + 2, 54, nodeH - 4, 4);
+      this.add.text(29, rowY + nodeH / 2, area.name, {
+        fontFamily: this.FONT, fontSize: '11px', fontStyle: 'bold', color: colorHex,
+      }).setOrigin(0.5, 0.5).setDepth(5);
 
-      const nodesY = rowY + headerH;
-
+      // Chapter nodes right of red line
       area.ids.forEach((levelId, i) => {
         const nx = LEFT + i * (nodeW + gapX);
-        const ny = nodesY;
+        const ny = rowY;
         const cfg = CONFIG.LEVELS[levelId - 1];
         const isUnlocked = levelId === 1 || (this.levelStars[levelId - 1] || 0) > 0;
         const stars = this.levelStars[levelId] || 0;
@@ -1539,22 +1537,21 @@ class LevelSelectScene extends Phaser.Scene {
         this._drawNodeNormal(node);
 
         if (!isUnlocked) {
-          this.add.text(nx + nodeW / 2, ny + nodeH / 2 - 2, '🔒', {
-            fontSize: '14px',
-          }).setOrigin(0.5).setDepth(5);
-          this.add.text(nx + nodeW / 2, ny + nodeH / 2 + 12, levelId, {
-            fontFamily: this.FONT, fontSize: '8px', color: '#999999',
-          }).setOrigin(0.5).setDepth(5);
+          this.add.text(nx + nodeW / 2, ny + nodeH / 2 - 4, '🔒', {
+            fontSize: '16px',
+          }).setOrigin(0.5).setDepth(6);
+          this.add.text(nx + nodeW / 2, ny + nodeH / 2 + 12, '' + levelId, {
+            fontFamily: this.FONT, fontSize: '10px', color: '#999999',
+          }).setOrigin(0.5).setDepth(6);
         } else {
-          // Compact: "3.追风" + stars
           const label = levelId + '.' + cfg.name;
-          this.add.text(nx + nodeW / 2, ny + 11, label, {
-            fontFamily: this.FONT, fontSize: '9px', fontStyle: 'bold', color: '#444433',
+          this.add.text(nx + nodeW / 2, ny + 14, label, {
+            fontFamily: this.FONT, fontSize: '11px', fontStyle: 'bold', color: '#444433',
           }).setOrigin(0.5).setDepth(6);
 
           const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
-          this.add.text(nx + nodeW / 2, ny + 26, starStr, {
-            fontSize: '8px',
+          this.add.text(nx + nodeW / 2, ny + 32, starStr, {
+            fontSize: '10px',
           }).setOrigin(0.5).setDepth(6);
 
           const zone = this.add.zone(nx, ny, nodeW, nodeH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(7);
@@ -1616,8 +1613,8 @@ class LevelSelectScene extends Phaser.Scene {
 
   drawStoryArea() {
     // Story panel background
-    const panelY = 298;
-    const panelH = 125;
+    const panelY = 290;
+    const panelH = 130;
     this.storyPanelY = panelY;
     this.storyPanelH = panelH;
 
@@ -1629,22 +1626,22 @@ class LevelSelectScene extends Phaser.Scene {
 
     // Placeholder texts (will be updated by selectChapter)
     this.storyTitle = this.add.text(this.LEFT + 10, panelY + 10, '', {
-      fontFamily: this.FONT, fontSize: '14px', fontStyle: 'bold', color: '#333333',
+      fontFamily: this.FONT, fontSize: '15px', fontStyle: 'bold', color: '#333333',
     }).setOrigin(0, 0).setDepth(5);
 
-    this.storyText = this.add.text(this.LEFT + 10, panelY + 30, '', {
-      fontFamily: this.FONT, fontSize: '11px', color: '#555544', lineSpacing: 4,
+    this.storyText = this.add.text(this.LEFT + 10, panelY + 32, '', {
+      fontFamily: this.FONT, fontSize: '12px', color: '#555544', lineSpacing: 5,
       wordWrap: { width: this.RIGHT - this.LEFT - 24 },
     }).setOrigin(0, 0).setDepth(5);
 
     this.storyInfo = this.add.text(this.LEFT + 10, panelY + panelH - 32, '', {
-      fontFamily: this.FONT, fontSize: '10px', color: '#888877',
+      fontFamily: this.FONT, fontSize: '11px', color: '#888877',
     }).setOrigin(0, 0).setDepth(5);
 
     // Play button
     this.playBtnBg = this.add.graphics().setDepth(5);
     this.playBtnTxt = this.add.text(this.RIGHT - 16, panelY + panelH - 24, '▶ 开始挑战', {
-      fontFamily: this.FONT, fontSize: '12px', fontStyle: 'bold', color: '#ffffff',
+      fontFamily: this.FONT, fontSize: '13px', fontStyle: 'bold', color: '#ffffff',
     }).setOrigin(1, 0.5).setDepth(6);
 
     this.playBtnZone = this.add.zone(this.RIGHT - 100, panelY + panelH - 36, 90, 26)
