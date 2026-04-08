@@ -1471,65 +1471,74 @@ class LevelSelectScene extends Phaser.Scene {
     this.contentCX = (LEFT + RIGHT) / 2;
 
     // Title in the margin area (like a chapter heading)
-    this.add.text(30, 18, '🏆', { fontSize: '22px' }).setOrigin(0.5).setDepth(5);
-    this.add.text(LEFT + 4, 16, '选择关卡', {
+    this.add.text(LEFT + 4, 14, '🏆 选择关卡', {
       fontFamily: "-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-      fontSize: '22px',
+      fontSize: '20px',
       fontStyle: 'bold',
       color: '#333333',
     }).setOrigin(0, 0).setDepth(5);
   }
 
   drawTabs() {
-    const LEFT = this.contentLeft;
-    const RIGHT = this.contentRight;
-    const tabY = 46;
-    const availW = RIGHT - LEFT;
+    // Vertical tabs in left margin (like chapter bookmarks)
+    const tabX = 3;
+    const tabW = 54;
+    const tabH = 48;
     const gap = 4;
-    const tabW = Math.floor((availW - (this.areas.length - 1) * gap) / this.areas.length);
-    const tabH = 24;
-    const startX = LEFT;
+    const startY = 46;
 
     this.tabItems = [];
     this.areas.forEach((area, idx) => {
-      const tx = startX + idx * (tabW + gap);
+      const ty = startY + idx * (tabH + gap);
       const isActive = idx === this.currentAreaIdx;
 
       const tabBg = this.add.graphics().setDepth(5);
-      const tabTxt = this.add.text(tx + tabW / 2, tabY + tabH / 2, area.label, {
+      // Icon
+      const iconTxt = this.add.text(tabX + tabW / 2, ty + 16, area.label.charAt(0), {
+        fontSize: '16px',
+      }).setOrigin(0.5).setDepth(5);
+      // Short label (remove emoji prefix)
+      const shortLabel = area.label.replace(/^.\s*/, '');
+      const tabTxt = this.add.text(tabX + tabW / 2, ty + 36, shortLabel, {
         fontFamily: "-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-        fontSize: '11px',
+        fontSize: '8px',
         fontStyle: 'bold',
-        color: isActive ? '#ffffff' : '#555544',
+        color: isActive ? '#ffffff' : '#777766',
       }).setOrigin(0.5).setDepth(5);
 
       const drawTab = (active) => {
         tabBg.clear();
         if (active) {
           tabBg.fillStyle(area.color, 0.85);
-          tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
+          tabBg.fillRoundedRect(tabX, ty, tabW, tabH, 5);
           tabTxt.setColor('#ffffff');
         } else {
-          tabBg.fillStyle(0xddddcc, 0.6);
-          tabBg.fillRoundedRect(tx, tabY, tabW, tabH, 6);
-          tabBg.lineStyle(1, area.color, 0.4);
-          tabBg.strokeRoundedRect(tx, tabY, tabW, tabH, 6);
-          tabTxt.setColor('#555544');
+          tabTxt.setColor('#777766');
         }
       };
       drawTab(isActive);
 
-      const zone = this.add.zone(tx, tabY, tabW, tabH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(3);
+      const zone = this.add.zone(tabX, ty, tabW, tabH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
+      zone.on('pointerover', () => {
+        if (idx !== this.currentAreaIdx) {
+          tabBg.clear();
+          tabBg.fillStyle(area.color, 0.3);
+          tabBg.fillRoundedRect(tabX, ty, tabW, tabH, 5);
+        }
+      });
+      zone.on('pointerout', () => {
+        if (idx !== this.currentAreaIdx) {
+          tabBg.clear();
+        }
+      });
       zone.on('pointerdown', () => {
         if (this.currentAreaIdx === idx) return;
         this.currentAreaIdx = idx;
-        // Redraw all tabs
         this.tabItems.forEach((t, ti) => t.draw(ti === idx));
-        // Redraw content
         this.drawAreaContent(idx);
       });
 
-      this.tabItems.push({ draw: drawTab, bg: tabBg, txt: tabTxt });
+      this.tabItems.push({ draw: drawTab, bg: tabBg, txt: tabTxt, icon: iconTxt });
     });
   }
 
@@ -1547,7 +1556,7 @@ class LevelSelectScene extends Phaser.Scene {
     const LEFT = this.contentLeft;
     const RIGHT = this.contentRight;
     const CX = this.contentCX;
-    const contentY = 80;
+    const contentY = 46;
     const boxGap = 6;
     const availW = RIGHT - LEFT;
     const boxW = Math.floor((availW - (area.ids.length - 1) * boxGap) / area.ids.length);
