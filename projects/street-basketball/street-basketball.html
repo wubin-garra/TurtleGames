@@ -1756,7 +1756,8 @@ class CharSelectScene extends Phaser.Scene {
 class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
   shutdown() {
-    // Clean up DOM S button on scene exit
+    // Clean up DOM S button + resize listener on scene exit
+    if (this._sBtnPosHandler) { this.game.scale.off('resize', this._sBtnPosHandler); this._sBtnPosHandler = null; }
     if (this._sBtnDom) { this._sBtnDom.remove(); this._sBtnDom = null; }
   }
 
@@ -3734,14 +3735,13 @@ class GameScene extends Phaser.Scene {
     });
 
     // ── RIGHT: S button — DOM overlay for 100% reliable touch on mobile ──
-    // Position to match joystick center height (70px from bottom in game coords = 19.4% from bottom)
+    // Positioned dynamically relative to canvas (not container) to handle letterboxing
     const canvas = this.game.canvas;
     const sBtn = document.createElement('div');
     sBtn.id = 'mobile-shoot-btn';
     sBtn.innerHTML = '🏀<br><span style="font-size:9px;letter-spacing:1px">SHOOT</span>';
     const sBtnSize = 80;
-    const joyBottomPct = (70 / CONFIG.HEIGHT * 100).toFixed(1); // match joystick Y
-    sBtn.style.cssText = 'position:absolute;bottom:calc(' + joyBottomPct + '% - ' + (sBtnSize/2) + 'px);right:4%;' +
+    sBtn.style.cssText = 'position:absolute;' +
       'width:' + sBtnSize + 'px;height:' + sBtnSize + 'px;' +
       'border-radius:50%;background:rgba(0,0,0,0.4);border:3px solid rgba(255,255,255,0.5);' +
       'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
@@ -3751,6 +3751,20 @@ class GameScene extends Phaser.Scene {
     canvas.parentElement.style.position = 'relative';
     canvas.parentElement.appendChild(sBtn);
     this._sBtnDom = sBtn;
+
+    // Position button relative to canvas bounds (handles letterboxing from FIT mode)
+    const positionSBtn = () => {
+      const cw = canvas.clientWidth;
+      const ch = canvas.clientHeight;
+      const cl = canvas.offsetLeft;
+      const ct = canvas.offsetTop;
+      // Right side of canvas, 4% inset; vertically match joystick (70px from bottom in game coords)
+      sBtn.style.left = (cl + cw - sBtnSize - cw * 0.04) + 'px';
+      sBtn.style.top = (ct + ch * (1 - 70 / CONFIG.HEIGHT) - sBtnSize / 2) + 'px';
+    };
+    positionSBtn();
+    this.game.scale.on('resize', positionSBtn);
+    this._sBtnPosHandler = positionSBtn;
 
     const setActive = (active) => {
       if (active) {
