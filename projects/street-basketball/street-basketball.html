@@ -1506,7 +1506,10 @@ class LevelSelectScene extends Phaser.Scene {
 
   drawChapterGrid() {
     const LEFT = this.LEFT;   // 70, right of red margin
-    const nodeW = 60, nodeH = 44, gapX = 4, gapY = 6;
+    const availW = this.RIGHT - LEFT; // 315px
+    const gapX = 4, gapY = 6;
+    const nodeW = Math.floor((availW - 4 * gapX) / 5); // 59px
+    const nodeH = 44;
     const gridStartY = 34;
     const rowH = nodeH + gapY; // 50px per row
 
@@ -1544,14 +1547,19 @@ class LevelSelectScene extends Phaser.Scene {
             fontFamily: this.FONT, fontSize: '10px', color: '#999999',
           }).setOrigin(0.5).setDepth(6);
         } else {
-          const label = levelId + '.' + cfg.name;
-          this.add.text(nx + nodeW / 2, ny + 14, label, {
-            fontFamily: this.FONT, fontSize: '11px', fontStyle: 'bold', color: '#444433',
+          // Two lines: level number + name
+          this.add.text(nx + nodeW / 2, ny + 9, '' + levelId, {
+            fontFamily: this.FONT, fontSize: '11px', fontStyle: 'bold', color: '#666655',
+          }).setOrigin(0.5).setDepth(6);
+
+          this.add.text(nx + nodeW / 2, ny + 23, cfg.name, {
+            fontFamily: this.FONT, fontSize: '10px', fontStyle: 'bold', color: '#444433',
+            wordWrap: { width: nodeW - 4 },
           }).setOrigin(0.5).setDepth(6);
 
           const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
-          this.add.text(nx + nodeW / 2, ny + 32, starStr, {
-            fontSize: '10px',
+          this.add.text(nx + nodeW / 2, ny + 36, starStr, {
+            fontSize: '9px',
           }).setOrigin(0.5).setDepth(6);
 
           const zone = this.add.zone(nx, ny, nodeW, nodeH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(7);
