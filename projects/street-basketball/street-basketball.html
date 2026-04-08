@@ -8275,6 +8275,12 @@ class GameScene extends Phaser.Scene {
 class LeaderboardScene extends Phaser.Scene {
   constructor() { super({ key: 'LeaderboardScene' }); }
 
+  preload() {
+    if (!this.textures.exists('leaderboardBg')) {
+      this.load.image('leaderboardBg', 'paihang.jpeg');
+    }
+  }
+
   create() {
     const cx = CONFIG.WIDTH / 2;
     const save = loadSave();
@@ -8284,6 +8290,15 @@ class LeaderboardScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillStyle(0xf5f0e0, 1);
     g.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    // Background image
+    if (this.textures.exists('leaderboardBg')) {
+      const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'leaderboardBg');
+      img.setOrigin(1, 1);
+      const scale = Math.max(CONFIG.WIDTH / img.width, CONFIG.HEIGHT / img.height);
+      img.setScale(scale).setAlpha(0.55).setDepth(0);
+    }
+
     g.lineStyle(1, 0xaabbdd, 0.25);
     for (let y = 20; y < CONFIG.HEIGHT; y += 22) {
       g.beginPath(); g.moveTo(0, y); g.lineTo(CONFIG.WIDTH, y); g.strokePath();

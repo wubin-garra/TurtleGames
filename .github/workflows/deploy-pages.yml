@@ -42,6 +42,7 @@ jobs:
           cp projects/street-basketball/qinzi1.webp deploy-game-library/
           cp projects/street-basketball/qinzi2.jpeg deploy-game-library/
           cp projects/street-basketball/jizhang2.webp deploy-game-library/
+          cp projects/street-basketball/paihang.jpeg deploy-game-library/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
