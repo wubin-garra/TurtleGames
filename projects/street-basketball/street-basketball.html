@@ -1462,7 +1462,10 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   drawTitle() {
-    this.add.text(CONFIG.WIDTH / 2 - 40, 24, '🏆 选择关卡', {
+    // Content area = left side, avoiding photo on right
+    const CX = 195; // center of content area (~390px wide)
+    this.contentCX = CX;
+    this.add.text(CX, 24, '🏆 选择关卡', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '24px',
       color: '#333333',
@@ -1472,10 +1475,11 @@ class LevelSelectScene extends Phaser.Scene {
   }
 
   drawTabs() {
+    const CX = this.contentCX;
     const tabY = 50;
-    const tabW = 108, tabH = 28, gap = 6;
+    const tabW = 72, tabH = 26, gap = 4;
     const totalW = this.areas.length * tabW + (this.areas.length - 1) * gap;
-    const startX = (CONFIG.WIDTH - totalW) / 2 - 40;
+    const startX = CX - totalW / 2;
 
     this.tabItems = [];
     this.areas.forEach((area, idx) => {
@@ -1530,23 +1534,25 @@ class LevelSelectScene extends Phaser.Scene {
     const save = loadSave();
     const levelStars = save.levelStars || {};
 
-    const boxW = 100, boxH = 80, boxR = 10;
-    const contentY = 90;
-    const totalW = area.ids.length * boxW + (area.ids.length - 1) * 14;
-    const startX = (CONFIG.WIDTH - totalW) / 2 - 40;
+    const CX = this.contentCX;
+    const boxW = 68, boxH = 78, boxR = 8;
+    const contentY = 86;
+    const boxGap = 8;
+    const totalW = area.ids.length * boxW + (area.ids.length - 1) * boxGap;
+    const startX = CX - totalW / 2;
 
     // Area total stars
     let totalAreaStars = 0;
     area.ids.forEach(id => { totalAreaStars += (levelStars[id] || 0); });
     const maxStars = area.ids.length * 3;
-    const progressTxt = this.add.text(CONFIG.WIDTH / 2 - 40, contentY - 6,
+    const progressTxt = this.add.text(CX, contentY - 6,
       '⭐ ' + totalAreaStars + ' / ' + maxStars, {
       fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#888877',
     }).setOrigin(0.5).setDepth(5);
     this.contentItems.push(progressTxt);
 
     area.ids.forEach((levelId, i) => {
-      const bx = startX + i * (boxW + 14);
+      const bx = startX + i * (boxW + boxGap);
       const by = contentY + 10;
 
       const isUnlocked = levelId === 1 || (levelStars[levelId - 1] || 0) > 0;
@@ -1617,7 +1623,7 @@ class LevelSelectScene extends Phaser.Scene {
       kainan: '挑战神奈川王者海南大附属',
       sunset: '镰仓的夕阳下，向全国制霸进发',
     };
-    const desc = this.add.text(CONFIG.WIDTH / 2 - 40, contentY + 100,
+    const desc = this.add.text(CX, contentY + 100,
       descMap[area.key] || '', {
       fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888877',
     }).setOrigin(0.5).setDepth(5);
@@ -1625,7 +1631,7 @@ class LevelSelectScene extends Phaser.Scene {
 
     // Navigation arrows
     if (areaIdx > 0) {
-      const leftArr = this.add.text(30, contentY + 45, '◀', {
+      const leftArr = this.add.text(CX - totalW / 2 - 20, contentY + 45, '◀', {
         fontSize: '28px', color: '#888877',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
       leftArr.on('pointerdown', () => {
@@ -1636,7 +1642,7 @@ class LevelSelectScene extends Phaser.Scene {
       this.contentItems.push(leftArr);
     }
     if (areaIdx < this.areas.length - 1) {
-      const rightArr = this.add.text(CONFIG.WIDTH - 30, contentY + 45, '▶', {
+      const rightArr = this.add.text(CX + totalW / 2 + 20, contentY + 45, '▶', {
         fontSize: '28px', color: '#888877',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5);
       rightArr.on('pointerdown', () => {
@@ -1986,8 +1992,11 @@ class VenueSelectScene extends Phaser.Scene {
       img.setScale(scale).setAlpha(0.55).setDepth(0);
     }
 
+    // Content area center — left of photo (qinzi1 ~240px wide on right)
+    const CX = 175;
+
     // Title
-    this.add.text(CONFIG.WIDTH / 2 - 30, 28, '🏟️ 选择场地', {
+    this.add.text(CX, 28, '🏟️ 选择场地', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '24px', color: '#333333',
       stroke: '#888866', strokeThickness: 3,
@@ -2004,11 +2013,11 @@ class VenueSelectScene extends Phaser.Scene {
       { key: 'sunset',  icon: '🌅', name: '镰仓夕阳',  color: 0xcc6622 },
     ];
 
-    const cols = 4, rows = 2;
-    const boxW = 120, boxH = 70, gap = 14;
+    const cols = 2, rows = 4;
+    const boxW = 150, boxH = 50, gap = 8;
     const totalW = cols * boxW + (cols - 1) * gap;
-    const startX = (CONFIG.WIDTH - totalW) / 2 - 30;
-    const startY = 65;
+    const startX = CX - totalW / 2;
+    const startY = 58;
 
     venues.forEach((v, i) => {
       const col = i % cols, row = Math.floor(i / cols);
@@ -2017,34 +2026,34 @@ class VenueSelectScene extends Phaser.Scene {
 
       const bg = this.add.graphics().setDepth(5);
       bg.fillStyle(0xffffff, 0.9);
-      bg.fillRoundedRect(bx, by, boxW, boxH, 10);
+      bg.fillRoundedRect(bx, by, boxW, boxH, 8);
       bg.lineStyle(2, v.color, 0.7);
-      bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
+      bg.strokeRoundedRect(bx, by, boxW, boxH, 8);
 
-      this.add.text(bx + boxW / 2, by + 22, v.icon, {
-        fontSize: '28px',
+      this.add.text(bx + 24, by + boxH / 2, v.icon, {
+        fontSize: '22px',
       }).setOrigin(0.5).setDepth(5);
 
-      this.add.text(bx + boxW / 2, by + 50, v.name, {
+      this.add.text(bx + 60, by + boxH / 2, v.name, {
         fontFamily: "'Arial Black', sans-serif",
-        fontSize: '11px', color: '#444433',
+        fontSize: '12px', color: '#444433',
         stroke: '#ffffff', strokeThickness: 1,
-      }).setOrigin(0.5).setDepth(5);
+      }).setOrigin(0, 0.5).setDepth(5);
 
       const zone = this.add.zone(bx, by, boxW, boxH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
       zone.on('pointerover', () => {
         bg.clear();
         bg.fillStyle(v.color, 0.2);
-        bg.fillRoundedRect(bx, by, boxW, boxH, 10);
+        bg.fillRoundedRect(bx, by, boxW, boxH, 8);
         bg.lineStyle(3, v.color, 1);
-        bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
+        bg.strokeRoundedRect(bx, by, boxW, boxH, 8);
       });
       zone.on('pointerout', () => {
         bg.clear();
         bg.fillStyle(0xffffff, 0.9);
-        bg.fillRoundedRect(bx, by, boxW, boxH, 10);
+        bg.fillRoundedRect(bx, by, boxW, boxH, 8);
         bg.lineStyle(2, v.color, 0.7);
-        bg.strokeRoundedRect(bx, by, boxW, boxH, 10);
+        bg.strokeRoundedRect(bx, by, boxW, boxH, 8);
       });
       zone.on('pointerdown', () => {
         this.scene.start('GameScene', { mode: 'endless', level: 1, area: v.key });
@@ -2052,19 +2061,18 @@ class VenueSelectScene extends Phaser.Scene {
     });
 
     // Random button
-    const rndY = startY + rows * (boxH + gap) + 10;
+    const rndY = startY + rows * (boxH + gap) + 4;
     const rndBg = this.add.graphics().setDepth(5);
-    const rndCX = CONFIG.WIDTH / 2 - 30;
     rndBg.fillStyle(0xdd4444, 0.85);
-    rndBg.fillRoundedRect(rndCX - 80, rndY, 160, 36, 8);
+    rndBg.fillRoundedRect(CX - 75, rndY, 150, 32, 8);
     rndBg.lineStyle(2, 0xff6666, 0.8);
-    rndBg.strokeRoundedRect(rndCX - 80, rndY, 160, 36, 8);
-    this.add.text(rndCX, rndY + 18, '🎲 随机场地', {
+    rndBg.strokeRoundedRect(CX - 75, rndY, 150, 32, 8);
+    this.add.text(CX, rndY + 16, '🎲 随机场地', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '14px', color: '#ffffff',
+      fontSize: '13px', color: '#ffffff',
       stroke: '#880000', strokeThickness: 2,
     }).setOrigin(0.5).setDepth(5);
-    const rndZone = this.add.zone(rndCX - 80, rndY, 160, 36).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
+    const rndZone = this.add.zone(CX - 75, rndY, 150, 32).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(6);
     rndZone.on('pointerdown', () => {
       this.scene.start('GameScene', { mode: 'endless', level: 1 }); // no area = random
     });
