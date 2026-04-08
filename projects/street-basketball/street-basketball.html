@@ -1694,6 +1694,10 @@ class CharSelectScene extends Phaser.Scene {
 // ─── GAME SCENE ───────────────────────────────────────────────────────────────
 class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
+  shutdown() {
+    // Clean up DOM S button on scene exit
+    if (this._sBtnDom) { this._sBtnDom.remove(); this._sBtnDom = null; }
+  }
 
   // ── Init (receives mode data from scene transitions) ──────────────────────
   init(data) {
@@ -1860,6 +1864,7 @@ class GameScene extends Phaser.Scene {
 
   // ── Create ────────────────────────────────────────────────────────────────
   create() {
+    this.events.on('shutdown', this.shutdown, this);
     this.initState();
     this.drawBackground();
     this.drawHoop();
@@ -3667,59 +3672,51 @@ class GameScene extends Phaser.Scene {
       drawThumb(joyX, joyY, false);
     });
 
-    // ── RIGHT: S button (shoot/special, supports long press) ──
-    const sBtnX = CONFIG.WIDTH - 60, sBtnY = CONFIG.HEIGHT - 60, sBtnR = 36;
+    // ── RIGHT: S button — DOM overlay for 100% reliable touch on mobile ──
+    const canvas = this.game.canvas;
+    const sBtn = document.createElement('div');
+    sBtn.id = 'mobile-shoot-btn';
+    sBtn.innerHTML = '🏀<br><span style="font-size:9px;letter-spacing:1px">SHOOT</span>';
+    sBtn.style.cssText = 'position:absolute;bottom:8%;right:4%;width:80px;height:80px;' +
+      'border-radius:50%;background:rgba(0,0,0,0.4);border:3px solid rgba(255,255,255,0.5);' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'font-size:30px;color:#fff;font-family:"Arial Black",sans-serif;' +
+      'touch-action:none;user-select:none;-webkit-user-select:none;z-index:100;' +
+      'box-shadow:0 0 20px rgba(255,102,0,0.3);';
+    canvas.parentElement.style.position = 'relative';
+    canvas.parentElement.appendChild(sBtn);
+    this._sBtnDom = sBtn;
 
-    const sBg = this.add.graphics().setDepth(50);
-    const drawSBtn = (active) => {
-      sBg.clear();
-      sBg.fillStyle(active ? 0xff6633 : 0x000000, active ? 0.55 : 0.4);
-      sBg.fillCircle(sBtnX, sBtnY, sBtnR);
-      sBg.lineStyle(3, active ? 0xffaa66 : 0xffffff, active ? 0.9 : 0.5);
-      sBg.strokeCircle(sBtnX, sBtnY, sBtnR);
+    const setActive = (active) => {
+      if (active) {
+        sBtn.style.background = 'rgba(255,102,51,0.55)';
+        sBtn.style.borderColor = 'rgba(255,170,100,0.9)';
+        sBtn.style.boxShadow = '0 0 30px rgba(255,102,0,0.6)';
+      } else {
+        sBtn.style.background = 'rgba(0,0,0,0.4)';
+        sBtn.style.borderColor = 'rgba(255,255,255,0.5)';
+        sBtn.style.boxShadow = '0 0 20px rgba(255,102,0,0.3)';
+      }
     };
-    drawSBtn(false);
-    this.mobileControlItems.push(sBg);
 
-    const sTxt = this.add.text(sBtnX, sBtnY - 2, '🏀', {
-      fontSize: '28px', resolution: 2,
-    }).setOrigin(0.5).setDepth(51);
-    const sLabel = this.add.text(sBtnX, sBtnY + 20, 'SHOOT', {
-      fontFamily: "'Arial Black', sans-serif", fontSize: '7px',
-      color: '#ffffff', resolution: 2,
-    }).setOrigin(0.5).setDepth(51).setAlpha(0.6);
-    this.mobileControlItems.push(sTxt, sLabel);
-
-    // S button interaction — track pointer ID for reliable hold
-    const sHitR = sBtnR + 12;
-    const sHit = this.add.graphics().setDepth(49);
-    sHit.fillStyle(0x000000, 0.001);
-    sHit.fillCircle(sBtnX, sBtnY, sHitR);
-    sHit.setDepth(55); // above all other interactive elements
-    sHit.setInteractive(new Phaser.Geom.Circle(sBtnX, sBtnY, sHitR), Phaser.Geom.Circle.Contains);
-    this.mobileControlItems.push(sHit);
-
-    let sPointerId = null;
-
-    sHit.on('pointerdown', (pointer) => {
-      sPointerId = pointer.id;
+    sBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
       this.virtualS = true;
       this.virtualSJustPressed = true;
-      drawSBtn(true);
-    });
+      setActive(true);
+    }, { passive: false });
 
-    // pointerout: only visual change, don't release (finger drift)
-    sHit.on('pointerout', () => { drawSBtn(false); });
-    sHit.on('pointerover', (pointer) => {
-      if (pointer.id === sPointerId) drawSBtn(true);
-    });
-
-    this.input.on('pointerup', (pointer) => {
-      if (pointer.id !== sPointerId) return;
-      sPointerId = null;
+    sBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
       this.virtualS = false;
       this.virtualSJustReleased = true;
-      drawSBtn(false);
+      setActive(false);
+    }, { passive: false });
+
+    sBtn.addEventListener('touchcancel', (e) => {
+      this.virtualS = false;
+      this.virtualSJustReleased = true;
+      setActive(false);
     });
   }
 
@@ -5082,9 +5079,11 @@ class GameScene extends Phaser.Scene {
           const fwd = spinForward * (p * p * 0.4 + p * 0.6);
           this.playerX = Phaser.Math.Clamp(startX - 10 + fwd, 40, 550);
         }
+        this.spinT = t;
         this.redrawPlayerSpin(this.playerX, this.playerY, t);
       },
       onComplete: () => {
+        this.spinT = 0;
         this.playerX = Phaser.Math.Clamp(startX + spinForward - 10, 40, 550);
         const distToRim = Math.abs(this.playerX - rimX);
 
@@ -6062,41 +6061,45 @@ class GameScene extends Phaser.Scene {
 
   // ── HUD ───────────────────────────────────────────────────────────────────
   createHUD() {
-    // Score bg
+    // ── Score HUD (graffiti style) ──
     this.scoreBg = this.add.graphics();
-    this.scoreBg.fillStyle(0xffffff, 0.75);
-    this.scoreBg.fillRoundedRect(10, 10, 130, 46, 10);
-    this.scoreBg.lineStyle(2, 0x333333, 0.6);
-    this.scoreBg.strokeRoundedRect(10, 10, 130, 46, 10);
+    this.scoreBg.fillStyle(0x222222, 0.7);
+    this.scoreBg.fillRoundedRect(8, 6, 140, 42, 12);
+    this.scoreBg.lineStyle(3, 0xffcc00, 0.8);
+    this.scoreBg.strokeRoundedRect(8, 6, 140, 42, 12);
 
-    this.scoreIcon = this.add.text(18, 16, '⭐', { fontSize: '20px' });
+    this.scoreIcon = this.add.text(16, 12, '⭐', { fontSize: '22px' });
 
-    this.scoreTxt = this.add.text(44, 18, 'SCORE: 0', {
+    this.scoreTxt = this.add.text(44, 11, '0', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '14px',
-      color: '#333333'
+      fontSize: '22px',
+      color: '#ffcc00',
+      stroke: '#000000',
+      strokeThickness: 3,
     });
 
-    // Timer / ball HUD (top-right)
+    // Timer / ball HUD (top-right, graffiti style)
     const showTimer = this.gameMode === 'endless' ||
       (this.gameMode === 'level' && this.levelMode === 'time');
     const showBalls = this.gameMode === 'level' && this.levelMode === 'balls';
 
     if (showTimer) {
       this.timerBg = this.add.graphics();
-      this.timerBg.fillStyle(0xffffff, 0.75);
-      this.timerBg.fillRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
-      this.timerBg.lineStyle(2, 0x333333, 0.6);
-      this.timerBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+      this.timerBg.fillStyle(0x222222, 0.7);
+      this.timerBg.fillRoundedRect(CONFIG.WIDTH - 148, 6, 140, 42, 12);
+      this.timerBg.lineStyle(3, 0x44ddff, 0.8);
+      this.timerBg.strokeRoundedRect(CONFIG.WIDTH - 148, 6, 140, 42, 12);
 
-      this.timerIcon = this.add.text(CONFIG.WIDTH - 132, 16, '⏱', { fontSize: '20px' });
+      this.timerIcon = this.add.text(CONFIG.WIDTH - 140, 10, '⏱', { fontSize: '22px' });
 
       const initSecs = Math.ceil(this.timeLeft);
       const im = Math.floor(initSecs / 60), is = initSecs % 60;
-      this.timerTxt = this.add.text(CONFIG.WIDTH - 106, 18, im + ':' + (is < 10 ? '0' : '') + is, {
+      this.timerTxt = this.add.text(CONFIG.WIDTH - 112, 11, im + ':' + (is < 10 ? '0' : '') + is, {
         fontFamily: "'Arial Black', sans-serif",
-        fontSize: '20px',
-        color: '#333333',
+        fontSize: '22px',
+        color: '#44ddff',
+        stroke: '#000000',
+        strokeThickness: 3,
       });
 
       // Waiting for first shot indicator (endless only)
@@ -6121,17 +6124,19 @@ class GameScene extends Phaser.Scene {
 
     if (showBalls) {
       this.ballsBg = this.add.graphics();
-      this.ballsBg.fillStyle(0xffffff, 0.75);
-      this.ballsBg.fillRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
-      this.ballsBg.lineStyle(2, 0x333333, 0.6);
-      this.ballsBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+      this.ballsBg.fillStyle(0x222222, 0.7);
+      this.ballsBg.fillRoundedRect(CONFIG.WIDTH - 148, 6, 140, 42, 12);
+      this.ballsBg.lineStyle(3, 0xff8833, 0.8);
+      this.ballsBg.strokeRoundedRect(CONFIG.WIDTH - 148, 6, 140, 42, 12);
 
-      this.ballsIcon = this.add.text(CONFIG.WIDTH - 132, 16, '🏀', { fontSize: '20px' });
+      this.ballsIcon = this.add.text(CONFIG.WIDTH - 140, 10, '🏀', { fontSize: '22px' });
 
-      this.ballsTxt = this.add.text(CONFIG.WIDTH - 104, 18, 'x' + this.ballsLeft, {
+      this.ballsTxt = this.add.text(CONFIG.WIDTH - 112, 11, 'x' + this.ballsLeft, {
         fontFamily: "'Arial Black', sans-serif",
-        fontSize: '20px',
-        color: '#333333',
+        fontSize: '22px',
+        color: '#ff8833',
+        stroke: '#000000',
+        strokeThickness: 3,
       });
     }
 
@@ -6146,6 +6151,24 @@ class GameScene extends Phaser.Scene {
         strokeThickness: 2,
       }).setOrigin(0.5);
     }
+
+    // Back to menu button (top-left, small pause/home icon)
+    const homeBg = this.add.graphics().setDepth(30);
+    homeBg.fillStyle(0x222222, 0.5);
+    homeBg.fillRoundedRect(155, 10, 34, 34, 8);
+    homeBg.lineStyle(2, 0xffffff, 0.3);
+    homeBg.strokeRoundedRect(155, 10, 34, 34, 8);
+    const homeBtn = this.add.text(172, 27, '⏸', {
+      fontSize: '18px',
+    }).setOrigin(0.5).setDepth(31).setAlpha(0.6);
+    const homeHit = this.add.zone(172, 27, 44, 44).setDepth(32).setInteractive({ useHandCursor: true });
+    homeHit.on('pointerdown', () => {
+      soundManager.stopBGM();
+      if (this._sBtnDom) { this._sBtnDom.remove(); this._sBtnDom = null; }
+      this.scene.start('MenuScene');
+    });
+    homeHit.on('pointerover', () => { homeBtn.setAlpha(1); homeBg.clear(); homeBg.fillStyle(0x444444, 0.7); homeBg.fillRoundedRect(155, 10, 34, 34, 8); homeBg.lineStyle(2, 0xffffff, 0.6); homeBg.strokeRoundedRect(155, 10, 34, 34, 8); });
+    homeHit.on('pointerout', () => { homeBtn.setAlpha(0.6); homeBg.clear(); homeBg.fillStyle(0x222222, 0.5); homeBg.fillRoundedRect(155, 10, 34, 34, 8); homeBg.lineStyle(2, 0xffffff, 0.3); homeBg.strokeRoundedRect(155, 10, 34, 34, 8); });
 
     // Combo counter
     this.comboTxt = this.add.text(CONFIG.WIDTH / 2, 16, '', {
@@ -6305,7 +6328,7 @@ class GameScene extends Phaser.Scene {
   }
 
   updateHUD() {
-    this.scoreTxt.setText('SCORE: ' + this.score);
+    this.scoreTxt.setText('' + this.score);
 
     if (this.combo > 1) {
       this.comboTxt.setText('🔥 x' + this.combo);
@@ -6325,16 +6348,16 @@ class GameScene extends Phaser.Scene {
       // Flash red when <= 10 seconds
       if (secs <= 10 && this.gameStarted) {
         const flash = secs % 2 === 0;
-        this.timerTxt.setColor(flash ? '#ff2222' : '#cc0000');
+        this.timerTxt.setColor(flash ? '#ff4444' : '#ff0000');
         if (this.timerBg) {
           this.timerBg.clear();
-          this.timerBg.fillStyle(flash ? 0xff4444 : 0xff0000, flash ? 0.25 : 0.35);
-          this.timerBg.fillRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
-          this.timerBg.lineStyle(2, 0xff0000, 0.9);
-          this.timerBg.strokeRoundedRect(CONFIG.WIDTH - 140, 10, 130, 46, 10);
+          this.timerBg.fillStyle(0x440000, flash ? 0.7 : 0.8);
+          this.timerBg.fillRoundedRect(CONFIG.WIDTH - 148, 6, 140, 42, 12);
+          this.timerBg.lineStyle(3, 0xff0000, 0.9);
+          this.timerBg.strokeRoundedRect(CONFIG.WIDTH - 148, 6, 140, 42, 12);
         }
       } else {
-        this.timerTxt.setColor('#333333');
+        this.timerTxt.setColor('#44ddff');
       }
     }
 
@@ -6588,8 +6611,14 @@ class GameScene extends Phaser.Scene {
       }
     }
 
+    // Sync ball during spin move (ground level, ball swings around player)
+    if (this.isSpinning && !this.isShooting) {
+      const armAngle = Math.sin((this.spinT || 0) * Math.PI * 2) * 20;
+      this.ball.body.reset(this.playerX + armAngle, this.playerY - 80);
+    }
+
     // Sync ball + jersey position BEFORE S key check so shot uses correct position
-    if (this.isJumping && !this.isShooting && !this.isDunkHanging) {
+    if (this.isJumping && !this.isShooting && !this.isDunkHanging && !this.isSpinning) {
       if (this.isFadeaway) {
         // Fadeaway: ball held high near head, slightly behind
         this.ball.body.reset(this.playerX + 15, this.playerY - 120 - (this.jumpOffset || 0));
