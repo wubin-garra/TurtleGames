@@ -8393,12 +8393,12 @@ class LeaderboardScene extends Phaser.Scene {
       stroke: '#f5f0e0', strokeThickness: 2, resolution: 2,
     }).setOrigin(0.5);
 
-    // Back button
-    const backTxt = this.add.text(cx, CONFIG.HEIGHT - 28, '← 返回主页', {
+    // Back button — bottom left
+    const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回主页', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '16px', color: '#666666',
+      fontSize: '14px', color: '#666666',
       stroke: '#f5f0e0', strokeThickness: 2, resolution: 2,
-    }).setOrigin(0.5);
+    }).setOrigin(0, 1);
     backTxt.setInteractive({ useHandCursor: true });
     backTxt.on('pointerover', () => backTxt.setColor('#333333'));
     backTxt.on('pointerout', () => backTxt.setColor('#666666'));
