@@ -13,10 +13,9 @@ html, body {
   background: #222;
   display: flex; justify-content: center; align-items: center;
   touch-action: none; user-select: none; -webkit-user-select: none;
-}
-/* Use small viewport height to guarantee content fits within visible area (excludes toolbar) */
-@supports (height: 100svh) {
-  html, body { height: 100svh; }
+  /* Fixed position fills exact visible viewport on all mobile browsers */
+  position: fixed;
+  inset: 0;
 }
 /* Portrait rotation overlay */
 #rotate-hint {
@@ -61,12 +60,12 @@ html, body {
 }
 /* CSS forced landscape: rotate game when in portrait (WeChat fallback) */
 body.css-landscape {
-  width: 100vh !important; height: 100vw !important;
   transform: rotate(90deg);
   transform-origin: top left;
-  position: absolute;
-  top: 0; left: 100vw;
+  position: fixed !important;
+  top: 0; left: 0;
   overflow: hidden;
+  /* width/height set by JS (applyCSSLandscape) to exact viewport size */
 }
 canvas { display: block; }
 </style>
@@ -107,10 +106,20 @@ function goFullscreen() {
 }
 function applyCSSLandscape() {
   if (isPortrait()) {
-    document.body.classList.add('css-landscape');
-    // Trigger Phaser resize so it fills the rotated viewport
+    // Use actual visible dimensions for fullscreen coverage
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var b = document.body;
+    // After 90deg rotation: CSS width becomes visual height, CSS height becomes visual width
+    b.style.width = vh + 'px';
+    b.style.height = vw + 'px';
+    // transform-origin is top-left; shift left by the visual height to position correctly
+    b.style.left = vh + 'px';
+    b.style.top = '0px';
+    b.classList.add('css-landscape');
+    // Trigger Phaser resize with swapped dimensions
     if (window.__phaserGame) {
-      window.__phaserGame.scale.resize(window.innerHeight, window.innerWidth);
+      window.__phaserGame.scale.resize(vh, vw);
       window.__phaserGame.scale.refresh();
     }
   }
@@ -7757,11 +7766,8 @@ window.__phaserGame = new Phaser.Game({
 });
 // Force Phaser to re-fit when mobile browser toolbar shows/hides
 function refreshGameSize() {
-  // Use visualViewport for accurate mobile dimensions (excludes browser chrome)
-  if (window.visualViewport) {
-    document.body.style.height = window.visualViewport.height + 'px';
-    document.body.style.width = window.visualViewport.width + 'px';
-  }
+  // Skip if CSS landscape rotation is active (it manages its own sizing)
+  if (document.body.classList.contains('css-landscape')) return;
   if (window.__phaserGame) window.__phaserGame.scale.refresh();
 }
 window.addEventListener('resize', refreshGameSize);
