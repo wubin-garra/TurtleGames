@@ -8295,7 +8295,7 @@ class LeaderboardScene extends Phaser.Scene {
     if (this.textures.exists('leaderboardBg')) {
       const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'leaderboardBg');
       img.setOrigin(1, 1);
-      const scale = Math.max(CONFIG.WIDTH / img.width, CONFIG.HEIGHT / img.height);
+      const scale = CONFIG.HEIGHT / img.height; // fit full height, show on right
       img.setScale(scale).setAlpha(0.55).setDepth(0);
     }
 
