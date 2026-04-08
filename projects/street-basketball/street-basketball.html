@@ -1446,11 +1446,10 @@ class LevelSelectScene extends Phaser.Scene {
 
     // Background image (center-fill, semi-transparent)
     if (this.textures.exists('levelSelectBg')) {
-      const img = this.add.image(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, 'levelSelectBg');
-      const scaleX = CONFIG.WIDTH / img.width;
-      const scaleY = CONFIG.HEIGHT / img.height;
-      const scale = Math.max(scaleX, scaleY);
-      img.setScale(scale).setAlpha(0.3).setDepth(0);
+      const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'levelSelectBg');
+      img.setOrigin(1, 1); // anchor bottom-right
+      const scale = CONFIG.HEIGHT / img.height;
+      img.setScale(scale).setAlpha(0.35).setDepth(0);
     }
 
     // Dark overlay for readability
@@ -1972,9 +1971,10 @@ class VenueSelectScene extends Phaser.Scene {
 
     // Background image
     if (this.textures.exists('venueBg')) {
-      const img = this.add.image(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, 'venueBg');
-      const scale = Math.max(CONFIG.WIDTH / img.width, CONFIG.HEIGHT / img.height);
-      img.setScale(scale).setAlpha(0.3).setDepth(0);
+      const img = this.add.image(CONFIG.WIDTH, CONFIG.HEIGHT, 'venueBg');
+      img.setOrigin(1, 1); // anchor bottom-right
+      const scale = CONFIG.HEIGHT / img.height;
+      img.setScale(scale).setAlpha(0.35).setDepth(0);
     }
 
     // Dark overlay
