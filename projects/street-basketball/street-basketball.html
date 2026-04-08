@@ -57,14 +57,14 @@ body { position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
 @media screen and (orientation: portrait) and (max-width: 900px) {
   #rotate-hint:not(.dismissed) { display: flex !important; }
 }
-/* CSS forced landscape: rotate game when in portrait (WeChat fallback) */
+/* CSS forced landscape: rotate game when in portrait (WeChat fallback)
+   Strategy: center element on screen, then rotate 90deg around its center.
+   JS sets exact pixel width/height from innerHeight/innerWidth. */
 body.css-landscape {
-  width: 100vh !important; height: 100vw !important;
-  transform: rotate(90deg);
-  transform-origin: top left;
-  position: absolute !important;
-  top: 0; left: 100vw;
-  right: auto; bottom: auto;
+  position: fixed !important;
+  top: 50%; left: 50%;
+  right: auto !important; bottom: auto !important;
+  transform: translate(-50%, -50%) rotate(90deg);
   overflow: hidden;
 }
 canvas { display: block; }
@@ -106,16 +106,26 @@ function goFullscreen() {
 }
 function applyCSSLandscape() {
   if (isPortrait()) {
-    document.body.classList.add('css-landscape');
-    // Tell Phaser the available space is swapped (width=vh, height=vw)
+    var vw = window.innerWidth;   // portrait narrow (e.g. 390)
+    var vh = window.innerHeight;  // portrait tall (e.g. 780, excludes WeChat nav)
+    var b = document.body;
+    // In CSS space: width=vh (tall becomes wide), height=vw (narrow becomes tall)
+    b.style.width = vh + 'px';
+    b.style.height = vw + 'px';
+    b.classList.add('css-landscape');
+    // After 90deg rotation, visual: width=vw (narrow), height=vh (tall)
+    // → fills the portrait screen exactly
     if (window.__phaserGame) {
-      window.__phaserGame.scale.resize(window.innerHeight, window.innerWidth);
+      window.__phaserGame.scale.resize(vh, vw);
       window.__phaserGame.scale.refresh();
     }
   }
 }
 function removeCSSLandscape() {
-  document.body.classList.remove('css-landscape');
+  var b = document.body;
+  b.classList.remove('css-landscape');
+  b.style.width = '';
+  b.style.height = '';
   if (window.__phaserGame) {
     window.__phaserGame.scale.refresh();
   }
