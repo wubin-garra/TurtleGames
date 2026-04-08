@@ -3529,7 +3529,8 @@ class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', (ptr) => {
       if (this.isShooting || this.isGameOver) return;
       // Ignore touches on virtual buttons area (left side, bottom 120px)
-      if (this.isTouchDevice && ptr.y > CONFIG.HEIGHT - 120 && ptr.x < 200) return;
+      // Ignore touches on virtual controls: joystick (left) and S button (right)
+      if (this.isTouchDevice && ptr.y > CONFIG.HEIGHT - 140 && (ptr.x < 150 || ptr.x > CONFIG.WIDTH - 120)) return;
       this.swipeStart = { x: ptr.x, y: ptr.y, time: this.time.now };
     });
 
@@ -3562,87 +3563,146 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  // ── Mobile Virtual Controls — WASD keyboard layout ───────────────────────
+  // ── Mobile Virtual Controls — Joystick (left) + S button (right) ────────
   _createMobileControls() {
-    const btnR = 22;
-    const gap = 52;
-    // Bottom row: A S D — S centered between A and D
-    const bottomY = CONFIG.HEIGHT - 30;
-    const aX = 40, sX = aX + gap, dX = aX + gap * 2;
-    // Top row: W above S
-    const topY = bottomY - gap;
-    const wX = sX;
     this.mobileControlItems = [];
 
-    const drawBtn = (g, x, y, r, fillColor, fillAlpha, strokeAlpha) => {
-      g.clear();
-      g.fillStyle(fillColor, fillAlpha);
-      g.fillRoundedRect(x - r, y - r, r * 2, r * 2, 8);
-      g.lineStyle(2, 0xffffff, strokeAlpha);
-      g.strokeRoundedRect(x - r, y - r, r * 2, r * 2, 8);
+    // ── LEFT: Virtual joystick (move + jump) ──
+    const joyX = 70, joyY = CONFIG.HEIGHT - 70;
+    const joyOuterR = 52, joyInnerR = 22;
+    const deadZone = 10; // pixels before direction registers
+
+    // Draw joystick base
+    const joyBase = this.add.graphics().setDepth(50);
+    joyBase.fillStyle(0x000000, 0.3);
+    joyBase.fillCircle(joyX, joyY, joyOuterR);
+    joyBase.lineStyle(2, 0xffffff, 0.35);
+    joyBase.strokeCircle(joyX, joyY, joyOuterR);
+    this.mobileControlItems.push(joyBase);
+
+    // Direction labels
+    const labelStyle = { fontFamily: "'Arial Black', sans-serif", fontSize: '10px', color: '#ffffff', resolution: 2 };
+    const lL = this.add.text(joyX - joyOuterR + 6, joyY, '◀', labelStyle).setOrigin(0.5).setDepth(51).setAlpha(0.3);
+    const lR = this.add.text(joyX + joyOuterR - 6, joyY, '▶', labelStyle).setOrigin(0.5).setDepth(51).setAlpha(0.3);
+    const lU = this.add.text(joyX, joyY - joyOuterR + 8, '▲', labelStyle).setOrigin(0.5).setDepth(51).setAlpha(0.3);
+    this.mobileControlItems.push(lL, lR, lU);
+
+    // Joystick thumb (moves with finger)
+    const joyThumb = this.add.graphics().setDepth(52);
+    const drawThumb = (x, y, active) => {
+      joyThumb.clear();
+      joyThumb.fillStyle(active ? 0xffffff : 0xaaaaaa, active ? 0.5 : 0.35);
+      joyThumb.fillCircle(x, y, joyInnerR);
+      joyThumb.lineStyle(2, 0xffffff, active ? 0.8 : 0.4);
+      joyThumb.strokeCircle(x, y, joyInnerR);
     };
+    drawThumb(joyX, joyY, false);
+    this.mobileControlItems.push(joyThumb);
 
-    const makeBtn = (x, y, label, onDown, onUp) => {
-      const bg = this.add.graphics().setDepth(50);
-      drawBtn(bg, x, y, btnR, 0x000000, 0.4, 0.5);
-      const hitRect = new Phaser.Geom.Rectangle(x - btnR - 6, y - btnR - 6, (btnR + 6) * 2, (btnR + 6) * 2);
-      bg.setInteractive(hitRect, Phaser.Geom.Rectangle.Contains);
-      bg._btnX = x; bg._btnY = y; bg._btnR = btnR;
-      bg._onUp = onUp; bg._holdingPointer = null;
-      bg.on('pointerdown', (pointer) => {
-        bg._holdingPointer = pointer.id;
-        onDown();
-        drawBtn(bg, x, y, btnR, 0xffffff, 0.45, 0.8);
-      });
-      bg.on('pointerup', (pointer) => {
-        if (bg._holdingPointer === pointer.id) {
-          bg._holdingPointer = null;
-          onUp();
-          drawBtn(bg, x, y, btnR, 0x000000, 0.4, 0.5);
-        }
-      });
-      // pointerout: only change visual, don't release — finger may drift on touch
-      bg.on('pointerout', () => {
-        drawBtn(bg, x, y, btnR, 0x000000, 0.4, 0.5);
-      });
-      this.mobileControlItems.push(bg);
+    // Joystick hit area (larger than visual)
+    const joyHit = this.add.graphics().setDepth(49);
+    const joyHitR = joyOuterR + 20;
+    joyHit.fillStyle(0x000000, 0.001); // nearly invisible
+    joyHit.fillCircle(joyX, joyY, joyHitR);
+    joyHit.setInteractive(new Phaser.Geom.Circle(joyX, joyY, joyHitR), Phaser.Geom.Circle.Contains);
+    this.mobileControlItems.push(joyHit);
 
-      const txt = this.add.text(x, y, label, {
-        fontFamily: "'Arial Black', sans-serif", fontSize: '15px',
-        color: '#ffffff', resolution: 2,
-      }).setOrigin(0.5).setDepth(51).setAlpha(0.75);
-      this.mobileControlItems.push(txt);
-    };
+    let joyPointerId = null;
 
-    // Global pointerup: release any held button when finger lifts anywhere
-    this.input.on('pointerup', (pointer) => {
-      this.mobileControlItems.forEach(item => {
-        if (item._holdingPointer === pointer.id) {
-          item._holdingPointer = null;
-          if (item._onUp) item._onUp();
-          if (item._btnX != null) drawBtn(item, item._btnX, item._btnY, item._btnR, 0x000000, 0.4, 0.5);
-        }
-      });
+    joyHit.on('pointerdown', (pointer) => {
+      joyPointerId = pointer.id;
+      this._updateJoystick(pointer.x, pointer.y, joyX, joyY, joyOuterR, deadZone, drawThumb);
     });
 
-    //    [W]         ← jump
-    // [A] [S] [D]    ← left, special (long press), right
-    makeBtn(wX, topY, 'W',
-      () => { this.virtualJump = true; this.virtualJumpJustPressed = true; },
-      () => { this.virtualJump = false; }
-    );
-    makeBtn(aX, bottomY, 'A',
-      () => { this.virtualLeft = true; },
-      () => { this.virtualLeft = false; }
-    );
-    makeBtn(sX, bottomY, 'S',
-      () => { this.virtualS = true; this.virtualSJustPressed = true; },
-      () => { this.virtualS = false; this.virtualSJustReleased = true; }
-    );
-    makeBtn(dX, bottomY, 'D',
-      () => { this.virtualRight = true; },
-      () => { this.virtualRight = false; }
-    );
+    this.input.on('pointermove', (pointer) => {
+      if (pointer.id !== joyPointerId) return;
+      this._updateJoystick(pointer.x, pointer.y, joyX, joyY, joyOuterR, deadZone, drawThumb);
+    });
+
+    this.input.on('pointerup', (pointer) => {
+      if (pointer.id !== joyPointerId) return;
+      joyPointerId = null;
+      // Reset all directions
+      this.virtualLeft = false;
+      this.virtualRight = false;
+      this.virtualJump = false;
+      drawThumb(joyX, joyY, false);
+    });
+
+    // ── RIGHT: S button (shoot/special, supports long press) ──
+    const sBtnX = CONFIG.WIDTH - 60, sBtnY = CONFIG.HEIGHT - 60, sBtnR = 36;
+
+    const sBg = this.add.graphics().setDepth(50);
+    const drawSBtn = (active) => {
+      sBg.clear();
+      sBg.fillStyle(active ? 0xff6633 : 0x000000, active ? 0.55 : 0.4);
+      sBg.fillCircle(sBtnX, sBtnY, sBtnR);
+      sBg.lineStyle(3, active ? 0xffaa66 : 0xffffff, active ? 0.9 : 0.5);
+      sBg.strokeCircle(sBtnX, sBtnY, sBtnR);
+    };
+    drawSBtn(false);
+    this.mobileControlItems.push(sBg);
+
+    const sTxt = this.add.text(sBtnX, sBtnY - 2, '🏀', {
+      fontSize: '28px', resolution: 2,
+    }).setOrigin(0.5).setDepth(51);
+    const sLabel = this.add.text(sBtnX, sBtnY + 20, 'SHOOT', {
+      fontFamily: "'Arial Black', sans-serif", fontSize: '7px',
+      color: '#ffffff', resolution: 2,
+    }).setOrigin(0.5).setDepth(51).setAlpha(0.6);
+    this.mobileControlItems.push(sTxt, sLabel);
+
+    // S button interaction — track pointer ID for reliable hold
+    const sHitR = sBtnR + 12;
+    const sHit = this.add.graphics().setDepth(49);
+    sHit.fillStyle(0x000000, 0.001);
+    sHit.fillCircle(sBtnX, sBtnY, sHitR);
+    sHit.setInteractive(new Phaser.Geom.Circle(sBtnX, sBtnY, sHitR), Phaser.Geom.Circle.Contains);
+    this.mobileControlItems.push(sHit);
+
+    let sPointerId = null;
+
+    sHit.on('pointerdown', (pointer) => {
+      sPointerId = pointer.id;
+      this.virtualS = true;
+      this.virtualSJustPressed = true;
+      drawSBtn(true);
+    });
+
+    // pointerout: only visual change, don't release (finger drift)
+    sHit.on('pointerout', () => { drawSBtn(false); });
+    sHit.on('pointerover', (pointer) => {
+      if (pointer.id === sPointerId) drawSBtn(true);
+    });
+
+    this.input.on('pointerup', (pointer) => {
+      if (pointer.id !== sPointerId) return;
+      sPointerId = null;
+      this.virtualS = false;
+      this.virtualSJustReleased = true;
+      drawSBtn(false);
+    });
+  }
+
+  // Joystick direction calculation
+  _updateJoystick(px, py, cx, cy, maxR, deadZone, drawThumb) {
+    let dx = px - cx, dy = py - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    // Clamp thumb to outer radius
+    if (dist > maxR) { dx = (dx / dist) * maxR; dy = (dy / dist) * maxR; }
+    drawThumb(cx + dx, cy + dy, true);
+
+    // Horizontal: left/right
+    if (dx < -deadZone) { this.virtualLeft = true; this.virtualRight = false; }
+    else if (dx > deadZone) { this.virtualRight = true; this.virtualLeft = false; }
+    else { this.virtualLeft = false; this.virtualRight = false; }
+
+    // Vertical: up = jump (only trigger once per push)
+    if (dy < -deadZone * 1.5) {
+      if (!this.virtualJump) { this.virtualJump = true; this.virtualJumpJustPressed = true; }
+    } else {
+      this.virtualJump = false;
+    }
   }
 
   drawTrajectoryPreview(ex, ey) {
@@ -6059,7 +6119,9 @@ class GameScene extends Phaser.Scene {
     this.comboTxt.setOrigin(0.5, 0);
 
     // Instructions
-    this.instrTxt = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT - 22, 'SWIPE TO SHOOT', {
+    // Instruction text — position above move list area
+    const instrY = this.isTouchDevice ? CONFIG.HEIGHT - 140 : CONFIG.HEIGHT - 22;
+    this.instrTxt = this.add.text(CONFIG.WIDTH / 2, instrY, 'SWIPE TO SHOOT', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '14px',
       color: '#888877',
@@ -6107,48 +6169,57 @@ class GameScene extends Phaser.Scene {
 
     // Build move list per character
     const moves = [];
-    // Common moves
-    moves.push({ keys: 'A/D', desc: '运球移动' });
+    // Common moves — adapt labels for mobile (joystick) vs PC (keyboard)
+    const isMobile = this.isTouchDevice;
+    const L = isMobile ? '◀' : 'A';
+    const R = isMobile ? '▶' : 'D';
+    const J = isMobile ? '▲' : '空格';
+    const S = isMobile ? '🏀' : 'S';
+    moves.push({ keys: `${L}/${R}`, desc: '运球移动' });
     moves.push({ keys: '滑动', desc: '投篮' });
 
     const sk = char.skill;
     if (sk === 'rebound') {
-      moves.push({ keys: '→+空格', desc: '超远飞扣' });
+      moves.push({ keys: `${R}+${J}`, desc: '超远飞扣' });
       moves.push({ keys: '自动', desc: '抢篮板补扣' });
     } else if (sk === 'ace') {
-      moves.push({ keys: '→+空格', desc: '突破扣篮' });
-      moves.push({ keys: '←+空格', desc: '后仰跳投' });
-      moves.push({ keys: '←+S', desc: '旋转突破' });
+      moves.push({ keys: `${R}+${J}`, desc: '突破扣篮' });
+      moves.push({ keys: `${L}+${J}`, desc: '后仰跳投' });
+      moves.push({ keys: `${L}+${S}`, desc: '旋转突破' });
     } else if (sk === 'bigMan') {
-      moves.push({ keys: '→+空格', desc: '力量扣篮' });
+      moves.push({ keys: `${R}+${J}`, desc: '力量扣篮' });
     } else if (sk === 'threePoint') {
-      moves.push({ keys: '空格+S', desc: '蓄力跳投' });
+      moves.push({ keys: `${J}+${S}`, desc: '蓄力跳投' });
       moves.push({ keys: '站三分线外', desc: '球变小筐变大' });
     } else if (sk === 'speed') {
-      moves.push({ keys: '→+空格', desc: '高速上篮' });
+      moves.push({ keys: `${R}+${J}`, desc: '高速上篮' });
     } else if (sk === 'genius') {
-      moves.push({ keys: '→+空格', desc: '假投转身后仰' });
+      moves.push({ keys: `${R}+${J}`, desc: '假投转身后仰' });
       moves.push({ keys: '自动', desc: '球轨迹修正' });
     }
 
-    // Draw move list at bottom center
-    const cx = CONFIG.WIDTH / 2;
-    const baseY = CONFIG.HEIGHT - 8;
+    // Draw move list — mobile: top-left, PC: bottom-center
     const lineH = 13;
     const totalH = moves.length * lineH + 8;
+    let mlX, mlY;
+    if (this.isTouchDevice) {
+      mlX = 10; mlY = 50; // top-left, below HUD
+    } else {
+      mlX = CONFIG.WIDTH / 2 - 120; mlY = CONFIG.HEIGHT - 8 - totalH;
+    }
 
     // Semi-transparent background
     const bg = this.add.graphics().setDepth(24).setAlpha(0.7);
     bg.fillStyle(0x000000, 0.5);
-    bg.fillRoundedRect(cx - 120, baseY - totalH, 240, totalH, 6);
+    bg.fillRoundedRect(mlX, mlY, 240, totalH, 6);
 
     const lines = moves.map((m, i) => {
-      const y = baseY - totalH + 6 + i * lineH;
-      const keyTxt = this.add.text(cx - 110, y, m.keys, {
+      const y = mlY + 6 + i * lineH;
+      const keyTxt = this.add.text(mlX + 10, y, m.keys, {
         fontFamily: "'Arial Black', sans-serif", fontSize: '9px',
         color: '#ffcc44', resolution: 2,
       }).setDepth(25);
-      const descTxt = this.add.text(cx + 10, y, m.desc, {
+      const descTxt = this.add.text(mlX + 130, y, m.desc, {
         fontFamily: "sans-serif", fontSize: '9px',
         color: '#ffffff', resolution: 2,
       }).setDepth(25);
