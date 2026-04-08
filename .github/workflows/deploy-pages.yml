@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'deploy-game-library/**'
+      - 'projects/**/*.html'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -25,6 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Sync game files to deploy directory
+        run: |
+          cp projects/turtle-race/turtle-race.html deploy-game-library/turtle-race.html
+          cp projects/merge-turtle/merge-turtle.html deploy-game-library/merge-turtle.html
+          cp projects/street-basketball/street-basketball.html deploy-game-library/street-basketball.html
+          cp projects/portfolio/index.html deploy-game-library/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
