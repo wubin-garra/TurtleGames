@@ -615,7 +615,7 @@ class MenuScene extends Phaser.Scene {
     const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
     if (isMobile) {
       const fsBtn = this.add.text(CONFIG.WIDTH - 12, 12, '[ ]全屏', {
-        fontSize: '14px', resolution: 2,
+        fontSize: '14px', resolution: 4,
         fontFamily: "'Arial Black', sans-serif",
         color: '#ffffff',
         stroke: '#000000', strokeThickness: 2,
@@ -702,7 +702,7 @@ class MenuScene extends Phaser.Scene {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '22px', color: '#ff3366',
       stroke: '#000000', strokeThickness: 2,
-      resolution: 2,
+      resolution: 4,
     });
     g1.setAngle(-5); g1.setAlpha(0.6);
 
@@ -710,7 +710,7 @@ class MenuScene extends Phaser.Scene {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '18px', color: '#ffcc00',
       stroke: '#000000', strokeThickness: 2,
-      resolution: 2,
+      resolution: 4,
     });
     g2.setAngle(4); g2.setAlpha(0.5);
 
@@ -754,7 +754,7 @@ class MenuScene extends Phaser.Scene {
       color: '#ff2200',
       stroke: '#ffcc00',
       strokeThickness: 6,
-      resolution: 2,
+      resolution: 4,
     });
     title.setOrigin(0.5).setAngle(-3);
 
@@ -765,7 +765,7 @@ class MenuScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#333333',
       strokeThickness: 3,
-      resolution: 2,
+      resolution: 4,
     });
     sub.setOrigin(0.5).setAngle(0.5);
 
@@ -782,7 +782,7 @@ class MenuScene extends Phaser.Scene {
       const hsTxt = this.add.text(cx, badgeY + 12, '🏆 最高分 ' + hs, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '14px', color: '#663300',
-        resolution: 2,
+        resolution: 4,
       });
       hsTxt.setOrigin(0.5);
     }
@@ -838,7 +838,7 @@ class MenuScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#770000',
       strokeThickness: 3,
-      resolution: 2,
+      resolution: 4,
     });
     endlessTxt.setOrigin(0.5);
 
@@ -848,7 +848,7 @@ class MenuScene extends Phaser.Scene {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '12px',
       color: '#ffdddd',
-      resolution: 2,
+      resolution: 4,
     });
     endlessSub.setOrigin(0.5);
 
@@ -861,7 +861,7 @@ class MenuScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#001155',
       strokeThickness: 3,
-      resolution: 2,
+      resolution: 4,
     });
     levelTxt.setOrigin(0.5);
 
@@ -871,7 +871,7 @@ class MenuScene extends Phaser.Scene {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '12px',
       color: '#ccddff',
-      resolution: 2,
+      resolution: 4,
     });
     levelSub.setOrigin(0.5);
 
@@ -952,25 +952,25 @@ class MenuScene extends Phaser.Scene {
     const numTxt = this.add.text(centerX - btnW / 2 + 24, btnY, curChar.jersey || '23', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '12px', color: '#ffffff',
-      stroke: '#000000', strokeThickness: 1, resolution: 2,
+      stroke: '#000000', strokeThickness: 1, resolution: 4,
     }).setOrigin(0.5);
 
     // Name + skill text
     const nameTxt = this.add.text(centerX - btnW / 2 + 50, btnY - 8, curChar.name + ' · ' + curChar.title, {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '14px', color: '#ffffff',
-      stroke: '#000000', strokeThickness: 2, resolution: 2,
+      stroke: '#000000', strokeThickness: 2, resolution: 4,
     });
 
     const descTxt = this.add.text(centerX - btnW / 2 + 50, btnY + 8, curChar.desc, {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '11px', color: '#ffcc00', resolution: 2,
+      fontSize: '11px', color: '#ffcc00', resolution: 4,
     });
 
     // "换人 ▸" on the right side
     const changeTxt = this.add.text(centerX + btnW / 2 - 16, btnY, '换人 ▸', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '13px', color: '#aaaaaa', resolution: 2,
+      fontSize: '13px', color: '#aaaaaa', resolution: 4,
     }).setOrigin(1, 0.5);
 
     // Hover / click zone
@@ -997,7 +997,7 @@ class MenuScene extends Phaser.Scene {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '14px',
       color: '#aaaaaa',
-      resolution: 2,
+      resolution: 4,
     });
     backTxt.setOrigin(0, 0.5);
     backTxt.setInteractive({ useHandCursor: true });
@@ -1014,7 +1014,7 @@ class MenuScene extends Phaser.Scene {
     // Leaderboard link
     const lbTxt = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT - 17, '🏀 排行榜', {
       fontFamily: "'Arial Black', sans-serif",
-      fontSize: '14px', color: '#aaaaaa', resolution: 2,
+      fontSize: '14px', color: '#aaaaaa', resolution: 4,
     });
     lbTxt.setOrigin(0.5);
     lbTxt.setInteractive({ useHandCursor: true });
@@ -1478,7 +1478,7 @@ class LevelSelectScene extends Phaser.Scene {
       color: '#333333',
       stroke: '#f5f0e0',
       strokeThickness: 2,
-      resolution: 2,
+      resolution: 4,
     }).setOrigin(0, 0).setDepth(5);
   }
 
@@ -1502,7 +1502,7 @@ class LevelSelectScene extends Phaser.Scene {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '10px',
         color: isActive ? '#ffffff' : '#666655',
-        resolution: 2,
+        resolution: 4,
       }).setOrigin(0.5).setDepth(5);
 
       const drawTab = (active) => {
@@ -1563,7 +1563,7 @@ class LevelSelectScene extends Phaser.Scene {
     const maxStars = area.ids.length * 3;
     const progressTxt = this.add.text(CX, contentY - 4,
       '⭐ ' + totalAreaStars + ' / ' + maxStars, {
-      fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#888877', resolution: 2,
+      fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#888877', resolution: 4,
     }).setOrigin(0.5).setDepth(5);
     this.contentItems.push(progressTxt);
 
@@ -1593,15 +1593,15 @@ class LevelSelectScene extends Phaser.Scene {
 
         const numTxt = this.add.text(bx + boxW / 2, by + 12, 'LV.' + levelId, {
           fontFamily: "'Arial Black', sans-serif", fontSize: '12px', color: '#333333',
-          stroke: '#ffffff', strokeThickness: 2, resolution: 2,
+          stroke: '#ffffff', strokeThickness: 2, resolution: 4,
         }).setOrigin(0.5).setDepth(5);
 
         const nameTxt = this.add.text(bx + boxW / 2, by + 28, cfg.name, {
-          fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#555544', resolution: 2,
+          fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#555544', resolution: 4,
         }).setOrigin(0.5).setDepth(5);
 
         const hintTxt = this.add.text(bx + boxW / 2, by + 42, hint, {
-          fontFamily: 'Arial, sans-serif', fontSize: '9px', color: '#999988', resolution: 2,
+          fontFamily: 'Arial, sans-serif', fontSize: '9px', color: '#999988', resolution: 4,
         }).setOrigin(0.5).setDepth(5);
 
         const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
@@ -1641,7 +1641,7 @@ class LevelSelectScene extends Phaser.Scene {
     };
     const desc = this.add.text(LEFT + 4, contentY + 100,
       descMap[area.key] || '', {
-      fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888877', resolution: 2,
+      fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888877', resolution: 4,
     }).setOrigin(0, 0.5).setDepth(5);
     this.contentItems.push(desc);
 
@@ -1704,7 +1704,7 @@ class CharSelectScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#ff2200',
       strokeThickness: 3,
-      resolution: 2,
+      resolution: 4,
     });
     title.setOrigin(0.5);
     title.setAngle(-1);
@@ -1772,7 +1772,7 @@ class CharSelectScene extends Phaser.Scene {
         this.add.text(cx + cardW / 2, cy + 45, '🔒', { fontSize: '32px' }).setOrigin(0.5);
         this.add.text(cx + cardW / 2, cy + 82, char.name, {
           fontFamily: "'Arial Black', sans-serif",
-          fontSize: '13px', color: '#777799', resolution: 2,
+          fontSize: '13px', color: '#777799', resolution: 4,
         }).setOrigin(0.5);
 
         let condText = '';
@@ -1781,7 +1781,7 @@ class CharSelectScene extends Phaser.Scene {
         if (char.unlock.type === 'score')  condText = '得分' + char.unlock.value;
         this.add.text(cx + cardW / 2, cy + 100, condText, {
           fontFamily: "'Arial Black', sans-serif",
-          fontSize: '10px', color: '#666688', resolution: 2,
+          fontSize: '10px', color: '#666688', resolution: 4,
         }).setOrigin(0.5);
       } else {
         // Draw mini character
@@ -1791,13 +1791,13 @@ class CharSelectScene extends Phaser.Scene {
         this.add.text(cx + cardW / 2, cy + 88, char.name, {
           fontFamily: "'Arial Black', sans-serif",
           fontSize: '14px', color: '#ffffff',
-          stroke: '#000000', strokeThickness: 2, resolution: 2,
+          stroke: '#000000', strokeThickness: 2, resolution: 4,
         }).setOrigin(0.5);
 
         // Title
         this.add.text(cx + cardW / 2, cy + 106, '「' + (char.title || '') + '」', {
           fontFamily: "'Arial Black', sans-serif",
-          fontSize: '11px', color: '#cc4400', resolution: 2,
+          fontSize: '11px', color: '#cc4400', resolution: 4,
         }).setOrigin(0.5);
 
         // Skill desc
@@ -1812,7 +1812,7 @@ class CharSelectScene extends Phaser.Scene {
         if (isSelected) {
           this.add.text(cx + cardW / 2, cy + 138, '✔ 已选择', {
             fontFamily: "'Arial Black', sans-serif",
-            fontSize: '11px', color: '#cc8800', resolution: 2,
+            fontSize: '11px', color: '#cc8800', resolution: 4,
           }).setOrigin(0.5);
         }
 
@@ -1933,7 +1933,7 @@ class CharSelectScene extends Phaser.Scene {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '14px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 2,
-      resolution: 2,
+      resolution: 4,
     }).setOrigin(0.5).setDepth(10);
     const backZone = this.add.zone(btnX, btnY, btnW, btnH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(10);
     backZone.on('pointerover', () => {
@@ -4621,7 +4621,7 @@ class GameScene extends Phaser.Scene {
     this.jerseyNumTxt = this.add.text(px + lean, tT + (tB - tT) / 2, char.jersey || '7', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '12px', color: '#ffffff',
-      stroke: '#000000', strokeThickness: 1, resolution: 2,
+      stroke: '#000000', strokeThickness: 1, resolution: 4,
     }).setOrigin(0.5).setDepth(5);
 
     // === ARMS ===
@@ -6181,7 +6181,7 @@ class GameScene extends Phaser.Scene {
       if (skillLabel) {
         const st = this.add.text(CONFIG.WIDTH / 2, 75, skillLabel, {
           fontFamily: "'Arial Black', sans-serif", fontSize: '16px',
-          color: skillColor, stroke: '#000000', strokeThickness: 3, resolution: 2,
+          color: skillColor, stroke: '#000000', strokeThickness: 3, resolution: 4,
         }).setOrigin(0.5).setDepth(22).setAlpha(0);
         this.tweens.add({
           targets: st, alpha: 1, y: 65, duration: 300, ease: 'Quad.easeOut',
@@ -6511,7 +6511,7 @@ class GameScene extends Phaser.Scene {
         const txt = this.add.text(txtX, txtY, '补扣!', {
           fontFamily: "'Arial Black', sans-serif",
           fontSize: '36px', color: '#ff6600',
-          stroke: '#ffffff', strokeThickness: 5, resolution: 2,
+          stroke: '#ffffff', strokeThickness: 5, resolution: 4,
         });
         txt.setOrigin(0.5).setAngle(Phaser.Math.Between(-10, -3));
         this.tweens.add({ targets: txt, y: txt.y - 80, alpha: 0, scaleX: 1.5, scaleY: 1.5, duration: 1200, onComplete: () => txt.destroy() });
@@ -6922,7 +6922,7 @@ class GameScene extends Phaser.Scene {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '10px',
       color: '#888877',
-      resolution: 2,
+      resolution: 4,
     });
     this.songNameTxt.setOrigin(1, this.isTouchDevice ? 0.5 : 1).setDepth(25).setAlpha(0.7);
     this._updateSongName();
@@ -6985,11 +6985,11 @@ class GameScene extends Phaser.Scene {
       const y = mlY + 6 + i * lineH;
       const keyTxt = this.add.text(mlX + 10, y, m.keys, {
         fontFamily: "'Arial Black', sans-serif", fontSize: '9px',
-        color: '#ffcc44', resolution: 2,
+        color: '#ffcc44', resolution: 4,
       }).setDepth(25);
       const descTxt = this.add.text(mlX + 130, y, m.desc, {
         fontFamily: "sans-serif", fontSize: '9px',
-        color: '#ffffff', resolution: 2,
+        color: '#ffffff', resolution: 4,
       }).setDepth(25);
       return [keyTxt, descTxt];
     });
@@ -8312,7 +8312,7 @@ class LeaderboardScene extends Phaser.Scene {
     this.add.text(cx, 32, '🏀 进球排行榜', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '28px', color: '#cc2233',
-      stroke: '#ffcc00', strokeThickness: 4, resolution: 2,
+      stroke: '#ffcc00', strokeThickness: 4, resolution: 4,
     }).setOrigin(0.5).setAngle(-2);
 
     // Sort characters by baskets
@@ -8345,7 +8345,7 @@ class LeaderboardScene extends Phaser.Scene {
       this.add.text(rowX + 24, y + (rowH - 6) / 2, rankStr, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: rank <= 3 ? '22px' : '16px',
-        color: '#333333', resolution: 2,
+        color: '#333333', resolution: 4,
       }).setOrigin(0.5);
 
       // Jersey color dot
@@ -8359,31 +8359,31 @@ class LeaderboardScene extends Phaser.Scene {
       this.add.text(rowX + 62, y + (rowH - 6) / 2, char.jersey, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '11px', color: '#ffffff',
-        stroke: '#000000', strokeThickness: 1, resolution: 2,
+        stroke: '#000000', strokeThickness: 1, resolution: 4,
       }).setOrigin(0.5);
 
       // Name + title
       this.add.text(rowX + 90, y + 10, char.name, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '16px', color: '#333333',
-        stroke: '#f5f0e0', strokeThickness: 2, resolution: 2,
+        stroke: '#f5f0e0', strokeThickness: 2, resolution: 4,
       });
 
       this.add.text(rowX + 90, y + 30, char.title, {
         fontFamily: "'Arial Black', sans-serif",
-        fontSize: '11px', color: '#888877', resolution: 2,
+        fontSize: '11px', color: '#888877', resolution: 4,
       });
 
       // Basket count — right side, big number
       this.add.text(rowX + rowW - 24, y + (rowH - 6) / 2 - 6, '' + char.baskets, {
         fontFamily: "'Arial Black', sans-serif",
         fontSize: '24px', color: isTop3 ? '#cc2233' : '#333333',
-        stroke: '#f5f0e0', strokeThickness: 2, resolution: 2,
+        stroke: '#f5f0e0', strokeThickness: 2, resolution: 4,
       }).setOrigin(1, 0.5);
 
       this.add.text(rowX + rowW - 24, y + (rowH - 6) / 2 + 14, '进球', {
         fontFamily: "'Arial Black', sans-serif",
-        fontSize: '10px', color: '#888877', resolution: 2,
+        fontSize: '10px', color: '#888877', resolution: 4,
       }).setOrigin(1, 0.5);
     });
 
@@ -8392,14 +8392,14 @@ class LeaderboardScene extends Phaser.Scene {
     this.add.text(cx, startY + sorted.length * rowH + 10, '🏆 总进球数: ' + totalBaskets, {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '16px', color: '#cc8800',
-      stroke: '#f5f0e0', strokeThickness: 2, resolution: 2,
+      stroke: '#f5f0e0', strokeThickness: 2, resolution: 4,
     }).setOrigin(0.5);
 
     // Back button — bottom left
     const backTxt = this.add.text(14, CONFIG.HEIGHT - 22, '← 返回主页', {
       fontFamily: "'Arial Black', sans-serif",
       fontSize: '14px', color: '#666666',
-      stroke: '#f5f0e0', strokeThickness: 2, resolution: 2,
+      stroke: '#f5f0e0', strokeThickness: 2, resolution: 4,
     }).setOrigin(0, 1);
     backTxt.setInteractive({ useHandCursor: true });
     backTxt.on('pointerover', () => backTxt.setColor('#333333'));
@@ -8407,6 +8407,14 @@ class LeaderboardScene extends Phaser.Scene {
     backTxt.on('pointerdown', () => this.scene.start('MenuScene'));
   }
 }
+
+// Global: all text defaults to resolution 4 for crisp rendering
+const _origTextInit = Phaser.GameObjects.Text.prototype.initRTL || null;
+const _origSetStyle = Phaser.GameObjects.Text.prototype.setStyle;
+Phaser.GameObjects.Text.prototype.setStyle = function(style) {
+  if (style && !style.resolution) style.resolution = 4;
+  return _origSetStyle.call(this, style);
+};
 
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
 window.__phaserGame = new Phaser.Game({
