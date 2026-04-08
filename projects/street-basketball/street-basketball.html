@@ -57,20 +57,24 @@ body { position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
 @media screen and (orientation: portrait) and (max-width: 900px) {
   #rotate-hint:not(.dismissed) { display: flex !important; }
 }
-/* CSS forced landscape: rotate game when in portrait (WeChat fallback)
-   Strategy: center element on screen, then rotate 90deg around its center.
-   JS sets exact pixel width/height from innerHeight/innerWidth. */
-body.css-landscape {
-  position: fixed !important;
+/* Game container — wraps Phaser canvas + DOM controls */
+#game-container {
+  width: 100%; height: 100%;
+  position: relative;
+}
+/* CSS forced landscape: rotate only the game container, not body (WeChat fallback) */
+#game-container.css-landscape {
+  position: fixed;
   top: 50%; left: 50%;
-  right: auto !important; bottom: auto !important;
   transform: translate(-50%, -50%) rotate(90deg);
   overflow: hidden;
+  /* width/height set by JS to exact innerHeight x innerWidth */
 }
 canvas { display: block; }
 </style>
 </head>
 <body>
+<div id="game-container"></div>
 <!-- Portrait rotation hint -->
 <div id="rotate-hint">
   <div class="phone-icon">📱</div>
@@ -107,25 +111,23 @@ function goFullscreen() {
 function applyCSSLandscape() {
   if (isPortrait()) {
     var vw = window.innerWidth;   // portrait narrow (e.g. 390)
-    var vh = window.innerHeight;  // portrait tall (e.g. 780, excludes WeChat nav)
-    var b = document.body;
-    // In CSS space: width=vh (tall becomes wide), height=vw (narrow becomes tall)
-    b.style.width = vh + 'px';
-    b.style.height = vw + 'px';
-    b.classList.add('css-landscape');
-    // After 90deg rotation, visual: width=vw (narrow), height=vh (tall)
-    // → fills the portrait screen exactly
+    var vh = window.innerHeight;  // portrait tall (e.g. 780, excludes nav bar)
+    var gc = document.getElementById('game-container');
+    // Container CSS dimensions: width=vh (landscape width), height=vw (landscape height)
+    gc.style.width = vh + 'px';
+    gc.style.height = vw + 'px';
+    gc.classList.add('css-landscape');
+    // Phaser sees container as vh x vw (landscape) → fits game nicely
     if (window.__phaserGame) {
-      window.__phaserGame.scale.resize(vh, vw);
       window.__phaserGame.scale.refresh();
     }
   }
 }
 function removeCSSLandscape() {
-  var b = document.body;
-  b.classList.remove('css-landscape');
-  b.style.width = '';
-  b.style.height = '';
+  var gc = document.getElementById('game-container');
+  gc.classList.remove('css-landscape');
+  gc.style.width = '';
+  gc.style.height = '';
   if (window.__phaserGame) {
     window.__phaserGame.scale.refresh();
   }
@@ -7760,14 +7762,15 @@ window.__phaserGame = new Phaser.Game({
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    parent: document.body,
+    parent: 'game-container',
   },
   scene: [MenuScene, GameScene, ResultScene, LevelSelectScene, CharSelectScene, LeaderboardScene],
 });
 // Force Phaser to re-fit when mobile browser toolbar shows/hides
 function refreshGameSize() {
   // Skip if CSS landscape rotation is active (it manages its own sizing)
-  if (document.body.classList.contains('css-landscape')) return;
+  var gc = document.getElementById('game-container');
+  if (gc && gc.classList.contains('css-landscape')) return;
   if (window.__phaserGame) window.__phaserGame.scale.refresh();
 }
 window.addEventListener('resize', refreshGameSize);
