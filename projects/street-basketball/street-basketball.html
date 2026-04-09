@@ -207,36 +207,37 @@ CONFIG.ENDLESS = {
 };
 
 CONFIG.LEVELS = [
+  // stars = [1星进球数, 2星进球数, 3星进球数]
   // Area 1: 街角 Street Corner (1-5) — 放学后的街头
-  { id:1,  area:'street',  name:'热身赛',   balls:8, playerX:460, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[300,600,1000] },
-  { id:2,  area:'street',  name:'左右开弓', balls:8, playerX:0,   wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[400,800,1200], randomPos:true },
-  { id:3,  area:'street',  name:'追风少年', balls:7, playerX:400, wind:2, weather:'windy', rimMove:false, obstacles:false, stars:[400,900,1400] },
-  { id:4,  area:'street',  name:'移动靶心', balls:7, playerX:420, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[500,1000,1600] },
-  { id:5,  area:'street',  name:'街角王者', balls:0, playerX:400, wind:1, weather:'clear', rimMove:false, obstacles:false, stars:[600,1200,2000], timeLimit:40 },
+  { id:1,  area:'street',  name:'热身赛',   balls:8, playerX:460, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[3,5,8] },
+  { id:2,  area:'street',  name:'左右开弓', balls:8, playerX:0,   wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[3,5,7], randomPos:true },
+  { id:3,  area:'street',  name:'追风少年', balls:7, playerX:400, wind:2, weather:'windy', rimMove:false, obstacles:false, stars:[3,5,7] },
+  { id:4,  area:'street',  name:'移动靶心', balls:7, playerX:420, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[3,4,6] },
+  { id:5,  area:'street',  name:'街角王者', balls:0, playerX:400, wind:1, weather:'clear', rimMove:false, obstacles:false, stars:[4,6,10], timeLimit:40 },
   // Area 2: 校园 Shohoku Campus (6-10) — 湘北体育馆
-  { id:6,  area:'gym',     name:'校内对抗', balls:7, playerX:420, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[500,1000,1600] },
-  { id:7,  area:'gym',     name:'远投特训', balls:7, playerX:280, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[500,1100,1800] },
-  { id:8,  area:'gym',     name:'移动防守', balls:6, playerX:380, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[600,1200,2000] },
-  { id:9,  area:'gym',     name:'安西教练', balls:6, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[700,1400,2400], randomPos:true },
-  { id:10, area:'gym',     name:'湘北王牌', balls:0, playerX:360, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[800,1600,2800], timeLimit:40 },
+  { id:6,  area:'gym',     name:'校内对抗', balls:7, playerX:420, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[3,5,7] },
+  { id:7,  area:'gym',     name:'远投特训', balls:7, playerX:280, wind:0, weather:'clear', rimMove:false, obstacles:false, stars:[3,5,7] },
+  { id:8,  area:'gym',     name:'移动防守', balls:6, playerX:380, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[2,4,6] },
+  { id:9,  area:'gym',     name:'安西教练', balls:6, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[2,4,5], randomPos:true },
+  { id:10, area:'gym',     name:'湘北王牌', balls:0, playerX:360, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[4,7,12], timeLimit:40 },
   // Area 3: 陵南 Ryonan (11-15) — 陵南体育馆
-  { id:11, area:'ryonan',  name:'客场作战', balls:6, playerX:360, wind:0, weather:'clear', rimMove:false, obstacles:true,  stars:[600,1300,2200] },
-  { id:12, area:'ryonan',  name:'鱼住威压', balls:6, playerX:300, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[700,1500,2500] },
-  { id:13, area:'ryonan',  name:'仙道对决', balls:5, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[800,1700,2800], randomPos:true },
-  { id:14, area:'ryonan',  name:'逆转陵南', balls:5, playerX:280, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[900,1900,3200], rimShake:true },
-  { id:15, area:'ryonan',  name:'陵南之战', balls:0, playerX:300, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[1000,2000,3500], timeLimit:40, rimShake:true },
+  { id:11, area:'ryonan',  name:'客场作战', balls:6, playerX:360, wind:0, weather:'clear', rimMove:false, obstacles:true,  stars:[2,4,6] },
+  { id:12, area:'ryonan',  name:'鱼住威压', balls:6, playerX:300, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[2,4,5] },
+  { id:13, area:'ryonan',  name:'仙道对决', balls:5, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[2,3,5], randomPos:true },
+  { id:14, area:'ryonan',  name:'逆转陵南', balls:5, playerX:280, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[2,3,4], rimShake:true },
+  { id:15, area:'ryonan',  name:'陵南之战', balls:0, playerX:300, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[4,6,10], timeLimit:40, rimShake:true },
   // Area 4: 海南 Kainan (16-20) — 神奈川王者
-  { id:16, area:'kainan',  name:'王者球馆', balls:5, playerX:340, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[700,1500,2500] },
-  { id:17, area:'kainan',  name:'牧绅一',   balls:5, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[800,1700,2800], randomPos:true },
-  { id:18, area:'kainan',  name:'神宗一郎', balls:5, playerX:240, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[900,1900,3200], rimShake:true },
-  { id:19, area:'kainan',  name:'绝境反击', balls:4, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[900,2100,3600], rimShake:true, randomPos:true },
-  { id:20, area:'kainan',  name:'挑战海南', balls:0, playerX:260, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[1100,2300,3800], timeLimit:40, rimShake:true },
+  { id:16, area:'kainan',  name:'王者球馆', balls:5, playerX:340, wind:0, weather:'clear', rimMove:true,  obstacles:false, stars:[2,3,5] },
+  { id:17, area:'kainan',  name:'牧绅一',   balls:5, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[2,3,4], randomPos:true },
+  { id:18, area:'kainan',  name:'神宗一郎', balls:5, playerX:240, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[2,3,4], rimShake:true },
+  { id:19, area:'kainan',  name:'绝境反击', balls:4, playerX:0,   wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[1,2,4], rimShake:true, randomPos:true },
+  { id:20, area:'kainan',  name:'挑战海南', balls:0, playerX:260, wind:0, weather:'clear', rimMove:true,  obstacles:true,  stars:[3,5,8], timeLimit:40, rimShake:true },
   // Area 5: 镰仓 Kamakura (21-25) — 最后的夕阳
-  { id:21, area:'sunset',  name:'镰仓海岸', balls:5, playerX:320, wind:2, weather:'windy', rimMove:true,  obstacles:false, stars:[800,1700,2800] },
-  { id:22, area:'sunset',  name:'海风挑战', balls:5, playerX:280, wind:3, weather:'windy', rimMove:true,  obstacles:true,  stars:[900,1900,3200] },
-  { id:23, area:'sunset',  name:'夕阳暴风', balls:4, playerX:0,   wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[900,2100,3600], randomPos:true },
-  { id:24, area:'sunset',  name:'最后一投', balls:4, playerX:240, wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1000,2300,4000], rimShake:true, randomPos:true },
-  { id:25, area:'sunset',  name:'全国制霸', balls:0, playerX:220, wind:5, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1200,2800,4500], timeLimit:45, rimShake:true },
+  { id:21, area:'sunset',  name:'镰仓海岸', balls:5, playerX:320, wind:2, weather:'windy', rimMove:true,  obstacles:false, stars:[2,3,5] },
+  { id:22, area:'sunset',  name:'海风挑战', balls:5, playerX:280, wind:3, weather:'windy', rimMove:true,  obstacles:true,  stars:[2,3,4] },
+  { id:23, area:'sunset',  name:'夕阳暴风', balls:4, playerX:0,   wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1,2,4], randomPos:true },
+  { id:24, area:'sunset',  name:'最后一投', balls:4, playerX:240, wind:4, weather:'rain',  rimMove:true,  obstacles:true,  stars:[1,2,3], rimShake:true, randomPos:true },
+  { id:25, area:'sunset',  name:'全国制霸', balls:0, playerX:220, wind:5, weather:'rain',  rimMove:true,  obstacles:true,  stars:[3,5,8], timeLimit:45, rimShake:true },
 ];
 
 CONFIG.STORY = [
@@ -1422,10 +1423,10 @@ class ResultScene extends Phaser.Scene {
     const starStr = [0,1,2].map(i => i < stars ? '⭐' : '☆').join(' ');
     this.add.text(cx, 278, starStr, { fontSize: '28px' }).setOrigin(0.5);
 
-    // Target score info
+    // Target baskets info
     if (cfg) {
       const targetTxt = this.add.text(cx, 310,
-        '⭐' + cfg.stars[0] + '  ⭐⭐' + cfg.stars[1] + '  ⭐⭐⭐' + cfg.stars[2], {
+        '⭐进' + cfg.stars[0] + '球  ⭐⭐进' + cfg.stars[1] + '球  ⭐⭐⭐进' + cfg.stars[2] + '球', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '11px',
         color: '#888877',
@@ -1676,7 +1677,7 @@ class LevelSelectScene extends Phaser.Scene {
       this.storyText.setText(story);
       const hint = cfg.balls > 0 ? '限 ' + cfg.balls + ' 球' : '限时 ' + cfg.timeLimit + ' 秒';
       const starStr = [0,1,2].map(si => si < stars ? '⭐' : '☆').join('');
-      const passTarget = '通关: ' + cfg.stars[0] + '分';
+      const passTarget = '通关: 进' + cfg.stars[0] + '球';
       const extras = [];
       if (cfg.wind > 0) extras.push('🌬风力' + cfg.wind);
       if (cfg.rimMove) extras.push('🎯移动篮筐');
@@ -6775,9 +6776,10 @@ class GameScene extends Phaser.Scene {
     const cfg = this.levelConfig;
     let stars = 0;
     if (cfg && cfg.stars) {
-      if (this.score >= cfg.stars[2])      stars = 3;
-      else if (this.score >= cfg.stars[1]) stars = 2;
-      else if (this.score >= cfg.stars[0]) stars = 1;
+      // Stars based on basket count, not score
+      if (this.basketCount >= cfg.stars[2])      stars = 3;
+      else if (this.basketCount >= cfg.stars[1]) stars = 2;
+      else if (this.basketCount >= cfg.stars[0]) stars = 1;
     }
     const passed = stars > 0;
 
@@ -7088,7 +7090,12 @@ class GameScene extends Phaser.Scene {
   }
 
   updateHUD() {
-    this.scoreTxt.setText('' + this.score);
+    if (this.gameMode === 'level' && this.levelConfig && this.levelConfig.stars) {
+      // Level mode: show baskets / target
+      this.scoreTxt.setText(this.basketCount + '/' + this.levelConfig.stars[0] + '球');
+    } else {
+      this.scoreTxt.setText('' + this.score);
+    }
 
     if (this.combo > 1) {
       this.comboTxt.setText('🔥 x' + this.combo);
